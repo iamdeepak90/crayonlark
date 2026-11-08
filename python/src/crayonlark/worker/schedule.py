@@ -8,4 +8,9 @@ from celery.schedules import crontab  # noqa: F401  (used from Phase 3)
 
 BEAT_SCHEDULE: dict[str, dict[str, Any]] = {
     "heartbeat": {"task": "crayonlark.ping", "schedule": 300.0},
+    "inbox-scan": {
+        "task": "crayonlark.inbox.scan",
+        "schedule": 300.0,
+        "options": {"queue": "default"},
+    },
 }

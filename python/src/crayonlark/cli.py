@@ -39,5 +39,19 @@ def create_admin(email: str = typer.Option(..., prompt=True)) -> None:
     typer.echo(f"admin {email} saved")
 
 
+@app.command()
+def demo(out: str = "/demo-output") -> None:
+    """Run the full pipeline on the 5 bundled sample images (no paid API calls)."""
+    from pathlib import Path
+
+    from crayonlark.demo import run
+
+    typer.echo("Crayonlark demo (manual mode, zero paid calls)")
+    res = run(Path(out))
+    typer.echo("\nOutput files:")
+    for f in res["files"]:
+        typer.echo(f"  {f}")
+
+
 if __name__ == "__main__":
     app()

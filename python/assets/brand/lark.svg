@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Crayonlark mascot: a friendly lark holding a crayon">
+  <g stroke="#1F2333" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- crayon -->
+    <path d="M78 74 L104 48 L112 56 L86 82 Z" fill="#FF6F59"/>
+    <path d="M104 48 L110 40 L118 50 L112 56 Z" fill="#FFC93C"/>
+    <!-- body -->
+    <path d="M22 70 C18 44 40 26 62 30 C84 34 92 56 84 76 C76 96 46 100 32 90 C26 86 23 79 22 70 Z" fill="#5BC0EB"/>
+    <!-- belly -->
+    <path d="M38 78 C44 90 64 92 74 80 C66 84 48 84 38 78 Z" fill="#FFF8EE"/>
+    <!-- wing holding crayon -->
+    <path d="M52 62 C62 56 76 60 84 72 C72 76 60 74 52 62 Z" fill="#FFC93C"/>
+    <!-- tail -->
+    <path d="M24 74 L8 84 L22 86" fill="#5BC0EB"/>
+    <!-- crest -->
+    <path d="M56 30 C54 20 60 14 66 12 M62 31 C64 22 70 18 76 18" fill="none"/>
+    <!-- beak -->
+    <path d="M82 44 L96 48 L84 54 Z" fill="#FFC93C"/>
+  </g>
+  <circle cx="70" cy="44" r="4.5" fill="#1F2333"/>
+  <circle cx="71.5" cy="42.5" r="1.4" fill="#FFF"/>
+  <circle cx="62" cy="54" r="4" fill="#FF6F59" opacity=".5"/>
+</svg>

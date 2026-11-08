@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from sqlalchemy import (
     JSON,
@@ -48,7 +48,7 @@ JSONType = JSON().with_variant(JSONB(), "postgresql")
 
 
 class Base(DeclarativeBase):
-    type_annotation_map = {dict[str, Any]: JSONType, list[Any]: JSONType}
+    type_annotation_map: ClassVar[dict[Any, Any]] = {dict[str, Any]: JSONType, list[Any]: JSONType}
 
 
 class TimestampMixin:
@@ -323,7 +323,7 @@ class ApiCost(Base):
     model: Mapped[str] = mapped_column(String(100), default="")
     agent: Mapped[str] = mapped_column(String(60), default="")
     kind: Mapped[str] = mapped_column(String(20), default="llm")  # llm | image | search | other
-    status: Mapped[str] = mapped_column(String(20), default="reserved")  # reserved|committed|released
+    status: Mapped[str] = mapped_column(String(20), default="reserved")  # reserved|committed|..
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
     images: Mapped[int] = mapped_column(Integer, default=0)

@@ -9,6 +9,13 @@ x-dev-python: &dev-python
     ENVIRONMENT: development
     PUBLIC_SITE_URL: http://localhost:3000
     ADMIN_SITE_URL: http://admin.localhost:3000
+  # live code: edit python/src locally, restart the service (no rebuild needed)
+  volumes:
+    - work:/work
+    - ./python/src:/app/src
+    - ./python/assets:/app/assets
+    - ./python/tests:/app/tests
+    - ./python/migrations:/app/migrations
 
 services:
   postgres:
@@ -32,6 +39,11 @@ services:
     <<: *dev-python
     volumes:
       - work:/work
+      - ./python/src:/app/src
+      - ./python/assets:/app/assets
+      - ./python/tests:/app/tests
+      - ./python/migrations:/app/migrations
+      - ./python/scripts:/app/scripts
       - ./demo-output:/demo-output
     deploy: { resources: { limits: { cpus: "2.0", memory: 1500m } } }
   scheduler:

@@ -15,8 +15,13 @@ from crayonlark.core.redis import get_redis
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Crayonlark API", version=__version__, docs_url="/api/docs",
-                  openapi_url="/api/openapi.json", redoc_url=None)
+    app = FastAPI(
+        title="Crayonlark API",
+        version=__version__,
+        docs_url="/api/docs",
+        openapi_url="/api/openapi.json",
+        redoc_url=None,
+    )
 
     @app.get("/api/health")
     def health() -> JSONResponse:
@@ -29,11 +34,12 @@ def create_app() -> FastAPI:
             try:
                 fn()
                 checks[name] = "ok"
-            except Exception as exc:  # noqa: BLE001 - health must never raise
+            except Exception as exc:  # health must never raise
                 checks[name] = f"error: {type(exc).__name__}"
         ok = all(v == "ok" for v in checks.values())
-        return JSONResponse({"ok": ok, "version": __version__, "checks": checks},
-                            status_code=200 if ok else 503)
+        return JSONResponse(
+            {"ok": ok, "version": __version__, "checks": checks}, status_code=200 if ok else 503
+        )
 
     from crayonlark.api.routers import register
 

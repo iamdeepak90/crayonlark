@@ -62,8 +62,11 @@ def ensure_key(c: httpx.Client) -> str:
         return s.s3_access_key
     c.post(
         "/v2/ImportKey",
-        json={"accessKeyId": s.s3_access_key, "secretAccessKey": s.s3_secret_key,
-              "name": "crayonlark"},
+        json={
+            "accessKeyId": s.s3_access_key,
+            "secretAccessKey": s.s3_secret_key,
+            "name": "crayonlark",
+        },
     ).raise_for_status()
     return s.s3_access_key
 
@@ -78,15 +81,23 @@ def ensure_bucket(c: httpx.Client, name: str, key_id: str, website: bool = False
         bucket_id = created.json()["id"]
     c.post(
         "/v2/AllowBucketKey",
-        json={"bucketId": bucket_id, "accessKeyId": key_id,
-              "permissions": {"read": True, "write": True, "owner": True}},
+        json={
+            "bucketId": bucket_id,
+            "accessKeyId": key_id,
+            "permissions": {"read": True, "write": True, "owner": True},
+        },
     ).raise_for_status()
     if website:
         c.post(
             "/v2/UpdateBucket",
             params={"id": bucket_id},
-            json={"websiteAccess": {"enabled": True, "indexDocument": "index.html",
-                                    "errorDocument": None}},
+            json={
+                "websiteAccess": {
+                    "enabled": True,
+                    "indexDocument": "index.html",
+                    "errorDocument": None,
+                }
+            },
         ).raise_for_status()
 
 
