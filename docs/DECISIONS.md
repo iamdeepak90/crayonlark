@@ -59,3 +59,24 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     whose art wasn't AI-made doesn't claim it was (the demo sample art is hand-coded shapes).
 20. **Covers are paperback-only for now.** Hardcover slots are counted by the weekly limiter, but the
     hardcover case-wrap template is not built yet.
+
+## Covers, listings and packs (Phase 3)
+21. **The cover hero is a colourised approved interior picture** (`print/colorize.py` flood-fills
+    closed shapes with the brand palette). It costs nothing and matches the inside of the book. The
+    cover's AI flag is set to true when that art is AI-made or `ai_cover_image` is ticked.
+22. **Chromium rounds PDF paper size to whole CSS pixels** (up to ~0.01 in). After printing, the
+    MediaBox is set to the exact KDP full-wrap size; the layout is anchored top-left, so only a
+    sliver of outer bleed is affected. The validator then checks the exact size.
+23. **Rejecting a cover builds a new version** (theme and hero rotate), and old versions are kept.
+    Options (theme, front picture, blurb) can be chosen in admin before rebuilding.
+24. **Listing text: the LLM writes it, code enforces the rules.** KDP price ≥ $9.99, 7 keywords
+    with no "free/bestseller/Amazon…" claims, 3 categories, safe HTML only (p, b, i, ul, li, br…),
+    title+subtitle ≤ 200 characters; Etsy 13 lowercase tags ≤ 20 characters. Disclosure wording is
+    appended by code from the book's AI fields, never written by the LLM.
+25. **Listing approval is refused while any blocklist hit or rule problem exists.** The check
+    lives inside `approvals.approve_all_listings`, so admin and Telegram can't bypass it.
+26. **Etsy products per book:** full PDF + bundle + activity pack when the book has activities, and
+    mini packs of 10 designs for books with ≥ 10 / ≥ 20 designs (3–5 products). Etsy PDFs are built
+    only for approved Etsy listings. A single product can be skipped without rejecting the rest.
+27. **The KDP slot week is assigned when the pack is built** (approving listings). Archiving a book
+    whose pack was never uploaded releases its slot. The demo does this so it never uses real slots.

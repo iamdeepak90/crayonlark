@@ -141,3 +141,32 @@ def validate_pdf(
         if max_bytes is not None and rep.size_bytes > max_bytes:
             rep.errors.append(f"file is {rep.size_bytes / 1e6:.1f} MB > {max_bytes / 1e6:.0f} MB")
         return rep
+
+
+def validate_cover_pdf(path: Path, width_in: float, height_in: float) -> ValidationReport:
+    """A cover is one page of exactly the full-wrap size with all fonts embedded."""
+    with pikepdf.open(path) as pdf:
+        page = pdf.pages[0]
+        mb = page.mediabox
+        w, h = float(mb[2] - mb[0]) / PT, float(mb[3] - mb[1]) / PT
+        rep = ValidationReport(
+            path=str(path),
+            pages=len(pdf.pages),
+            width_in=round(w, 3),
+            height_in=round(h, 3),
+            min_image_dpi=None,
+            size_bytes=path.stat().st_size,
+        )
+        if len(pdf.pages) != 1:
+            rep.errors.append(f"cover has {len(pdf.pages)} pages, expected 1")
+        if abs(w - width_in) > 0.01 or abs(h - height_in) > 0.01:
+            rep.errors.append(
+                f"cover is {w:.3f}x{h:.3f} in, expected {width_in:.3f}x{height_in:.3f}"
+            )
+        names: set[str] = set()
+        for name, embedded in _fonts_on_page(page):
+            names.add(name)
+            if not embedded:
+                rep.errors.append(f"font {name} not embedded")
+        rep.fonts = sorted(names)
+        return rep

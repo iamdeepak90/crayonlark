@@ -7,18 +7,19 @@ provider. Approvals are made by the CLI human actor "cli:demo" and land in the a
 from __future__ import annotations
 
 import shutil
+import zipfile
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from crayonlark.core import approvals, pipeline, storage
+from crayonlark.core import approvals, pipeline, publishing, storage
 from crayonlark.core.actors import HumanActor
 from crayonlark.core.config import ASSETS_DIR
 from crayonlark.core.db import session_scope
 from crayonlark.core.models import ApiCost, Book
-from crayonlark.print.validate import validate_pdf
+from crayonlark.print.validate import validate_cover_pdf, validate_pdf
 
 DEMO_PLAN: dict[str, Any] = {
     "mazes": 2,
@@ -109,8 +110,27 @@ def run(out: Path) -> dict[str, Any]:
             f"interior: {rep.pages} pages, {rep.width_in}x{rep.height_in} in, "
             f"min image DPI {rep.min_image_dpi}, fonts {', '.join(rep.fonts)}"
         )
-        etsy = pipeline.build_etsy_pdfs(s, book)
         interior_key, slug = book.interior_key, book.slug
+
+    with session_scope() as s:
+        book = _book(s, book_id)
+        cover = publishing.build_cover(s, book)
+        _say(
+            f"cover v{cover.version}: {cover.width_in:.3f}x{cover.height_in:.3f} in, "
+            f"spine {cover.spine_in:.3f} in → {book.status}"
+        )
+        approvals.decide_cover(s, cover, True, me)
+        cover_files = publishing.cover_files(cover)
+        cover_size = (cover.width_in, cover.height_in)
+
+    with session_scope() as s:
+        book = _book(s, book_id)
+        rows = publishing.draft_listings(s, book)
+        _say(f"listings drafted (offline agent): {[r.product_kind for r in rows]}")
+        approvals.approve_all_listings(s, book, me)
+        pack_key = publishing.build_pack(s, book)
+        etsy = publishing.build_etsy_files(s, book)
+        _say(f"KDP pack built for slot week {book.kdp_week_start} → {book.status}")
 
     results: dict[str, Any] = {"book_id": book_id, "files": []}
     book_dir = out / slug
@@ -121,6 +141,20 @@ def run(out: Path) -> dict[str, Any]:
     final = validate_pdf(dest, "8.5x11")
     results["files"].append(str(dest))
     _say(f"validated {dest.name}: {'OK' if final.ok else final.errors}")
+    cdest = storage.download("outputs", cover_files["pdf"], book_dir / "kdp" / "cover.pdf")
+    crep = validate_cover_pdf(cdest, *cover_size)
+    _say(f"validated cover.pdf: fonts {', '.join(crep.fonts)} {'OK' if crep.ok else crep.errors}")
+    for name in ("preview", "phone"):
+        storage.download(
+            "outputs",
+            cover_files[name],
+            book_dir / "kdp" / f"cover-{name}{Path(cover_files[name]).suffix}",
+        )
+    zdest = storage.download("outputs", pack_key, book_dir / Path(pack_key).name)
+    with zipfile.ZipFile(zdest) as z:
+        names = sorted(z.namelist())
+    results["files"] += [str(cdest), str(zdest)]
+    _say(f"KDP upload pack {zdest.name}: {', '.join(names)}")
     for keys in etsy.values():
         for paper, key in keys.items():
             d = storage.download("outputs", key, book_dir / "etsy" / Path(key).name)
@@ -131,6 +165,11 @@ def run(out: Path) -> dict[str, Any]:
                 f"validated {d.name}: {v.pages} pages, {v.size_bytes / 1e6:.2f} MB, "
                 f"{'OK' if v.ok else v.errors}"
             )
+
+    with session_scope() as s:
+        # The demo book never goes to KDP: archive it so it frees its weekly KDP slot.
+        pipeline.archive_book(s, _book(s, book_id), me)
+        _say("demo book archived (its KDP slot is released)")
 
     with session_scope() as s:
         costs_after = s.scalar(select(func.count(ApiCost.id))) or 0

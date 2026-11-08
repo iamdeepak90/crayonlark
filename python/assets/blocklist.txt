@@ -1,0 +1,115 @@
+# Blocked words/phrases: famous characters, brands, logos, franchises and living artists' styles.
+# One per line, case-insensitive, accents ignored, spaces/hyphens flexible. Lines starting with # are comments.
+# Add more in admin → Settings → blocklist_extra.
+
+# companies / brands
+disney
+pixar
+dreamworks
+marvel
+dc comics
+nintendo
+pokemon
+sanrio
+hello kitty
+crayola
+lego
+barbie
+mattel
+hasbro
+fisher price
+nickelodeon
+cartoon network
+paw patrol
+peppa pig
+bluey
+cocomelon
+baby shark
+pinkfong
+sesame street
+my little pony
+transformers
+hot wheels
+minecraft
+roblox
+fortnite
+among us
+sonic the hedgehog
+super mario
+mario
+luigi
+pikachu
+star wars
+harry potter
+hogwarts
+disney frozen
+anna and elsa
+elsa
+olaf
+moana
+encanto
+toy story
+buzz lightyear
+sheriff woody
+lightning mcqueen
+mickey mouse
+minnie mouse
+winnie the pooh
+spongebob
+spiderman
+spider man
+batman
+superman
+wonder woman
+avengers
+hulk
+iron man
+captain america
+thomas the tank engine
+peter rabbit
+paddington
+the very hungry caterpillar
+gruffalo
+dora the explorer
+pj masks
+teletubbies
+care bears
+smurfs
+garfield
+snoopy
+peanuts
+looney tunes
+bugs bunny
+scooby doo
+shrek
+minions
+despicable me
+kung fu panda
+trolls
+squishmallows
+lilo and stitch
+gabby's dollhouse
+blippi
+ms rachel
+labubu
+
+# living artists / named styles
+studio ghibli
+ghibli
+miyazaki
+dr seuss
+eric carle
+mo willems
+beatrix potter
+quentin blake
+yayoi kusama
+banksy
+keith haring
+takashi murakami
+mary blair
+
+# marketing words we must never use
+handmade
+hand-drawn
+hand drawn
+hand drawn by

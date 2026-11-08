@@ -47,3 +47,30 @@ budget guard, KDP slots and the full manual pipeline. `cd web && pnpm test:e2e` 
 **Verified:** through HTTP on the running stack: login → create book → upload 5 images → QA on
 worker-heavy → awaiting approval → approve → 5 cleanups → interior (28 pages) → Etsy PDFs, no
 failed jobs. 54 Python tests and 7 Playwright tests pass.
+
+## Phase 3: Covers, listings, KDP pack ✅
+**Built:** cover maths (spine per paper type, full wrap, barcode keep-out, spine text from 100
+pages); an HTML/CSS cover template rendered by Playwright to an exact-size PDF with embedded fonts,
+plus a 150 DPI preview, a JPG thumbnail and a phone-size preview; colourised hero art; 3 colour
+themes. Listing agent with Pydantic output (offline provider in tests and demo), with rules
+enforced in code; blocklist check on all listing fields; AI-disclosure text from the book fields.
+KDP upload pack zip: `interior.pdf`, `cover.pdf`, `listing.md` (KDP field order), `ai-disclosure.md`,
+`upload-checklist.md`, `week-slot.txt`, `cover-thumbnail.jpg`. Etsy Letter/A4 PDFs per approved
+Etsy listing. Flow: interior → cover (cpu-heavy) → Telegram photo with ✅/🔁 → listings (llm queue)
+→ Telegram summary with ✅/🔁 → pack + Etsy files → Telegram "pack ready". Admin pages: cover review
+(full wrap, phone size, rebuild with theme/picture/blurb), listing editor (live limits, blocklist
+warnings, skip one Etsy product, redraft), KDP packs (slots this week and next 4, downloads,
+"I uploaded it" → proof → live with ASIN). Archiving a never-uploaded pack releases its KDP slot.
+
+**Run/test:** `make demo` now also writes `demo-output/<slug>/kdp-pack-<slug>.zip`, `kdp/cover.pdf`,
+cover previews and 6 Etsy PDFs, all validated, still with 0 paid calls. `make test` adds listing
+rules, safe HTML, disclosure, pack zip and the full cover → listings → pack flow (including the
+GateError for non-humans, the Telegram cover button and the blocklist refusal).
+
+**You need to:** nothing new. Real listing text needs an LLM key (Phase 6). Until then the
+offline agent writes plain, correct drafts that you edit in admin.
+
+**Verified:** `make demo` passes. Over HTTP on the running stack: book 4 → cover v1 → approve →
+offline listings → approval refused for "Peppa Pig" in an Etsy title → fixed → approved → pack +
+6 Etsy PDFs, slot counter 1/2 paperbacks this week, no failed jobs. 73 Python tests pass; eslint,
+tsc and the admin pages were checked with screenshots.

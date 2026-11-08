@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Fredoka"; font-weight: 700; src: url("{{ fonts }}/Fredoka-Bold.ttf"); }
+  @font-face { font-family: "Fredoka"; font-weight: 600; src: url("{{ fonts }}/Fredoka-SemiBold.ttf"); }
+  @font-face { font-family: "Nunito"; font-weight: 400; src: url("{{ fonts }}/Nunito-Regular.ttf"); }
+  @font-face { font-family: "Nunito"; font-weight: 700; src: url("{{ fonts }}/Nunito-Bold.ttf"); }
+  @page { size: {{ g.width }}in {{ g.height }}in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: {{ g.width }}in; height: {{ g.height }}in; overflow: hidden; }
+  body { position: relative; overflow: hidden; background: {{ c.bg }}; font-family: "Nunito"; color: {{ c.ink }}; }
+  .abs { position: absolute; }
+  /* soft blobs that run into the bleed */
+  .blob { position: absolute; border-radius: 50%; opacity: .9; }
+  .panel { position: absolute; top: {{ g.front.y }}in; height: {{ g.front.h }}in; }
+  .front { left: {{ g.front.x }}in; width: {{ g.front.w }}in; }
+  .back { left: {{ g.back.x }}in; width: {{ g.back.w }}in; }
+  .safe { position: absolute; inset: {{ safe }}in; display: flex; flex-direction: column; align-items: center; }
+  .title { width: 100%; padding: 0 1.05in; font-family: "Fredoka"; font-weight: 700; font-size: {{ title_pt }}pt; line-height: 1.02; text-align: center;
+           color: {{ c.ink }}; letter-spacing: -0.5pt; text-wrap: balance; }
+  .subtitle { margin-top: .12in; font-family: "Nunito"; font-weight: 700; font-size: {{ subtitle_pt }}pt; text-align: center;
+              background: {{ c.ink }}; color: #fff; padding: .06in .22in; border-radius: 1in; }
+  .hero { margin-top: .25in; flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .hero-card { height: 100%; max-height: 100%; aspect-ratio: {{ hero_aspect }}; background: #fff; border: .06in solid {{ c.ink }};
+               border-radius: .35in; padding: .18in; box-shadow: .08in .08in 0 {{ c.ink }}; display: flex; }
+  .hero-card img { width: 100%; height: 100%; object-fit: contain; }
+  .brand { margin-top: .2in; display: flex; align-items: center; gap: .1in; font-family: "Fredoka"; font-weight: 600; font-size: 16pt; }
+  .brand img { height: .5in; }
+  .ages { position: absolute; top: 0; right: 0; background: {{ c.accent }}; color: #fff; font-family: "Fredoka"; font-weight: 700;
+          font-size: 15pt; width: 1.05in; height: 1.05in; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+          text-align: center; line-height: 1; transform: rotate(8deg); border: .04in solid {{ c.ink }}; }
+  .back .safe { align-items: flex-start; }
+  .blurb-title { font-family: "Fredoka"; font-weight: 700; font-size: 24pt; }
+  .blurb { margin-top: .12in; font-size: 12.5pt; line-height: 1.45; max-width: 6.6in; }
+  .bullets { margin-top: .12in; font-size: 12pt; line-height: 1.5; list-style: none; }
+  .bullets li { position: relative; padding-left: .22in; }
+  .bullets li::before { content: ""; position: absolute; left: 0; top: .08in; width: .11in; height: .11in; border-radius: 50%; background: {{ c.accent }}; }
+  .thumbs { margin-top: .22in; display: grid; grid-template-columns: repeat(3, 2.05in); gap: .12in; }
+  .thumbs div { aspect-ratio: 3/4; background: #fff; border: .03in solid {{ c.ink }}; border-radius: .12in; padding: .05in; display: flex; }
+  .thumbs img { width: 100%; height: 100%; object-fit: contain; }
+  .back-brand { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: .08in; font-family: "Fredoka"; font-weight: 600; font-size: 13pt; }
+  .back-brand img { height: .45in; }
+  .barcode { position: absolute; left: {{ g.barcode.x }}in; top: {{ g.barcode.y }}in; width: {{ g.barcode.w }}in; height: {{ g.barcode.h }}in;
+             background: #fff; {% if show_guides %}outline: 1px dashed red;{% endif %} }
+  .spine { position: absolute; left: {{ g.spine_rect.x }}in; top: 0; width: {{ g.spine_rect.w }}in; height: 100%;
+           background: {{ c.ink }}; display: flex; align-items: center; justify-content: center; }
+  .spine-text { writing-mode: vertical-rl; font-family: "Fredoka"; font-weight: 600; color: #fff; white-space: nowrap;
+                font-size: {{ spine_pt }}pt; max-height: calc(100% - .8in); overflow: hidden; }
+  .guide { position: absolute; border: 1px dashed red; pointer-events: none; }
+</style>
+</head>
+<body>
+  <div class="blob" style="left: -1in; top: -1.2in; width: 5in; height: 5in; background: {{ c.blob1 }}"></div>
+  <div class="blob" style="left: {{ g.width - 4 }}in; top: {{ g.height - 3.5 }}in; width: 6in; height: 6in; background: {{ c.blob2 }}"></div>
+  <div class="blob" style="left: {{ g.front.x + g.front.w - 2.2 }}in; top: -1.4in; width: 3.6in; height: 3.6in; background: {{ c.blob1 }}"></div>
+
+  <section class="panel back" aria-label="back cover">
+    <div class="safe">
+      <h2 class="blurb-title">{{ back_title }}</h2>
+      <p class="blurb">{{ blurb }}</p>
+      <ul class="bullets">{% for b in bullets %}<li>{{ b }}</li>{% endfor %}</ul>
+      <div class="thumbs">{% for t in thumbs %}<div><img src="{{ t }}"></div>{% endfor %}</div>
+      <div class="back-brand"><img src="{{ mascot }}"> Crayonlark · crayonlark.com</div>
+    </div>
+  </section>
+  <div class="barcode" aria-label="barcode area (left empty for KDP)"></div>
+
+  <div class="spine">{% if g.spine_text %}<span class="spine-text">{{ spine_label }}</span>{% endif %}</div>
+
+  <section class="panel front" aria-label="front cover">
+    <div class="safe">
+      <div class="ages">Ages<br>{{ ages }}</div>
+      <h1 class="title">{{ title }}</h1>
+      {% if subtitle %}<p class="subtitle">{{ subtitle }}</p>{% endif %}
+      <div class="hero"><div class="hero-card"><img src="{{ hero }}"></div></div>
+      <div class="brand"><img src="{{ mascot }}"> Crayonlark</div>
+    </div>
+  </section>
+
+  {% if show_guides %}
+  <div class="guide" style="left: {{ 0.125 }}in; top: {{ 0.125 }}in; width: {{ g.width - 0.25 }}in; height: {{ g.height - 0.25 }}in;"></div>
+  {% endif %}
+</body>
+</html>

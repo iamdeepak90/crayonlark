@@ -259,7 +259,7 @@ def build_etsy_pdfs(
         all_paths = dict(zip([i.id for i in approved], _download_cleaned(book, tmp), strict=True))
         acts = build_activities(book.activity_plan or {}, seed=book.id)
         for prod in products:
-            ids = prod.get("image_ids") or list(all_paths)
+            ids = prod["image_ids"] if prod.get("image_ids") is not None else list(all_paths)
             product = etsy_files.EtsyProduct(
                 slug=prod["slug"],
                 title=prod["title"],
@@ -277,6 +277,21 @@ def build_etsy_pdfs(
                 keys[paper] = key
             out[prod["slug"]] = keys
     return out
+
+
+def archive_book(session: Session, book: Book, actor: Actor) -> None:
+    """Archive a book. A pack that was never uploaded to KDP gives its weekly slot back."""
+    if book.status == BookStatus.KDP_PACK_READY and book.kdp_week_start is not None:
+        record(
+            session,
+            actor.name,
+            "kdp_slot.release",
+            "book",
+            book.id,
+            {"week": book.kdp_week_start.isoformat()},
+        )
+        book.kdp_week_start = None
+    transition(session, book, BookStatus.ARCHIVED, actor)
 
 
 # --------------------------------------------------------------------------- inbox (manual drop)

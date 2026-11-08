@@ -5,6 +5,8 @@ Kept in one place so the whole pipeline flow can be read top to bottom.
 
 from __future__ import annotations
 
+from typing import Any
+
 from crayonlark.core.jobs import enqueue
 from crayonlark.core.notify import notify
 
@@ -43,8 +45,52 @@ def after_cleaning(book_id: int) -> None:
 
 
 def after_interior(book_id: int) -> None:
-    """Phase 3 adds the cover build here."""
-    enqueue("crayonlark.book.build_etsy_pdfs", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
+    queue_cover(book_id)
+
+
+def queue_cover(book_id: int, options: dict[str, Any] | None = None) -> str:
+    return enqueue(
+        "crayonlark.book.build_cover",
+        {"book_id": book_id, "options": options or {}},
+        "cpu-heavy",
+        book_id=book_id,
+    )
+
+
+def after_cover_built(book_id: int, cover_id: int) -> None:
+    enqueue(
+        "crayonlark.telegram.cover_review",
+        {"cover_id": cover_id},
+        "publish",
+        idempotency_key=f"cover-review:{cover_id}",
+        book_id=book_id,
+    )
+
+
+def after_cover_decision(book_id: int, approved: bool) -> None:
+    """Approved → the listing agent drafts listings. Rejected → build a new cover version."""
+    if approved:
+        enqueue("crayonlark.book.draft_listings", {"book_id": book_id}, "llm", book_id=book_id)
+    else:
+        queue_cover(book_id)
+
+
+def after_listings_drafted(book_id: int) -> None:
+    enqueue(
+        "crayonlark.telegram.listing_review",
+        {"book_id": book_id},
+        "publish",
+        book_id=book_id,
+    )
+
+
+def after_listings_approved(book_id: int) -> None:
+    enqueue("crayonlark.book.build_pack", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
+    enqueue("crayonlark.book.build_etsy_files", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
+
+
+def after_listings_rejected(book_id: int) -> None:
+    enqueue("crayonlark.book.draft_listings", {"book_id": book_id}, "llm", book_id=book_id)
 
 
 def notify_text(text: str) -> None:

@@ -68,3 +68,65 @@ def image_review(book_id: int) -> dict[str, Any]:
         [[("✅ Approve image set", f"imgset:{book_id}")]],
     )
     return {"sent": len(items)}
+
+
+@celery.task(name="crayonlark.telegram.cover_review")
+@tracked
+def cover_review(cover_id: int) -> dict[str, Any]:
+    from crayonlark.core.models import Cover
+
+    with session_scope() as s:
+        cover = s.get(Cover, cover_id)
+        if cover is None:
+            return {"skipped": "missing"}
+        book_id, title, version = cover.book_id, cover.book.title, cover.version
+        thumb = storage.get_bytes("outputs", cover.thumb_key) if cover.thumb_key else None
+        spine, size = cover.spine_in, f"{cover.width_in:.3f} x {cover.height_in:.3f} in"
+    admin = get_settings().admin_site_url
+    caption = (
+        f"📕 Cover v{version} for “{title}”\nFull wrap {size}, spine {spine:.3f} in.\n"
+        f"Full preview: {admin}/books/{book_id}/cover"
+    )
+    buttons = [
+        [("✅ Approve cover", f"cover:{cover_id}:1"), ("🔁 New version", f"cover:{cover_id}:0")]
+    ]
+    if thumb:
+        telegram.send_photo(thumb, caption, buttons)
+    else:
+        telegram.send_message(caption, buttons)
+    return {"sent": 1}
+
+
+@celery.task(name="crayonlark.telegram.listing_review")
+@tracked
+def listing_review(book_id: int) -> dict[str, Any]:
+    from crayonlark.core import publishing
+
+    with session_scope() as s:
+        book = s.get(Book, book_id)
+        if book is None:
+            return {"skipped": "missing"}
+        lines = [
+            f"• {lst.platform.upper()} {lst.product_kind}: {lst.title[:90]} "
+            f"(${lst.price_cents / 100:.2f})"
+            for lst in book.listings
+        ]
+        problems = publishing.listing_problems(s, book)
+        title = book.title
+    admin = get_settings().admin_site_url
+    text = f"📝 Listings drafted for “{title}”:\n" + "\n".join(lines)
+    text += f"\n\nReview and edit: {admin}/books/{book_id}/listings"
+    if problems:
+        text += f"\n⚠️ {len(problems)} listing(s) need fixing before approval (blocklist/rules)."
+        telegram.send_message(text)
+    else:
+        telegram.send_message(
+            text,
+            [
+                [
+                    ("✅ Approve all", f"listings:{book_id}:1"),
+                    ("🔁 Redraft", f"listings:{book_id}:0"),
+                ]
+            ],
+        )
+    return {"listings": len(lines), "problems": len(problems)}

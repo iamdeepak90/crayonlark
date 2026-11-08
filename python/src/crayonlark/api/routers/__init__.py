@@ -6,8 +6,9 @@ from fastapi import FastAPI
 
 
 def register(app: FastAPI) -> None:
-    from crayonlark.api.routers import admin_books, admin_ops, auth
+    from crayonlark.api.routers import admin_books, admin_ops, admin_publish, auth
 
     app.include_router(auth.router)
     app.include_router(admin_books.router)
     app.include_router(admin_ops.router)
+    app.include_router(admin_publish.router)

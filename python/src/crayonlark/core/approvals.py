@@ -132,10 +132,16 @@ def decide_listing(session: Session, listing: Listing, approve: bool, actor: Act
 
 def approve_all_listings(session: Session, book: Book, actor: Actor) -> None:
     """Approve the KDP listing + Etsy listings together → kdp_pack_ready (pack gets built)."""
+    from crayonlark.core.publishing import listing_problems
+
     h = _human(actor)
     listings = session.scalars(select(Listing).where(Listing.book_id == book.id)).all()
     if not any(lst.platform == "kdp" for lst in listings):
         raise ValueError("no KDP listing to approve")
+    problems = listing_problems(session, book)
+    if problems:
+        first = next(iter(problems.values()))
+        raise ValueError(f"fix {len(problems)} listing(s) first: {first}")
     for lst in listings:
         if lst.status != ListingStatus.REJECTED:
             decide_listing(session, lst, True, h)

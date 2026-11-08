@@ -325,6 +325,10 @@ def output_file(key: str, admin: Admin = Depends(require_admin)) -> Response:
         if name.endswith(".zip")
         else "image/jpeg"
         if name.endswith(".jpg")
+        else "image/png"
+        if name.endswith(".png")
+        else "text/markdown; charset=utf-8"
+        if name.endswith(".md")
         else "application/octet-stream"
     )
     return Response(
@@ -351,9 +355,7 @@ def manual_status(
         elif action == "live":
             approvals.mark_live(s, b, admin.actor, asin=asin, amazon_url=amazon_url)
         elif action == "archive":
-            from crayonlark.core.state_machine import transition
-
-            transition(s, b, BookStatus.ARCHIVED, admin.actor)
+            pipeline.archive_book(s, b, admin.actor)
         else:
             raise HTTPException(400, "unknown action")
     except TransitionError as exc:
