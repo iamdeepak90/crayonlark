@@ -157,3 +157,47 @@ def after_etsy_published(book_id: int, pinterest_ready: bool) -> None:
     notify(f"🛍 Etsy listings for book #{book_id} are live.", book_id=book_id)
     if pinterest_ready:
         enqueue("crayonlark.pinterest.plan", {"book_id": book_id}, "default", book_id=book_id)
+
+
+# --------------------------------------------------------------------------- Phase 6: AI generation
+
+
+def queue_research(theme: str, notes: str, use_web: bool) -> str:
+    return enqueue(
+        "crayonlark.ai.research", {"theme": theme, "notes": notes, "use_web": use_web}, "llm"
+    )
+
+
+def after_research(theme: str, count: int, dropped: list[str]) -> None:
+    extra = f" ({len(dropped)} dropped by the blocklist)" if dropped else ""
+    notify(f"💡 {count} niche ideas for “{theme}” are waiting for you{extra}.", kind="approval")
+
+
+def queue_concepts(book_id: int) -> str:
+    return enqueue("crayonlark.ai.concepts", {"book_id": book_id}, "llm", book_id=book_id)
+
+
+def after_concepts(book_id: int, saved: int, manual: bool) -> None:
+    tail = (
+        "Make the pictures from the prompts in admin and upload them."
+        if manual
+        else "Press “Generate images” in admin when you are ready (paid)."
+    )
+    notify(f"📝 Book #{book_id}: {saved} scene prompts ready. {tail}", book_id=book_id)
+
+
+def queue_art(book_id: int, image_ids: list[int]) -> list[str]:
+    return [
+        enqueue(
+            "crayonlark.ai.generate_image",
+            {"image_id": image_id},
+            "images",
+            idempotency_key=f"art:{image_id}",
+            book_id=book_id,
+        )
+        for image_id in image_ids
+    ]
+
+
+def queue_vision_qa(image_id: int, book_id: int | None = None) -> str:
+    return enqueue("crayonlark.ai.vision_qa", {"image_id": image_id}, "llm", book_id=book_id)

@@ -130,8 +130,13 @@ def run_image_qa(session: Session, image: Image, check_text: bool = True) -> dic
 
 def finish_qa_if_ready(session: Session, book: Book) -> bool:
     """When every uploaded image has QA results, move the book to awaiting_image_approval."""
-    imgs = [i for i in book.images if i.status != ImageStatus.PENDING]
-    if not imgs or any(i.status == ImageStatus.UPLOADED for i in imgs):
+    imgs = [i for i in book.images if i.status not in (ImageStatus.PENDING, ImageStatus.FAILED)]
+    waiting = any(
+        i.status in (ImageStatus.UPLOADED, ImageStatus.GENERATING)
+        or (i.vision_scores or {}).get("pending")
+        for i in imgs
+    )
+    if not imgs or waiting:
         return False
     if book.status == BookStatus.IMAGES_GENERATING:
         transition(session, book, BookStatus.IMAGES_QA, SYSTEM)

@@ -211,3 +211,60 @@ export type PinterestOverview = {
   upcoming: PinItem[];
   recent: PinItem[];
 };
+
+export type BudgetState = "ok" | "warn" | "stop";
+
+export type CostCall = {
+  id: number;
+  at: string;
+  provider: string;
+  model: string;
+  agent: string;
+  kind: "llm" | "vision" | "image" | "search";
+  status: "reserved" | "committed" | "released";
+  input_tokens: number | null;
+  output_tokens: number | null;
+  images: number | null;
+  usd: number;
+  inr: number;
+  book_id: number | null;
+};
+
+export type CostsResponse = {
+  month: string;
+  spent_usd: number;
+  spent_inr: number;
+  cap_inr: number;
+  ratio: number;
+  state: BudgetState;
+  usd_inr_rate: number;
+  by_agent: { agent: string; provider: string; usd: number; calls: number }[];
+  daily: { day: string; usd: number }[];
+  by_book: { book_id: number; title: string; usd: number; calls: number }[];
+  recent: CostCall[];
+};
+
+export type LlmProvider = "offline" | "anthropic" | "openai" | "gemini";
+export type ImageProvider = "manual" | "openai" | "gemini";
+export type AgentModel = { provider: LlmProvider; model?: string; effort?: string };
+
+export type AIProviders = {
+  keys: { anthropic: boolean; openai: boolean; gemini: boolean; websearch: boolean };
+  agents: string[];
+  agent_models: Record<string, AgentModel>;
+  image_provider: { provider: ImageProvider; model: string };
+  llm_prices: Record<string, { input: number; output: number }>;
+  image_prices: Record<string, number>;
+  prices_checked: string;
+};
+
+export type ConceptsResponse = {
+  status: string;
+  can_make_concepts: boolean;
+  can_generate: boolean;
+  image_provider: ImageProvider;
+  image_model: string;
+  price_per_image_usd: number;
+  concepts: ImageItem[];
+  failed: ImageItem[];
+};

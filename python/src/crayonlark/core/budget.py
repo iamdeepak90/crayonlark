@@ -134,6 +134,7 @@ def settle(
     input_tokens: int = 0,
     output_tokens: int = 0,
     images: int = 0,
+    model: str | None = None,
 ) -> None:
     """Commit the real cost (or release it with actual_usd=None after a failed call)."""
     s_ = get_settings()
@@ -148,6 +149,8 @@ def settle(
         cost.cost_usd = actual_usd
         cost.cost_inr = actual_usd * s_.usd_inr_rate
         cost.input_tokens, cost.output_tokens, cost.images = input_tokens, output_tokens, images
+        if model:  # e.g. a server-side fallback model answered instead
+            cost.model = model[:100]
         row = _lock_month(s, cost.month)
         spent = spent_usd(s, cost.month)
         _alerts(
@@ -166,6 +169,7 @@ class PaidCall:
     input_tokens: int = 0
     output_tokens: int = 0
     images: int = 0
+    model: str | None = None
 
 
 @contextmanager
@@ -191,6 +195,7 @@ def paid_call(
         call.input_tokens,
         call.output_tokens,
         call.images,
+        call.model,
     )
 
 

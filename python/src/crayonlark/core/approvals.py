@@ -57,6 +57,8 @@ def approve_book_idea(session: Session, book: Book, actor: Actor) -> None:
 
 def decide_image(session: Session, image: Image, approve: bool, actor: Actor) -> None:
     h = _human(actor)
+    if approve and not image.original_key:
+        raise ValueError(f"image {image.id} has no picture yet (concept only)")
     image.approval = ApprovalState.APPROVED if approve else ApprovalState.REJECTED
     image.approved_by, image.approved_at = h.name, _now()
     record(

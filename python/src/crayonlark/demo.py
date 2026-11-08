@@ -14,6 +14,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from crayonlark.agents import concept
 from crayonlark.core import approvals, marketing, pipeline, publishing, storage
 from crayonlark.core.actors import HumanActor
 from crayonlark.core.config import ASSETS_DIR
@@ -67,6 +68,9 @@ def run(out: Path) -> dict[str, Any]:
         approvals.approve_book_idea(s, book, me)
         book_id = book.id
         _say(f"book #{book.id} '{book.slug}' created and approved by {me.name}")
+        # Phase 6 concept agent, always offline here so the demo never spends money
+        saved, _ = concept.save_concepts(s, book, concept.offline(book, 60))
+        _say(f"concept agent (offline): {saved} scene prompts → {book.status}")
 
     with session_scope() as s:
         book = _book(s, book_id)
@@ -76,7 +80,7 @@ def run(out: Path) -> dict[str, Any]:
             )
         s.flush()
         s.refresh(book)
-        for img in book.images:
+        for img in [i for i in book.images if i.original_key]:  # skip unused prompts
             r = pipeline.run_image_qa(s, img)
             _say(
                 f"QA {img.scene_title}: score {r['score']} → {r['recommendation']} "
@@ -87,7 +91,7 @@ def run(out: Path) -> dict[str, Any]:
 
     with session_scope() as s:
         book = _book(s, book_id)
-        for img in book.images:
+        for img in [i for i in book.images if i.original_key]:
             approvals.decide_image(s, img, True, me)
         n = approvals.approve_image_set(s, book, me, min_images=5)
         _say(f"{n} images approved → {book.status}")

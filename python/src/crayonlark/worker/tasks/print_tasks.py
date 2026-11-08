@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from crayonlark.agents import vision_qa
 from crayonlark.core import flows, pipeline
 from crayonlark.core.db import session_scope
 from crayonlark.core.jobs import tracked
@@ -21,9 +22,14 @@ def image_qa(image_id: int) -> dict[str, Any]:
         if img is None:
             return {"skipped": "missing"}
         result = pipeline.run_image_qa(s, img)
+        vision = vision_qa.enabled()
+        if vision:  # the vision model runs on the llm queue, not on this cpu-heavy worker
+            img.vision_scores = {"pending": True}
         s.flush()
         ready = pipeline.finish_qa_if_ready(s, img.book)
         book_id = img.book_id
+    if vision:
+        flows.queue_vision_qa(image_id, book_id)
     if ready:
         flows.notify_images_ready(book_id)
     return result

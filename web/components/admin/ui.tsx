@@ -26,6 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
   failed: "bg-rose-100 text-rose-900",
   succeeded: "bg-emerald-100 text-emerald-900",
   running: "bg-sky-100 text-sky-900",
+  generating: "bg-sky-100 text-sky-900",
 };
 
 export function Badge({ value }: { value: string }) {

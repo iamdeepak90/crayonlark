@@ -70,7 +70,7 @@ def test_approvals_are_audited(client: TestClient, db) -> None:  # type: ignore[
     login(client)
     book = client.post("/api/admin/books", json={"title": "Audit Book"}, headers=H).json()
     with db() as s:
-        img = Image(book_id=book["id"], position=1, status="qa_done")
+        img = Image(book_id=book["id"], position=1, status="qa_done", original_key="a.png")
         s.add(img)
         s.flush()
         image_id = img.id

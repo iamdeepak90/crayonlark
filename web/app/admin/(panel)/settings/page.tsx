@@ -1,11 +1,14 @@
+import AISettings from "@/components/admin/AISettings";
 import SecurityCard from "@/components/admin/SecurityCard";
 import SettingEditor from "@/components/admin/SettingEditor";
 import { PageTitle } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
+import type { AIProviders } from "@/lib/types";
+
+// Edited in the "AI providers & models" card instead (it checks API keys before saving).
+const AI_KEYS = new Set(["agent_models", "image_provider"]);
 
 const HELP: Record<string, string> = {
-  agent_models: "Provider and model per agent. provider: anthropic | openai | gemini | offline (free, template-based).",
-  image_provider: "manual (you upload images; zero cost) | openai | gemini.",
   house_prompt_template: "Prompt template for coloring pages. {scene} is replaced by each scene idea.",
   blocklist_extra: "Extra blocked words/phrases (brands, characters, artists) on top of the built-in list.",
   images_per_book: "How many images you must approve per book.",
@@ -16,7 +19,11 @@ const HELP: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-  const [settings, me] = await Promise.all([serverApi<Record<string, unknown>>("/api/admin/settings"), serverApi<{ email: string; totp_enabled: boolean }>("/api/auth/me")]);
+  const [settings, me, ai] = await Promise.all([
+    serverApi<Record<string, unknown>>("/api/admin/settings"),
+    serverApi<{ email: string; totp_enabled: boolean }>("/api/auth/me"),
+    serverApi<AIProviders>("/api/admin/ai/providers"),
+  ]);
   return (
     <>
       <PageTitle>Settings</PageTitle>
@@ -24,10 +31,13 @@ export default async function SettingsPage() {
         Secrets (API keys, budget cap) live in Coolify environment variables. Everything here is stored in the database and every change is written to the audit log.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
+        <AISettings initial={ai} />
         <SecurityCard email={me.email} totpEnabled={me.totp_enabled} />
-        {Object.entries(settings).map(([key, value]) => (
-          <SettingEditor key={key} name={key} value={value} help={HELP[key]} />
-        ))}
+        {Object.entries(settings)
+          .filter(([key]) => !AI_KEYS.has(key))
+          .map(([key, value]) => (
+            <SettingEditor key={key} name={key} value={value} help={HELP[key]} />
+          ))}
       </div>
     </>
   );

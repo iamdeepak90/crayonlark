@@ -41,7 +41,7 @@ DEFAULTS: dict[str, Any] = {
     "pinterest": {"pins_per_day": 4, "start_hour_utc": 13, "end_hour_utc": 23},
     "free_printable_key": None,  # outputs/free/sample-pack.pdf once built
     "qa_thresholds": {
-        "min_side_px": 1500,
+        "min_side_px": 840,  # potrace re-renders at 300 DPI; 1024x1536 API output is fine
         "max_grey_ratio": 0.06,
         "max_black_fill": 0.35,
         "min_line_px": 3.0,

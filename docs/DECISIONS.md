@@ -129,3 +129,45 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     approval. Publishing is checked against the blocklist again.
 42. **Amazon Associates:** the tag is added server-side to amazon.* links only. The site shows the
     required disclosure line only when a tag is configured.
+43. **Claude uses the official `anthropic` SDK; OpenAI, Gemini, Brave and Tavily use plain
+    `httpx`.** That's one SDK instead of four, and the request/response shapes are easy to read
+    and mock. Shapes were checked against each provider's official docs on 2026-11-08. The
+    Gemini text provider still sends `responseMimeType` + `responseJsonSchema` (as in Google's
+    guide), although Google now lists `responseFormat` as their successor. If Gemini starts
+    rejecting them, change `GeminiProvider.request()`.
+44. **Claude requests:** structured output (`output_config.format`, schema from
+    `anthropic.transform_schema`), adaptive thinking with `effort` from Settings (default
+    `medium`), streaming, and `max_tokens` ≥ 16k so thinking can't cut off the JSON. On Opus 5.5,
+    Opus 5, Fable 5.1 and Sonnet 5.5 a safety refusal is retried server-side on a fallback model
+    (`fallbacks: "default"`), and the cost is priced by the model that actually answered.
+45. **Every agent answer is validated with Pydantic**, whatever the provider. One repair retry
+    is made on invalid JSON. Refusals are charged but not retried (`LLMRefused`). OpenAI and
+    Gemini get a "portable" strict schema: every field required, `additionalProperties: false`,
+    length limits removed. Pydantic still enforces the limits afterwards.
+46. **Prices live in `providers/pricing.py`** (checked 2026-11-08), and admin → Settings →
+    `model_prices` can override them without a deploy. An unknown model is priced
+    high on purpose ($10 / $50 per 1M tokens, $0.25 per image), so the guard errs on the safe
+    side. Image costs come from the usage the provider returns. The per-image table is only the
+    budget reservation.
+47. **All agents default to `offline` and images to `manual`.** Nothing paid runs until I choose a
+    provider and model in admin → Settings → AI providers. Saving refuses a provider whose
+    API key is missing.
+48. **Concepts are Image rows with status `pending`** (a prompt, no file). Paid generation is a
+    button (`Generate N images`), never automatic. It checks the remaining monthly budget
+    before queueing anything, and each image is its own idempotent job (`art:{image_id}`) on the
+    `images` queue. In manual mode I copy the prompts and upload a picture per concept. A
+    concept can't be approved until it has a picture.
+49. **Concepts are written automatically** when I create a book from an approved niche (cheap,
+    and free in offline mode). Re-running replaces only unused prompts. Scenes that hit the
+    blocklist are dropped.
+50. **Vision QA runs on the `llm` queue** after the Python checks, so the cpu-heavy worker
+    never waits on a model. The book waits for every vision verdict before asking for approval.
+    A failed vision check (budget reached, refusal, outage) marks the image "not checked" and
+    never blocks the book; I still review every image. Images go to the model as 1024 px greyscale JPEGs.
+51. **Research web search** is optional (Brave or Tavily, official APIs). Amazon and Etsy are
+    excluded both in the query (Tavily `exclude_domains`) and in the results (filtered by host),
+    so we never read their pages. Each search request goes through the budget guard (`kind="search"`).
+52. **QA minimum image side lowered from 1500 to 840 px.** API images are 1024x1536 (OpenAI) or
+    896x1200 (Gemini 3:4 at 1K), and cleanup re-draws every line with potrace at 300 DPI, so
+    source pixels matter less than clean lines. An already-seeded database keeps its old value:
+    change it in admin → Settings → `qa_thresholds`.

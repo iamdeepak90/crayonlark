@@ -129,3 +129,43 @@ keys exist.
 - On the running stack, book 4 → kdp-uploaded → live triggered: public assets, the catalog entry, the book page, a blog draft (awaiting approval) and a free printable (3 pages).
 - Home and book page checked by screenshot at 1280 px and 390 px.
 - The public pages were built by a subagent and reviewed: content rules, an independent build and the Playwright run.
+
+## Phase 6: AI generation ✅
+**Built:**
+- **LLM providers** behind one interface (`providers/llm/`):
+  - **Claude:** official `anthropic` SDK. Structured JSON output, adaptive thinking with `effort`, streaming, and a server-side refusal fallback on Opus 5.5 / Sonnet 5.5.
+  - **OpenAI:** Responses API with strict JSON schema.
+  - **Gemini:** generateContent with a JSON schema.
+  - **All three:** support image input for vision. Every answer is validated with Pydantic, with one repair retry. Refusals are charged but not retried.
+- **Image providers** (`providers/image/`): OpenAI (`gpt-image-2.5-flare`, 1024x1536) and Gemini (`gemini-nano-banana-2.1`, 3:4), plus **manual** mode. Cost is computed from the usage each provider returns.
+- **Budget guard everywhere:** every LLM, image and web-search call reserves → settles in `api_costs`, recording tokens, images and the model that actually answered. Prices are in `providers/pricing.py`, can be overridden in Settings (`model_prices`), and unknown models are priced high.
+- **Agents:**
+  - **Research:** 10 niches from a theme plus your pasted notes plus optional Brave or Tavily search, with Amazon and Etsy excluded. Saved as *proposed* niches; blocklisted ideas are dropped.
+  - **Concept:** 60 scenes through the house prompt template, blocklist-filtered. Runs automatically when you create a book from a niche.
+  - **Art:** one idempotent job per image, started only by the "Generate N images" button, after a budget check.
+  - **Vision QA:** anatomy, scary faces, text, lookalikes, age and line art. Runs after the Python QA on the llm queue. A failed check never blocks the book.
+- **Admin:**
+  - **Costs page:** month vs cap, daily spend, by agent, by book, last 100 calls.
+  - **Settings → AI providers & models:** per agent, with prices shown. A provider can't be chosen without its key.
+  - **Book page → "Scene prompts & AI images":** write prompts, generate, copy prompts, upload a picture per prompt, retry failed ones.
+  - **Niches:** a "Use web search" checkbox.
+- `make demo` now also writes 60 offline scene prompts. It still makes 0 paid calls.
+- **Docs:** `docs/API_KEYS.md` (new), decisions 43–52.
+
+**Run/test:**
+- `make test`: 97 Python tests. The new ones cover provider requests and responses with mocked HTTP, the strict schemas, cost maths, refusal and repair, the web-search exclusions, the research and concept agents, and the vision verdict merge.
+- Web: lint, typecheck and build pass; Playwright 49 passed, 1 skipped. Logged-in admin smoke tests run when `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD` are set.
+
+**You need to:**
+1. **Choose keys:** add the AI keys you want (see `docs/API_KEYS.md`), restart, then pick models in admin → Settings → AI providers. Until then everything stays offline/manual and free.
+2. **Spend limits:** set a monthly limit in each provider's billing console as well.
+3. **QA threshold:** on the existing local database, lower `qa_thresholds.min_side_px` to 840 in Settings (new installs get it by default). Otherwise 1024-px API images fail QA.
+4. **Local research test data:** 10 proposed "farm animals" niches are waiting in admin → Niches. Approve or reject them as you like.
+5. **Model IDs:** the provider model IDs and prices were checked on 2026-11-08 and change often. Re-check them when you add a key.
+
+**Not verified yet:**
+- **Real paid calls:** none were made (no keys). They're covered by mocked tests only.
+- **Concepts panel on a live book:** not exercised on the running stack, because that needs a book that has passed an approval gate. Only the API behind it was tested end to end.
+- **Known limit:** if an image job uses up all its retries on a network error, the image stays "generating". Retry it from the Jobs page.
+
+**Next (Phase 7):** Etsy sales sync, KDP CSV import, weekly Telegram + email report, nightly backups with 14-day retention plus restore, resource review, load check, and the README / DEPLOY_COOLIFY / WORKFLOW docs.

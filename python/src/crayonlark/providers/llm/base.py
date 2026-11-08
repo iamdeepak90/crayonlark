@@ -24,6 +24,15 @@ class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
     cost_usd: float = 0.0
+    stop: str = ""  # provider stop reason; "refusal" means the model declined
+    model: str = ""  # the model that actually answered (may differ after a fallback)
+
+
+class LLMRefused(RuntimeError):
+    """The model declined the request (safety refusal). Not retried."""
+
+
+IMAGE_TOKENS = 1600  # rough input tokens per attached image, for estimates
 
 
 @dataclass
@@ -43,9 +52,14 @@ class LLMProvider(Protocol):
     name: str
 
     def complete_json(
-        self, task: AgentTask[Any], model: str, extra_user: str = ""
+        self,
+        task: AgentTask[Any],
+        model: str,
+        extra_user: str = "",
+        options: dict[str, Any] | None = None,
     ) -> tuple[str, Usage]:
-        """Return raw JSON text matching task.schema plus token usage/cost."""
+        """Return raw JSON text matching task.schema plus token usage/cost.
+        `options` is the agent's settings entry (e.g. {"effort": "medium"})."""
         ...
 
     def estimate_usd(self, task: AgentTask[Any], model: str) -> float: ...
@@ -63,6 +77,17 @@ def parse_json(text: str) -> Any:
         t = t.rsplit("```", 1)[0]
     start = min((i for i in (t.find("{"), t.find("[")) if i >= 0), default=0)
     return json.loads(t[start:])
+
+
+def estimate_input_tokens(task: AgentTask[Any], extra_user: str = "") -> int:
+    from crayonlark.providers.pricing import estimate_tokens
+
+    text = task.system + task.prompt + extra_user + schema_hint(task.schema)
+    return estimate_tokens(text) + IMAGE_TOKENS * len(task.images)
+
+
+def image_mime(data: bytes) -> str:
+    return "image/jpeg" if data[:3] == b"\xff\xd8\xff" else "image/png"
 
 
 def agent_config(agent: str) -> dict[str, str]:
@@ -94,9 +119,12 @@ def run_task[T: BaseModel](task: AgentTask[T]) -> T:
             estimate,
             book_id=task.book_id,
         ) as call:
-            raw, usage = provider.complete_json(task, model, extra)
+            raw, usage = provider.complete_json(task, model, extra, cfg)
             call.actual_usd = usage.cost_usd
             call.input_tokens, call.output_tokens = usage.input_tokens, usage.output_tokens
+            call.model = usage.model or None
+        if usage.stop == "refusal":
+            raise LLMRefused(f"{task.agent}: {provider_name}/{model} declined the request")
         try:
             return task.schema.model_validate(parse_json(raw))
         except (ValidationError, ValueError) as exc:
@@ -107,3 +135,29 @@ def run_task[T: BaseModel](task: AgentTask[T]) -> T:
                 "Reply again with ONLY valid JSON matching the schema."
             )
     raise ValueError(f"{task.agent}: model returned invalid output twice: {last_error}")
+
+
+DROP_KEYWORDS = {"minLength", "maxLength", "default", "title", "uniqueItems"}
+
+
+def portable_schema(schema: type[BaseModel]) -> dict[str, Any]:
+    """A JSON schema that OpenAI strict mode and Gemini both accept: every object has
+    additionalProperties=false and lists all its properties as required; string-length and
+    default keywords are dropped (Pydantic still enforces them after the call)."""
+
+    def fix(node: Any) -> Any:
+        if isinstance(node, list):
+            return [fix(n) for n in node]
+        if not isinstance(node, dict):
+            return node
+        out = {k: fix(v) for k, v in node.items() if k not in DROP_KEYWORDS}
+        for mapping in ("properties", "$defs"):  # name → schema maps: recurse into values only
+            if mapping in node:
+                out[mapping] = {k: fix(v) for k, v in node[mapping].items()}
+        if out.get("type") == "object" or "properties" in out:
+            out["additionalProperties"] = False
+            out["required"] = list(out.get("properties", {}))
+        return out
+
+    result: dict[str, Any] = fix(schema.model_json_schema())
+    return result

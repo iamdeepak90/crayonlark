@@ -5,7 +5,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { Button, Card } from "./ui";
 
-export default function NicheForm() {
+export default function NicheForm({ webSearch = true }: { webSearch?: boolean }) {
   const router = useRouter();
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -15,8 +15,10 @@ export default function NicheForm() {
     setBusy(true);
     setMsg("");
     try {
-      await api("/api/admin/research", { body: { theme: form.get("theme"), competitor_notes: form.get("competitor_notes") } });
-      setMsg("Research agent started. Ideas appear here in a minute.");
+      const r = await api<{ job_id: string; web_search: boolean }>("/api/admin/research", {
+        body: { theme: form.get("theme"), competitor_notes: form.get("competitor_notes"), use_web: form.get("use_web") === "on" },
+      });
+      setMsg(`Research agent started${r.web_search ? " with web search" : " without web search"}. Ideas appear here in a minute.`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "failed");
     } finally {
@@ -48,6 +50,11 @@ export default function NicheForm() {
           <label className="block text-sm font-semibold">
             Competitor notes (optional, paste your own research)
             <textarea name="competitor_notes" rows={4} className={input} />
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" name="use_web" defaultChecked={webSearch} disabled={!webSearch} />
+            Use web search
+            {!webSearch && <span className="font-normal text-slate-500">(not configured: set the web search API key)</span>}
           </label>
           <Button disabled={busy}>Suggest 10 niches</Button>
         </form>

@@ -3,11 +3,12 @@ import ActionButton from "@/components/admin/ActionButton";
 import NicheForm from "@/components/admin/NicheForm";
 import { Badge, Card, PageTitle, fmtDate } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
+import type { AIProviders } from "@/lib/types";
 
 type Niche = { id: number; theme: string; name: string; age_range: string; angle: string; risks: string; seasonality: string; notes: string; source: string; status: string; approved_by: string | null; created_at: string };
 
 export default async function NichesPage() {
-  const niches = await serverApi<Niche[]>("/api/admin/niches");
+  const [niches, ai] = await Promise.all([serverApi<Niche[]>("/api/admin/niches"), serverApi<AIProviders>("/api/admin/ai/providers")]);
   return (
     <>
       <PageTitle>Niche ideas</PageTitle>
@@ -35,7 +36,7 @@ export default async function NichesPage() {
           ))}
           {!niches.length && <p className="text-slate-500">No niche ideas yet. Add one, or ask the research agent.</p>}
         </div>
-        <NicheForm />
+        <NicheForm webSearch={ai.keys.websearch} />
       </div>
     </>
   );

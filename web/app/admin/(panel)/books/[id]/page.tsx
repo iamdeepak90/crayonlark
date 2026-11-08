@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
+import ConceptsPanel from "@/components/admin/ConceptsPanel";
 import ManualKdpSteps from "@/components/admin/ManualKdpSteps";
 import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui";
 import Uploader from "@/components/admin/Uploader";
@@ -12,12 +13,18 @@ const AI_FIELDS: [string, string][] = [
   ["ai_text", "Text"],
 ];
 
+// Images in these states are only a scene prompt so far: there is no file to show.
+const NO_FILE = new Set(["pending", "generating", "failed"]);
+const ART_STATUSES = ["niche_approved", "concepts_ready", "images_generating", "images_qa", "awaiting_image_approval"];
+
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const b = await serverApi<BookDetail>(`/api/admin/books/${id}`);
   const f = b.fields;
-  const pending = b.images.filter((i) => i.approval === "pending").length;
-  const canUpload = ["niche_approved", "concepts_ready", "images_generating", "images_qa", "awaiting_image_approval"].includes(b.status);
+  const pictures = b.images.filter((i) => !NO_FILE.has(i.status));
+  const pending = pictures.filter((i) => i.approval === "pending").length;
+  const canUpload = ART_STATUSES.includes(b.status);
+  const showConcepts = canUpload || pictures.length < b.images.length;
   return (
     <>
       <PageTitle
@@ -30,14 +37,14 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
       >
         {b.title}
       </PageTitle>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-3">
         <Card title="Images" className="lg:col-span-2" actions={<Link href={`/books/${b.id}/images`} className="text-sm font-semibold text-sky-800 underline">Open approval grid →</Link>}>
           <p className="mb-3 text-sm text-slate-600">
-            {b.images.length} images · {b.approved_count} approved · {pending} pending
+            {pictures.length} images · {b.approved_count} approved · {pending} pending
           </p>
           {canUpload && <Uploader bookId={b.id} />}
           <ul className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 lg:grid-cols-8">
-            {b.images.slice(0, 48).map((i) => (
+            {pictures.slice(0, 48).map((i) => (
               <li key={i.id} className={`overflow-hidden rounded-lg border-2 ${i.approval === "approved" ? "border-emerald-500" : i.approval === "rejected" ? "border-rose-400 opacity-50" : "border-slate-200"}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`/api/admin/images/${i.id}/file?variant=thumb`} alt={i.scene_title} loading="lazy" className="aspect-[3/4] w-full bg-white object-contain" />
@@ -91,6 +98,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
             {!b.interior_key && !b.cover_key && <li className="text-slate-500">nothing built yet</li>}
           </ul>
         </Card>
+        {showConcepts && <ConceptsPanel bookId={b.id} />}
         <Card title="Next steps" className="lg:col-span-2">
           <div className="flex flex-wrap gap-2">
             {b.status === "awaiting_image_approval" && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/images`}>Review images</Link>}

@@ -60,6 +60,7 @@ class NicheStatus(StrEnum):
 
 class ImageStatus(StrEnum):
     PENDING = "pending"  # prompt exists, no file yet
+    GENERATING = "generating"  # queued with a paid image provider
     UPLOADED = "uploaded"  # original stored (manual drop or provider)
     QA_DONE = "qa_done"
     CLEANED = "cleaned"

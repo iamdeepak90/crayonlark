@@ -7,3 +7,41 @@ test("admin login page renders and is not indexed", async ({ page }) => {
   await expect(page.getByLabel("Email")).toBeVisible();
   await expect(page.getByLabel("Password")).toBeVisible();
 });
+
+// Logged-in pages need the API (a running stack). Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run them;
+// otherwise (e.g. CI, where the build has no API) they are skipped. They only read pages, never approve.
+const EMAIL = process.env.E2E_ADMIN_EMAIL;
+const PASSWORD = process.env.E2E_ADMIN_PASSWORD;
+
+test.describe("logged-in admin", () => {
+  test.skip(!EMAIL || !PASSWORD, "set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD to run against a stack with the API");
+
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(EMAIL!);
+    await page.getByLabel("Password").fill(PASSWORD!);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page.getByRole("navigation", { name: "Admin" })).toBeVisible();
+  });
+
+  test("costs page renders", async ({ page }) => {
+    const res = await page.goto("/costs");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Costs");
+    await expect(page.getByRole("progressbar", { name: "Budget used" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Recent calls (last 100)" })).toBeVisible();
+  });
+
+  test("settings page shows AI providers", async ({ page }) => {
+    const res = await page.goto("/settings");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { name: "AI providers & models" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "concept" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Save AI settings" })).toBeVisible();
+  });
+
+  test("niches page has the web search option", async ({ page }) => {
+    await page.goto("/niches");
+    await expect(page.getByLabel("Use web search")).toBeVisible();
+  });
+});

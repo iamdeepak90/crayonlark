@@ -138,6 +138,8 @@ def create_book(
     book = pipeline.create_book(s, body.title, admin.actor, **body.model_dump(exclude={"title"}))
     approvals.approve_book_idea(s, book, admin.actor)  # I created it myself → approved idea
     s.commit()
+    if body.niche_id is not None:  # from an approved niche: write the scene prompts next
+        flows.queue_concepts(book.id)
     return book_summary(book)
 
 
@@ -259,7 +261,10 @@ def decide_image(
     img = s.get(Image, image_id)
     if img is None:
         raise HTTPException(404, "image not found")
-    approvals.decide_image(s, img, body.approve, admin.actor)
+    try:
+        approvals.decide_image(s, img, body.approve, admin.actor)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
     return image_out(img)
 
 
