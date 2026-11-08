@@ -70,7 +70,7 @@ class AdminUser(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True)
     password_hash: Mapped[str] = mapped_column(String(255))
-    totp_secret: Mapped[str | None] = mapped_column(String(64))
+    totp_secret: Mapped[str | None] = mapped_column(String(255))  # encrypted
     totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

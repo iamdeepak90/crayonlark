@@ -45,3 +45,12 @@ def after_cleaning(book_id: int) -> None:
 def after_interior(book_id: int) -> None:
     """Phase 3 adds the cover build here."""
     enqueue("crayonlark.book.build_etsy_pdfs", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
+
+
+def notify_text(text: str) -> None:
+    notify(text)
+
+
+def after_live(book_id: int) -> None:
+    """Book is live on Amazon: website catalog page + blog draft (Phase 5)."""
+    notify(f"🎉 Book #{book_id} is live.")

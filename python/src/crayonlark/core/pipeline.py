@@ -88,7 +88,6 @@ def add_original(
     if image is None:
         pos = len(book.images) + 1
         image = Image(
-            book_id=book.id,
             position=pos,
             prompt=prompt,
             provider=provider,
@@ -96,7 +95,7 @@ def add_original(
             scene_title=scene_title or Path(filename).stem,
             ai_generated=ai_generated,
         )
-        session.add(image)
+        book.images.append(image)  # keeps len(book.images) right for the next position
         session.flush()
     key = f"{book.slug}/{image.id:06d}-original.png"
     png = io.BytesIO()
