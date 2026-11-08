@@ -36,4 +36,14 @@ def handle(kind: str, ident: int, yes: bool, actor: HumanActor) -> str:
                 return "✅ Listings approved. Building the KDP pack and Etsy files…"
             flows.after_listings_rejected(ident)
             return "🔁 Redrafting listings…"
+        case "etsypub":
+            if not yes:
+                return "Nothing changed"
+            with session_scope() as s:
+                book = s.get(Book, ident)
+                if book is None:
+                    return "Book not found"
+                approvals.approve_etsy_publish(s, book, actor)
+            flows.after_etsy_publish_approved(ident)
+            return "✅ Approved. Publishing on Etsy…"
     return f"Unknown action {kind}"

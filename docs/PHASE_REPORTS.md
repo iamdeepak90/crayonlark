@@ -74,3 +74,36 @@ offline agent writes plain, correct drafts that you edit in admin.
 offline listings → approval refused for "Peppa Pig" in an Etsy title → fixed → approved → pack +
 6 Etsy PDFs, slot counter 1/2 paperbacks this week, no failed jobs. 73 Python tests pass; eslint,
 tsc and the admin pages were checked with screenshots.
+
+## Phase 4: Etsy + Pinterest ✅
+**Built:** OAuth connect flows for Etsy (PKCE S256) and Pinterest from admin, with tokens
+encrypted in Postgres and refreshed automatically. Etsy client: `x-api-key keystring:secret`,
+Bearer `user_id.token`, 5 req/s throttle, 429/`retry-after` handling, daily quota shown in admin.
+Pure payload builder plus a rule check (taxonomy set, 13 tags, the "Designed by" disclosure line,
+no "handmade"). Idempotent draft creation (draft → 8 mockup images → Letter + A4 files).
+Approve-to-publish gate in admin and Telegram (`✅ Publish on Etsy`), then activation. Pillow
+mockups from the real PDFs (8 Etsy images + 2 pins per product). Pinterest client (boards with
+bookmark paging, pins as base64 JPEG with `ai_disclosures`), pin planner (3–5/day with jitter)
+and a 15-minute beat poster. Admin pages: **Etsy drafts** (connect, problems, mockups, create
+drafts, retry, approve & publish) and **Pinterest** (connect, boards, scheduled/posted/failed pins
+with cancel/retry). `crayonlark etsy-taxonomy <word>` finds the taxonomy id. `make demo` now also
+writes the mockups.
+
+**Flow:** listings approved → pack + Etsy PDFs → mockups → (if Etsy is connected) drafts →
+Telegram/admin "approve publish" (you) → active on Etsy → pins scheduled → posted.
+
+**Run/test:** `make test` adds mocked Etsy and Pinterest runs (respx): 429 retry, headers,
+form fields, idempotent re-run, the publish gate, pin payload and the daily pin limit.
+
+**You need to:** create the Etsy app (callback `https://admin.crayonlark.com/api/oauth/etsy/callback`),
+set `ETSY_API_KEY`, `ETSY_SHARED_SECRET`, `ETSY_SHOP_ID`, connect in admin → Etsy, then run
+`crayonlark etsy-taxonomy coloring` and set `ETSY_TAXONOMY_ID`. Create a Pinterest app (redirect
+`https://admin.crayonlark.com/api/oauth/pinterest/callback`), set `PINTEREST_APP_ID` and
+`PINTEREST_APP_SECRET`, then connect in admin → Pinterest. Etsy requires an HTTPS callback, so
+connecting only works on the deployed admin. After the first real draft, check on Etsy that the
+tags and the files look right before you approve publishing.
+
+**Verified:** 78 Python tests pass, plus ruff and mypy. On the running stack, mockups were built
+for the Ocean book (8 per product), the Etsy and Pinterest pages render, and OAuth refuses without
+keys (400) or without a session (401). The real Etsy and Pinterest calls are untested until the
+keys exist.

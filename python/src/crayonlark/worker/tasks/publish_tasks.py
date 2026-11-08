@@ -81,4 +81,6 @@ def build_pack(book_id: int) -> dict[str, Any]:
 def build_etsy_files(book_id: int) -> dict[str, Any]:
     with session_scope() as s:
         out = publishing.build_etsy_files(s, _book(s, book_id))
+    if out:
+        flows.after_etsy_files(book_id)
     return {str(k): v for k, v in out.items()}

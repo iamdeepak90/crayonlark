@@ -130,3 +130,26 @@ def listing_review(book_id: int) -> dict[str, Any]:
             ],
         )
     return {"listings": len(lines), "problems": len(problems)}
+
+
+@celery.task(name="crayonlark.telegram.etsy_review")
+@tracked
+def etsy_review(book_id: int) -> dict[str, Any]:
+    with session_scope() as s:
+        book = s.get(Book, book_id)
+        if book is None:
+            return {"skipped": "missing"}
+        lines = [
+            f"• {lst.product_kind}: {lst.title[:80]} (${lst.price_cents / 100:.2f})"
+            for lst in book.listings
+            if lst.platform == "etsy" and lst.etsy is not None and lst.etsy.etsy_listing_id
+        ]
+        title = book.title
+    admin = get_settings().admin_site_url
+    telegram.send_message(
+        f"🛍 Etsy drafts created for “{title}”:\n"
+        + "\n".join(lines)
+        + f"\n\nCheck them on Etsy or in {admin}/etsy, then approve publishing.",
+        [[("✅ Publish on Etsy", f"etsypub:{book_id}:1")]],
+    )
+    return {"drafts": len(lines)}

@@ -13,4 +13,9 @@ BEAT_SCHEDULE: dict[str, dict[str, Any]] = {
         "schedule": 300.0,
         "options": {"queue": "default"},
     },
+    "pinterest-post-due": {
+        "task": "crayonlark.pinterest.post_due",
+        "schedule": 900.0,  # every 15 min, at most one pin per run
+        "options": {"queue": "publish"},
+    },
 }

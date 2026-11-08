@@ -80,3 +80,28 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     only for approved Etsy listings. A single product can be skipped without rejecting the rest.
 27. **The KDP slot week is assigned when the pack is built** (approving listings). Archiving a book
     whose pack was never uploaded releases its slot. The demo does this so it never uses real slots.
+
+## Etsy + Pinterest (Phase 4)
+28. **API details were checked against the official OpenAPI specs** (Etsy `oas/3.0.0.json`,
+    Pinterest `pinterest/api-description` v5.28) on 2026-11-08, not from memory. Key facts are in
+    the module docstrings of `integrations/etsy.py` and `integrations/pinterest.py`.
+29. **Etsy listings are `type=download`, `who_made=i_did`, `is_supply=false`.** Etsy has no API
+    field for AI. Disclosure therefore lives in the description ("Designed by Crayonlark. The
+    artwork was made with AI tools and then edited…"), and `draft_problems` refuses to create a draft
+    without it, or with "handmade"/"hand-drawn" anywhere. Tags are sent comma-separated in the
+    form body. **Check the first real draft on Etsy** to confirm all 13 tags arrived.
+30. **Etsy drafts are idempotent**: each upload step (draft, image n, file letter/a4) is recorded
+    in `etsy_listings.uploaded`, so a retry continues instead of duplicating. Publishing calls
+    `require_etsy_publish_approval` for every listing *before* any API call.
+31. **Rate limits:** Etsy calls are throttled to 5/s through Redis, retried on 429/5xx with
+    `retry-after`, and `x-remaining-today` is shown in admin. Pinterest retries on 429.
+32. **Pinterest uses the `ai_disclosures: AI_MODIFIED` field** (from the v5 spec) on pins whose
+    art is AI-made. Pinterest's OAuth is the confidential-client code flow (HTTP Basic + `state`),
+    with `continuous_refresh=true`. Etsy uses PKCE (S256), which Etsy requires.
+33. **Mockups are rendered from the real Letter PDF** with Ghostscript + Pillow (no stock photos,
+    props or brands): hero, "what's inside" grid, close-up, info card, page previews (8 Etsy
+    images, 4:3, 2400×1800) and 2 Pinterest pins (2:3, 1000×1500).
+34. **Pins:** planned only after the Etsy listing is active (the pin links to it), at most
+    `pinterest.pins_per_day` (default 4) per UTC day inside a 13:00–23:00 UTC window with
+    ±20 min jitter. Beat posts at most one due pin every 15 minutes. Boards are named after the
+    series/theme and created on Pinterest on first use.

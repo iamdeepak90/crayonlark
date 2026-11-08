@@ -100,3 +100,50 @@ def notify_text(text: str) -> None:
 def after_live(book_id: int) -> None:
     """Book is live on Amazon: website catalog page + blog draft (Phase 5)."""
     notify(f"🎉 Book #{book_id} is live.")
+
+
+# --------------------------------------------------------------------------- Etsy + Pinterest
+
+
+def after_etsy_files(book_id: int) -> None:
+    enqueue("crayonlark.book.build_mockups", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
+
+
+def after_mockups(book_id: int, etsy_ready: bool) -> None:
+    if etsy_ready:
+        queue_etsy_drafts(book_id)
+    else:
+        notify(
+            f"🖼 Mockups ready for book #{book_id}. Connect Etsy in admin → Etsy to create drafts.",
+            book_id=book_id,
+        )
+
+
+def queue_etsy_drafts(book_id: int) -> str:
+    return enqueue(
+        "crayonlark.etsy.create_drafts",
+        {"book_id": book_id},
+        "publish",
+        idempotency_key=f"etsy-drafts:{book_id}",
+        book_id=book_id,
+    )
+
+
+def after_etsy_drafts(book_id: int) -> None:
+    enqueue("crayonlark.telegram.etsy_review", {"book_id": book_id}, "publish", book_id=book_id)
+
+
+def after_etsy_publish_approved(book_id: int) -> None:
+    enqueue(
+        "crayonlark.etsy.publish",
+        {"book_id": book_id},
+        "publish",
+        idempotency_key=f"etsy-publish:{book_id}",
+        book_id=book_id,
+    )
+
+
+def after_etsy_published(book_id: int, pinterest_ready: bool) -> None:
+    notify(f"🛍 Etsy listings for book #{book_id} are live.", book_id=book_id)
+    if pinterest_ready:
+        enqueue("crayonlark.pinterest.plan", {"book_id": book_id}, "default", book_id=book_id)

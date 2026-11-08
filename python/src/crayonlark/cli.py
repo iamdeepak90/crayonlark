@@ -55,3 +55,20 @@ def demo(out: str = "/demo-output") -> None:
 
 if __name__ == "__main__":
     app()
+
+
+@app.command("etsy-taxonomy")
+def etsy_taxonomy(search: str = "coloring") -> None:
+    """Find the Etsy seller taxonomy id for ETSY_TAXONOMY_ID (needs Etsy connected)."""
+    from crayonlark.core.db import session_scope
+    from crayonlark.integrations.etsy import Etsy
+
+    def walk(nodes: list[dict], path: str = "") -> None:
+        for n in nodes:
+            full = f"{path} > {n['name']}" if path else n["name"]
+            if search.lower() in full.lower():
+                typer.echo(f"{n['id']:>6}  {full}")
+            walk(n.get("children") or [], full)
+
+    with session_scope() as s:
+        walk(Etsy(s).taxonomy())

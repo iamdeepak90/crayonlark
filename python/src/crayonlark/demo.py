@@ -14,7 +14,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from crayonlark.core import approvals, pipeline, publishing, storage
+from crayonlark.core import approvals, marketing, pipeline, publishing, storage
 from crayonlark.core.actors import HumanActor
 from crayonlark.core.config import ASSETS_DIR
 from crayonlark.core.db import session_scope
@@ -130,6 +130,8 @@ def run(out: Path) -> dict[str, Any]:
         approvals.approve_all_listings(s, book, me)
         pack_key = publishing.build_pack(s, book)
         etsy = publishing.build_etsy_files(s, book)
+        mocks = marketing.build_mockups(s, book)
+        _say(f"Etsy mockups + pins: {sum(len(v) for v in mocks.values())} images")
         _say(f"KDP pack built for slot week {book.kdp_week_start} → {book.status}")
 
     results: dict[str, Any] = {"book_id": book_id, "files": []}
@@ -165,6 +167,11 @@ def run(out: Path) -> dict[str, Any]:
                 f"validated {d.name}: {v.pages} pages, {v.size_bytes / 1e6:.2f} MB, "
                 f"{'OK' if v.ok else v.errors}"
             )
+
+    for mock_keys in mocks.values():
+        for mkey in mock_keys:
+            storage.download("outputs", mkey, book_dir / "mockups" / mkey.split("/mockups/", 1)[1])
+    _say(f"mockups saved under {book_dir.name}/mockups/")
 
     with session_scope() as s:
         # The demo book never goes to KDP: archive it so it frees its weekly KDP slot.

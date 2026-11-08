@@ -166,3 +166,48 @@ export type PackRow = {
   amazon_url: string | null;
   etsy: { id: number; product_kind: string; title: string; file_keys: Record<string, string> }[];
 };
+
+export type Connection = { connected: boolean; expires_at?: string | null; scopes?: string; updated_at?: string; extra?: Record<string, unknown> };
+
+export type EtsyOverview = {
+  configured: boolean;
+  connection: Connection;
+  remaining_today: number | null;
+  books: {
+    id: number;
+    title: string;
+    etsy_status: string;
+    problems: Record<string, string[]>;
+    listings: {
+      id: number;
+      product_kind: string;
+      title: string;
+      price_cents: number;
+      file_keys: Record<string, string>;
+      mockups: string[];
+      pins: string[];
+      etsy: null | { etsy_listing_id: number | null; state: string; url: string | null; uploaded: string[]; publish_approved_by: string | null; error: string | null };
+    }[];
+  }[];
+};
+
+export type PinItem = {
+  id: number;
+  book_id: number | null;
+  title: string;
+  link: string;
+  image_key: string;
+  scheduled_at: string;
+  posted_at: string | null;
+  status: string;
+  error: string | null;
+  pinterest_pin_id: string | null;
+};
+
+export type PinterestOverview = {
+  configured: boolean;
+  connection: Connection;
+  boards: { id: number; name: string; pinterest_board_id: string | null }[];
+  upcoming: PinItem[];
+  recent: PinItem[];
+};
