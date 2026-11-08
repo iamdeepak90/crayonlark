@@ -1,0 +1,46 @@
+# Local development overrides: publish ports, smaller limits, dev image (pytest/ruff), demo output mount.
+# Used by the Makefile:  docker compose -f docker-compose.yml -f docker-compose.dev.yml ...
+x-dev-python: &dev-python
+  build:
+    context: ./python
+    target: dev
+  image: crayonlark-python:dev
+  environment:
+    ENVIRONMENT: development
+    PUBLIC_SITE_URL: http://localhost:3000
+    ADMIN_SITE_URL: http://admin.localhost:3000
+
+services:
+  postgres:
+    ports: ["127.0.0.1:55432:5432"]
+  redis:
+    ports: ["127.0.0.1:56379:6379"]
+  garage:
+    ports: ["127.0.0.1:3900:3900", "127.0.0.1:3903:3903"]
+  migrate:
+    <<: *dev-python
+  api:
+    <<: *dev-python
+    ports: ["127.0.0.1:8000:8000"]
+    deploy: { resources: { limits: { cpus: "1.0", memory: 768m } } }
+  worker:
+    <<: *dev-python
+    command: ["celery", "-A", "crayonlark.worker.celery_app", "worker", "-Q", "default,llm,images,publish",
+              "-c", "2", "-n", "worker@%h", "--loglevel", "INFO"]
+    deploy: { resources: { limits: { cpus: "1.0", memory: 1g } } }
+  worker-heavy:
+    <<: *dev-python
+    volumes:
+      - work:/work
+      - ./demo-output:/demo-output
+    deploy: { resources: { limits: { cpus: "2.0", memory: 1500m } } }
+  scheduler:
+    <<: *dev-python
+  bot:
+    <<: *dev-python
+  web:
+    build:
+      args:
+        NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    ports: ["127.0.0.1:3000:3000"]
+    deploy: { resources: { limits: { cpus: "1.0", memory: 768m } } }

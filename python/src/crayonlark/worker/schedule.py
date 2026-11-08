@@ -1,0 +1,11 @@
+"""Celery beat schedule (the `scheduler` service). Times are UTC."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from celery.schedules import crontab  # noqa: F401  (used from Phase 3)
+
+BEAT_SCHEDULE: dict[str, dict[str, Any]] = {
+    "heartbeat": {"task": "crayonlark.ping", "schedule": 300.0},
+}

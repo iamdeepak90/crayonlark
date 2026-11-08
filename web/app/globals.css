@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* Crayonlark brand tokens. Deliberately NOT Crayola: no green/yellow chevron, no waxy wordmark. */
+@theme {
+  --color-sun: #ffc93c;
+  --color-sun-soft: #fff1c7;
+  --color-sky: #5bc0eb;
+  --color-sky-soft: #dff3fb;
+  --color-coral: #ff6f59;
+  --color-coral-dark: #c9412c; /* AA contrast on warm white for text/links */
+  --color-cream: #fff8ee;
+  --color-ink: #1f2333;
+  --color-ink-soft: #4a4f63;
+  --font-display: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
+  --font-body: var(--font-nunito), system-ui, sans-serif;
+  --radius-blob: 1.75rem;
+}
+
+html {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-sky);
+  outline-offset: 2px;
+}

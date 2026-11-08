@@ -1,0 +1,239 @@
+# Crayonlark production stack (Coolify "Docker Compose" build pack).
+#
+# Domains (set in Coolify UI, only on `web`):
+#   web -> https://crayonlark.com, https://www.crayonlark.com, https://admin.crayonlark.com  (port 3000)
+# Nothing else is exposed. The API is reached through web's /api/* rewrite.
+#
+# Secrets marked ${VAR:?} are required; set them in Coolify → Environment Variables.
+# See .env.example for the full list and docs/DEPLOY_COOLIFY.md for the walkthrough.
+
+x-python-env: &python-env
+  ENVIRONMENT: ${ENVIRONMENT:-production}
+  SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+  PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://crayonlark.com}
+  ADMIN_SITE_URL: ${ADMIN_SITE_URL:-https://admin.crayonlark.com}
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-crayonlark}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-crayonlark}
+  REDIS_URL: redis://redis:6379/0
+  S3_ENDPOINT_URL: http://garage:3900
+  S3_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY}
+  S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY}
+  GARAGE_ADMIN_URL: http://garage:3903
+  GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN}
+  MONTHLY_BUDGET_INR: ${MONTHLY_BUDGET_INR:-2000}
+  USD_INR_RATE: ${USD_INR_RATE:-88}
+  KDP_WEEKLY_PAPERBACKS: ${KDP_WEEKLY_PAPERBACKS:-2}
+  KDP_WEEKLY_HARDCOVERS: ${KDP_WEEKLY_HARDCOVERS:-2}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  WEBSEARCH_PROVIDER: ${WEBSEARCH_PROVIDER:-}
+  WEBSEARCH_API_KEY: ${WEBSEARCH_API_KEY:-}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+  TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-Crayonlark <hello@crayonlark.com>}
+  OWNER_EMAIL: ${OWNER_EMAIL:-}
+  ETSY_API_KEY: ${ETSY_API_KEY:-}
+  ETSY_SHARED_SECRET: ${ETSY_SHARED_SECRET:-}
+  ETSY_SHOP_ID: ${ETSY_SHOP_ID:-}
+  ETSY_TAXONOMY_ID: ${ETSY_TAXONOMY_ID:-0}
+  PINTEREST_APP_ID: ${PINTEREST_APP_ID:-}
+  PINTEREST_APP_SECRET: ${PINTEREST_APP_SECRET:-}
+  REVALIDATE_SECRET: ${REVALIDATE_SECRET:?set REVALIDATE_SECRET}
+  WEB_INTERNAL_URL: http://web:3000
+  AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG:-}
+  TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+  UPSCALE_ENABLED: ${UPSCALE_ENABLED:-false}
+  BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+
+x-python-service: &python-service
+  build:
+    context: ./python
+    target: base
+  image: crayonlark-python:latest
+  restart: unless-stopped
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+  environment: *python-env
+  volumes:
+    - work:/work
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "5" }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-crayonlark}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-crayonlark}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 2g }
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "384mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512m }
+
+  garage:
+    build: ./infra/garage
+    image: crayonlark-garage:latest
+    restart: unless-stopped
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?set GARAGE_RPC_SECRET}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN}
+    volumes:
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "status"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 1g }
+
+  # One-shot: storage layout/buckets + DB migrations + default settings. Exits 0.
+  migrate:
+    <<: *python-service
+    restart: "no"
+    depends_on:
+      postgres: { condition: service_healthy }
+      garage: { condition: service_healthy }
+    command: ["sh", "-c", "crayonlark garage-init && crayonlark migrate"]
+    healthcheck:
+      disable: true
+
+  api:
+    <<: *python-service
+    command: ["uvicorn", "crayonlark.api.main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--proxy-headers", "--forwarded-allow-ips", "*", "--workers", "2"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1g }
+
+  worker:
+    <<: *python-service
+    command: ["celery", "-A", "crayonlark.worker.celery_app", "worker", "-Q", "default,llm,images,publish",
+              "-c", "4", "-n", "worker@%h", "--loglevel", "INFO"]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A crayonlark.worker.celery_app inspect ping -d worker@$$HOSTNAME -t 10 | grep -q pong"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: "1.5", memory: 3g }
+
+  # cpu-heavy queue: potrace cleanup, PDF/cover builds, mockups, upscaling. Concurrency 1 so the site stays fast.
+  worker-heavy:
+    <<: *python-service
+    command: ["celery", "-A", "crayonlark.worker.celery_app", "worker", "-Q", "cpu-heavy",
+              "-c", "1", "-n", "heavy@%h", "--loglevel", "INFO", "--max-tasks-per-child", "20"]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A crayonlark.worker.celery_app inspect ping -d heavy@$$HOSTNAME -t 10 | grep -q pong"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: "2.0", memory: 4g }
+
+  scheduler:
+    <<: *python-service
+    command: ["celery", "-A", "crayonlark.worker.celery_app", "beat", "--loglevel", "INFO",
+              "-s", "/work/celerybeat-schedule"]
+    volumes:
+      - work:/work
+      - backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys,time,glob; f=glob.glob('/work/celerybeat-schedule*'); sys.exit(0 if f and time.time()-max(os.path.getmtime(x) for x in f)<900 else 1)\""]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 512m }
+
+  bot:
+    <<: *python-service
+    command: ["python", "-m", "crayonlark.bot.main"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os,sys,time; sys.exit(0 if time.time()-os.path.getmtime('/tmp/bot-heartbeat')<120 else 1)\""]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: "0.25", memory: 512m }
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-https://crayonlark.com}
+        NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
+    image: crayonlark-web:latest
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_healthy }
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?set REVALIDATE_SECRET}
+      AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG:-}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1.0", memory: 1g }
+
+volumes:
+  pgdata:
+  redisdata:
+  garage-meta:
+  garage-data:
+  work:
+  backups:
