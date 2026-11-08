@@ -15,8 +15,15 @@ from sqlalchemy.orm import Session
 from crayonlark.core import app_settings
 from crayonlark.core.actors import Actor, HumanActor
 from crayonlark.core.audit import record
-from crayonlark.core.enums import ApprovalState, BookStatus, EtsyStatus, ListingStatus, NicheStatus
-from crayonlark.core.models import Book, Cover, Image, Listing, Niche
+from crayonlark.core.enums import (
+    ApprovalState,
+    BookStatus,
+    EtsyStatus,
+    ListingStatus,
+    NicheStatus,
+    PostStatus,
+)
+from crayonlark.core.models import BlogPost, Book, Cover, Image, Listing, Niche
 from crayonlark.core.state_machine import GateError, transition, transition_etsy
 
 
@@ -173,6 +180,7 @@ def mark_live(
     if amazon_url:
         book.amazon_url = amazon_url.strip()
     transition(session, book, BookStatus.LIVE, h)
+    book.live_at = book.live_at or _now()
 
 
 # --------------------------------------------------------------------------- Etsy publish
@@ -203,3 +211,16 @@ def confirm_etsy_published(session: Session, book: Book, actor: Actor) -> None:
         if lst.platform == "etsy" and lst.status == ListingStatus.APPROVED:
             require_etsy_publish_approval(lst)
     transition_etsy(session, book, EtsyStatus.ETSY_PUBLISHED, actor)
+
+
+# --------------------------------------------------------------------------- blog
+
+
+def decide_post(session: Session, post: BlogPost, approve: bool, actor: Actor) -> None:
+    """Publish (or reject) a blog post. Only a human can publish to the website."""
+    h = _human(actor)
+    post.status = PostStatus.PUBLISHED if approve else PostStatus.REJECTED
+    post.approved_by = h.name
+    if approve and post.published_at is None:
+        post.published_at = _now()
+    record(session, h.name, "post.publish" if approve else "post.reject", "post", post.id)

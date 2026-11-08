@@ -5,5 +5,6 @@ from crayonlark.worker.tasks import (  # noqa: F401
     notify_tasks,
     print_tasks,
     publish_tasks,
+    site_tasks,
     system,
 )

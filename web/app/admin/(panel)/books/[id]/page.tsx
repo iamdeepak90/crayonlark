@@ -97,6 +97,15 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
             {b.status === "awaiting_cover_approval" && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/cover`}>Review cover</Link>}
             {["listing_draft", "awaiting_listing_approval"].includes(b.status) && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/listings`}>Edit & approve listings</Link>}
             <ManualKdpSteps bookId={b.id} status={b.status} />
+            {b.status === "live" && (
+              <ActionButton
+                path={`/api/admin/books/${b.id}/website`}
+                body={{ is_public: !f.is_public }}
+                label={f.is_public ? "Hide from website" : "Show on website"}
+                variant="ghost"
+              />
+            )}
+            {b.approved_count > 0 && <ActionButton path={`/api/admin/books/${b.id}/free-printable`} label="Use as free printable (3 pages)" variant="ghost" confirm="Replace the website's free printable with 3 pages from this book?" />}
             <ActionButton path={`/api/admin/books/${b.id}/status/archive`} label="Archive" variant="ghost" confirm="Archive this book?" />
           </div>
         </Card>

@@ -14,6 +14,8 @@ const NAV: [string, string][] = [
   ["/etsy", "Etsy drafts"],
   ["/pinterest", "Pinterest"],
   ["/blog", "Blog posts"],
+  ["/subscribers", "Subscribers"],
+  ["/messages", "Messages"],
   ["/sales", "Sales"],
   ["/costs", "Costs"],
   ["/jobs", "Jobs"],

@@ -98,8 +98,18 @@ def notify_text(text: str) -> None:
 
 
 def after_live(book_id: int) -> None:
-    """Book is live on Amazon: website catalog page + blog draft (Phase 5)."""
-    notify(f"🎉 Book #{book_id} is live.")
+    """Book is live on Amazon: catalog page (assets + revalidate) and a blog post draft."""
+    notify(f"🎉 Book #{book_id} is live. Website page + blog draft are being prepared.")
+    enqueue("crayonlark.site.book_live", {"book_id": book_id}, "llm", book_id=book_id)
+
+
+def after_site_change(book_id: int, publish_assets: bool = False) -> None:
+    enqueue(
+        "crayonlark.site.refresh",
+        {"book_id": book_id, "publish_assets": publish_assets},
+        "default",
+        book_id=book_id,
+    )
 
 
 # --------------------------------------------------------------------------- Etsy + Pinterest

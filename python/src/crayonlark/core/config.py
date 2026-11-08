@@ -80,6 +80,7 @@ class Settings(BaseSettings):
 
     # --- website ---
     revalidate_secret: str = "dev-revalidate"
+    web_internal_url: str = "http://web:3000"  # API → web on-demand revalidation
     amazon_associates_tag: str = ""
     turnstile_secret: str = ""
 

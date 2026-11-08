@@ -105,3 +105,27 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     `pinterest.pins_per_day` (default 4) per UTC day inside a 13:00–23:00 UTC window with
     ±20 min jitter. Beat posts at most one due pin every 15 minutes. Boards are named after the
     series/theme and created on Pinterest on first use.
+
+## Public website (Phase 5)
+35. **The site shows only what a human released:** books that are `live` and `is_public`,
+    and posts a human published (`approvals.decide_post`). Going live sets `is_public` on
+    automatically; "Hide from website" on the book page turns it off.
+36. **Website images live in the `public-assets` bucket** and are served by
+    `/api/public/media/...` with one-year cache headers: the front cover plus 4 sample pages
+    rendered on white Letter-shaped pages. Keys are checked against a strict pattern.
+37. **All HTML shown publicly is sanitised server-side** with a small allow-list sanitiser
+    (`core/html_safe.py`). Markdown is rendered with python-markdown, then sanitised. External
+    links get `rel="noopener nofollow"`.
+38. **Free printable:** double opt-in. Confirmation and download links are emailed, and the PDF is
+    only served to confirmed subscribers. The subscribe endpoint always returns the same message,
+    so no one can tell whether an address is on the list. The CSV export holds confirmed addresses only.
+39. **Spam protection without third parties by default:** honeypot field, a 3-second time trap,
+    and 5 requests per IP per hour. Cloudflare Turnstile is used only when `TURNSTILE_SECRET` is set.
+40. **On-demand revalidation:** the API sends `POST http://web:3000/revalidate` with
+    `x-revalidate-secret` when a book or post changes. Pages also refresh every 5 minutes (ISR),
+    and the web build works with no API running.
+41. **Website content agent drafts, a human publishes.** When a book goes live, the agent writes
+    a public description (used only if empty and blocklist-clean) and one blog post that waits for
+    approval. Publishing is checked against the blocklist again.
+42. **Amazon Associates:** the tag is added server-side to amazon.* links only. The site shows the
+    required disclosure line only when a tag is configured.

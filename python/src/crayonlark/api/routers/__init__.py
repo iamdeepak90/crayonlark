@@ -11,8 +11,10 @@ def register(app: FastAPI) -> None:
         admin_marketing,
         admin_ops,
         admin_publish,
+        admin_site,
         auth,
         oauth,
+        public,
     )
 
     app.include_router(auth.router)
@@ -21,3 +23,5 @@ def register(app: FastAPI) -> None:
     app.include_router(admin_publish.router)
     app.include_router(admin_marketing.router)
     app.include_router(oauth.router)
+    app.include_router(admin_site.router)
+    app.include_router(public.router)

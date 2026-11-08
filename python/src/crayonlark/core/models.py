@@ -141,7 +141,7 @@ class Book(TimestampMixin, Base):
     # public website
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
     public_description: Mapped[str] = mapped_column(Text, default="")
-    preview_keys: Mapped[list[Any]] = mapped_column(default=list)  # in public-assets bucket
+    public_assets: Mapped[dict[str, Any]] = mapped_column(default=dict)  # cover + preview keys
     live_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     niche: Mapped[Niche | None] = relationship(back_populates="books")

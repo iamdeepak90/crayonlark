@@ -107,3 +107,25 @@ tags and the files look right before you approve publishing.
 for the Ocean book (8 per product), the Etsy and Pinterest pages render, and OAuth refuses without
 keys (400) or without a session (401). The real Etsy and Pinterest calls are untested until the
 keys exist.
+
+## Phase 5: Public website ✅
+**Built:**
+- **Public API** (`docs/PUBLIC_API.md`): catalog with age/theme filters, book detail with related books, filters, blog, sitemap data, free printable, subscribe → confirm → download (double opt-in), unsubscribe, contact form (honeypot, time trap, per-IP limits, optional Turnstile), and cached public media.
+- **Backend services:** server-side HTML sanitiser; SMTP email; website images in `public-assets` (front cover plus 4 sample pages); on-demand revalidation of the web app.
+- **Website content agent:** drafts a public description and a blog post. The post only goes live after you approve it, and the blocklist is checked again at publish.
+- **Go-live hook:** "Mark live" now triggers assets → visible on site → blog draft → revalidate.
+- **Public site** (Next 16): Home, Books with filters, Book page (cover, "Peek inside", Amazon/Etsy buttons, AI note), Free printables with confirm and unsubscribe, Blog, About (honest about AI), Contact, Privacy, Terms, License. Also canonical/OG/Twitter metadata, a generated `/og.png`, JSON-LD (Organization, WebSite, Book, Product, BreadcrumbList, BlogPosting), `sitemap.xml`, `robots.txt`, optional Umami, mobile-first layout, and empty states when the API is down.
+- **Admin:** Blog posts (edit Markdown, publish/unpublish), Subscribers (counts, confirmed-only CSV export), Messages. Book page gains "Show/Hide on website" and "Use as free printable".
+
+**Run/test:** `make test` (83 Python tests, including visibility rules, sanitiser, blog gate, opt-in and spam limits). `cd web && pnpm build && pnpm test:e2e` gives 46 passed, 1 skipped (the 390px test runs only in the mobile project), with the API unreachable on purpose.
+
+**You need to:**
+- **SMTP:** set `SMTP_*` and `OWNER_EMAIL`. Without them, emails are only logged, so double opt-in can't complete.
+- **Optional:** `AMAZON_ASSOCIATES_TAG`, Turnstile keys, Umami.
+- **Legal pages:** review Privacy, Terms and License. They are templates.
+- **Local blog draft:** the Ocean book has one waiting for your approval in admin → Blog posts.
+
+**Verified:**
+- On the running stack, book 4 → kdp-uploaded → live triggered: public assets, the catalog entry, the book page, a blog draft (awaiting approval) and a free printable (3 pages).
+- Home and book page checked by screenshot at 1280 px and 390 px.
+- The public pages were built by a subagent and reviewed: content rules, an independent build and the Playwright run.
