@@ -48,6 +48,11 @@ x-python-env: &python-env
   TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
   UPSCALE_ENABLED: ${UPSCALE_ENABLED:-false}
   BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+  BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+  BACKUP_S3_REGION: ${BACKUP_S3_REGION:-}
+  BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+  BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-}
+  BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-}
 
 x-python-service: &python-service
   build:
@@ -69,6 +74,10 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    # Sized for the 2 GB limit below (small data set, few connections).
+    command: ["postgres", "-c", "shared_buffers=512MB", "-c", "effective_cache_size=1536MB",
+              "-c", "work_mem=16MB", "-c", "maintenance_work_mem=128MB", "-c", "max_connections=100"]
+    shm_size: 256mb
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-crayonlark}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
@@ -163,6 +172,9 @@ services:
     <<: *python-service
     command: ["celery", "-A", "crayonlark.worker.celery_app", "worker", "-Q", "cpu-heavy",
               "-c", "1", "-n", "heavy@%h", "--loglevel", "INFO", "--max-tasks-per-child", "20"]
+    volumes:
+      - work:/work
+      - backups:/backups   # nightly backups run here (cpu-heavy queue)
     healthcheck:
       test: ["CMD-SHELL", "celery -A crayonlark.worker.celery_app inspect ping -d heavy@$$HOSTNAME -t 10 | grep -q pong"]
       interval: 60s
@@ -179,7 +191,6 @@ services:
               "-s", "/work/celerybeat-schedule"]
     volumes:
       - work:/work
-      - backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import os,sys,time,glob; f=glob.glob('/work/celerybeat-schedule*'); sys.exit(0 if f and time.time()-max(os.path.getmtime(x) for x in f)<900 else 1)\""]
       interval: 60s

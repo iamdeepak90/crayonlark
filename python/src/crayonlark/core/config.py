@@ -89,6 +89,12 @@ class Settings(BaseSettings):
     upscale_window_utc: str = "01:00-05:00"
     backup_dir: str = "/backups"
     backup_retention_days: int = 14
+    # optional off-site copy to any S3-compatible storage (B2, R2, Wasabi, ...)
+    backup_s3_endpoint: str = ""
+    backup_s3_region: str = ""
+    backup_s3_bucket: str = ""
+    backup_s3_access_key: str = ""
+    backup_s3_secret_key: str = ""
 
     # --- derived ---
     buckets: dict[str, str] = Field(

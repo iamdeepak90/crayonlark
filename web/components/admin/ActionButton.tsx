@@ -13,6 +13,7 @@ export default function ActionButton({
   variant = "primary",
   confirm,
   method = "POST",
+  success,
 }: {
   path: string;
   body?: unknown;
@@ -20,10 +21,13 @@ export default function ActionButton({
   variant?: "primary" | "ghost" | "danger" | "ok";
   confirm?: string;
   method?: string;
+  /** Shown after the call succeeds, e.g. "Queued: done in a minute." */
+  success?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [done, setDone] = useState("");
   return (
     <span className="inline-flex flex-col">
       <Button
@@ -33,8 +37,10 @@ export default function ActionButton({
           if (confirm && !window.confirm(confirm)) return;
           setBusy(true);
           setError("");
+          setDone("");
           try {
             await api(path, { method, body: body ?? {} });
+            if (success) setDone(success);
             router.refresh();
           } catch (e) {
             setError(e instanceof Error ? e.message : "failed");
@@ -45,6 +51,7 @@ export default function ActionButton({
       >
         {busy ? "…" : label}
       </Button>
+      {done && <span role="status" className="mt-1 max-w-xs text-xs text-emerald-700">{done}</span>}
       {error && <span role="alert" className="mt-1 max-w-xs text-xs text-rose-700">{error}</span>}
     </span>
   );

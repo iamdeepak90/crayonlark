@@ -39,6 +39,7 @@ services:
     <<: *dev-python
     volumes:
       - work:/work
+      - backups:/backups
       - ./python/src:/app/src
       - ./python/assets:/app/assets
       - ./python/tests:/app/tests

@@ -53,10 +53,6 @@ def demo(out: str = "/demo-output") -> None:
         typer.echo(f"  {f}")
 
 
-if __name__ == "__main__":
-    app()
-
-
 @app.command("etsy-taxonomy")
 def etsy_taxonomy(search: str = "coloring") -> None:
     """Find the Etsy seller taxonomy id for ETSY_TAXONOMY_ID (needs Etsy connected)."""
@@ -72,3 +68,69 @@ def etsy_taxonomy(search: str = "coloring") -> None:
 
     with session_scope() as s:
         walk(Etsy(s).taxonomy())
+
+
+@app.command()
+def backup() -> None:
+    """Run the backup now (database dump + file mirror, 14-day retention)."""
+    import json
+
+    from crayonlark.core import backup as bk
+
+    typer.echo(json.dumps(bk.run(), indent=2, default=str))
+
+
+@app.command("backup-list")
+def backup_list() -> None:
+    """List the database dumps you can restore."""
+    from crayonlark.core import backup as bk
+
+    st = bk.status()
+    for name in st["dumps"]:
+        typer.echo(name.removeprefix("crayonlark-").removesuffix(".dump"))
+    if not st["dumps"]:
+        typer.echo("no backups yet")
+
+
+@app.command()
+def restore(
+    day: str = typer.Option(..., help="YYYY-MM-DD, see `crayonlark backup-list`"),
+    yes: bool = typer.Option(False, "--yes", help="really replace the database"),
+) -> None:
+    """Restore the database from that night's dump and put mirrored files back in Garage."""
+    from crayonlark.core import backup as bk
+
+    if not yes:
+        typer.confirm(
+            f"This REPLACES the whole database with the backup from {day}. Continue?", abort=True
+        )
+    typer.echo(bk.restore(day))
+
+
+@app.command("weekly-report")
+def weekly_report(send: bool = False) -> None:
+    """Print the weekly report (add --send to also send it by Telegram and email)."""
+    from crayonlark.core.db import session_scope
+    from crayonlark.reports import weekly
+
+    with session_scope() as s:
+        if send:
+            typer.echo(weekly.send(s)["text"])
+        else:
+            typer.echo(weekly.render(weekly.collect(s)))
+
+
+@app.command("kdp-import")
+def kdp_import(path: str) -> None:
+    """Import a KDP royalty report CSV (same as admin → Sales → Import)."""
+    from pathlib import Path
+
+    from crayonlark.core import sales
+    from crayonlark.core.db import session_scope
+
+    with session_scope() as s:
+        typer.echo(sales.import_kdp(s, Path(path).read_bytes()))
+
+
+if __name__ == "__main__":
+    app()

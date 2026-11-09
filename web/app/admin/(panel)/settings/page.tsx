@@ -1,9 +1,10 @@
 import AISettings from "@/components/admin/AISettings";
+import BackupsCard from "@/components/admin/BackupsCard";
 import SecurityCard from "@/components/admin/SecurityCard";
 import SettingEditor from "@/components/admin/SettingEditor";
 import { PageTitle } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
-import type { AIProviders } from "@/lib/types";
+import type { AIProviders, BackupsResponse } from "@/lib/types";
 
 // Edited in the "AI providers & models" card instead (it checks API keys before saving).
 const AI_KEYS = new Set(["agent_models", "image_provider"]);
@@ -19,10 +20,11 @@ const HELP: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-  const [settings, me, ai] = await Promise.all([
+  const [settings, me, ai, backups] = await Promise.all([
     serverApi<Record<string, unknown>>("/api/admin/settings"),
     serverApi<{ email: string; totp_enabled: boolean }>("/api/auth/me"),
     serverApi<AIProviders>("/api/admin/ai/providers"),
+    serverApi<BackupsResponse>("/api/admin/backups"),
   ]);
   return (
     <>
@@ -32,6 +34,7 @@ export default async function SettingsPage() {
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
         <AISettings initial={ai} />
+        <BackupsCard backups={backups} />
         <SecurityCard email={me.email} totpEnabled={me.totp_enabled} />
         {Object.entries(settings)
           .filter(([key]) => !AI_KEYS.has(key))

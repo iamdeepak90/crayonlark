@@ -268,3 +268,33 @@ export type ConceptsResponse = {
   concepts: ImageItem[];
   failed: ImageItem[];
 };
+
+export type SalesResponse = {
+  start: string;
+  end: string;
+  days: number;
+  by_platform: { platform: "etsy" | "kdp"; currency: string; units: number; revenue: number }[];
+  by_book: { book_id: number | null; title: string; currency: string; units: number; revenue: number }[];
+  rows: { id: number; platform: "etsy" | "kdp"; sold_on: string; title: string; book_id: number | null; marketplace: string; units: number; revenue: number; currency: string }[];
+  etsy_configured: boolean;
+  last_etsy_import: string | null;
+  last_kdp_import: string | null;
+};
+
+export type BackupRun = {
+  ok: boolean;
+  day: string;
+  started_at: string;
+  finished_at: string;
+  /** The fields below are missing when the run failed (ok: false); then `error` says why. */
+  dump?: string;
+  dump_mb?: number;
+  buckets?: Record<string, { objects: number; copied: number; removed: number }>;
+  pruned?: string[];
+  offsite?: { enabled: boolean; files?: number; pruned_dumps?: number };
+  error?: string;
+};
+
+export type BackupsResponse = { last: BackupRun | null; dumps: string[]; retention_days: number; offsite: boolean };
+
+export type WeeklyReport = { text: string; data: Record<string, unknown> };

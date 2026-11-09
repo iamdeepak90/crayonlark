@@ -171,3 +171,32 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     896x1200 (Gemini 3:4 at 1K), and cleanup re-draws every line with potrace at 300 DPI, so
     source pixels matter less than clean lines. An already-seeded database keeps its old value:
     change it in admin → Settings → `qa_thresholds`.
+53. **KDP sales come from the royalty report CSV that I download and upload** (admin → Sales,
+    or `crayonlark kdp-import FILE`). There's no scraping and no KDP login. xlsx is refused, to
+    avoid adding a spreadsheet library: export as CSV. The header is matched loosely, EU decimal
+    commas are handled, and every row gets a stable id, so re-uploads add nothing twice. Rows
+    are matched to books by ASIN.
+54. **Etsy sales sync every 6 hours** through the official receipts endpoint, going back 2 days
+    before the newest sale we already have. There is one row per transaction
+    (`receipt:transaction`), matched to a book through our Etsy listing id. The sync skips
+    quietly until Etsy is connected.
+55. **Backups go to the `backups` volume on `worker-heavy` every night at 03:00 IST:** a
+    `pg_dump -Fc` per day plus a mirror of every Garage bucket (only changed files are copied).
+    Files deleted from Garage move to `objects-deleted/DATE/`. Dumps and deleted files are
+    kept 14 days (`BACKUP_RETENTION_DAYS`). `restore --day` replaces the database and puts back
+    missing or changed files.
+56. **The off-site copy uses any S3-compatible bucket** (B2, R2, Wasabi: `BACKUP_S3_*`) through
+    boto3, which we already use, instead of rclone. That means no extra binary and no config file.
+    It's optional but recommended.
+57. **`pg_dump` comes from the PGDG repository (`postgresql-client-16`)**, so it matches the
+    Postgres 16 server: Debian's client is version 17, and its dumps don't restore into 16. The
+    password is passed as `PGPASSWORD`, never in the command line or in error messages.
+58. **Weekly report on Monday 09:00 IST** to Telegram and SMTP (`OWNER_EMAIL`). The KDP figures
+    are only as fresh as the last CSV I uploaded, and the report says so.
+59. **Postgres is tuned for its 2 GB limit** (shared_buffers 512 MB, effective_cache_size
+    1.5 GB, work_mem 16 MB, 100 connections, shm 256 MB). Memory limits add up to 13.5 GB of 24 GB.
+    CPU limits are ceilings, and `worker-heavy` (concurrency 1, 2 CPUs) can't starve the website.
+60. **Umami runs as its own Coolify one-click service**, not inside our compose file. It updates
+    and backs up on its own, and the site only needs `NEXT_PUBLIC_UMAMI_*`.
+61. **The load check is a small Python script (`scripts/loadcheck.py`, httpx)**, not k6 or hey,
+    so there is nothing extra to install.

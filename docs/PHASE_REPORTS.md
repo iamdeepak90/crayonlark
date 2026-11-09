@@ -169,3 +169,34 @@ keys exist.
 - **Known limit:** if an image job uses up all its retries on a network error, the image stays "generating". Retry it from the Jobs page.
 
 **Next (Phase 7):** Etsy sales sync, KDP CSV import, weekly Telegram + email report, nightly backups with 14-day retention plus restore, resource review, load check, and the README / DEPLOY_COOLIFY / WORKFLOW docs.
+
+## Phase 7: Reports + hardening ✅
+**Built:**
+- **Sales:**
+  - Etsy receipts sync every 6 h (official API).
+  - KDP royalty CSV upload, which is idempotent and matched by ASIN.
+  - admin → Sales: totals per platform/currency and per book, a CSV upload and *Sync now*.
+- **Weekly report** (Monday 09:00 IST, Telegram + email): sales, AI spend, what waits for you, KDP slots, pins, subscribers, last backup. There's a preview and *Send now* in admin.
+- **Backups:**
+  - Every night at 03:00 IST: database dump + Garage mirror, kept 14 days. An optional off-site S3 copy.
+  - admin → Settings → Backups shows the status and has *Run now*.
+  - CLI: `crayonlark backup`, `backup-list`, `restore --day`. Scripts: `scripts/backup.sh` and `scripts/restore.sh` (it stops the app services around the restore).
+- **Hardening:**
+  - The Postgres 16 client matches the server.
+  - Postgres is tuned for its memory limit.
+  - The resource limits were reviewed.
+  - A load check script.
+- **Docs:** README, `DEPLOY_COOLIFY.md`, `WORKFLOW.md`, decisions 53–61.
+
+**Run/test:**
+- `make test`: 104 Python tests. The new ones cover KDP CSV parsing (preamble, EU numbers, duplicates), Etsy rows, idempotent imports and matching, the weekly report, pruning, and a real backup → disaster → restore round trip.
+- Measured locally:
+  - backup: 2.7 s (499 objects, 79 MB);
+  - load check: 536 req/s with 20 users, p50 20 ms, p95 103 ms, 0 errors, and web stayed at 110 MB.
+- Commands: `docker compose exec worker-heavy crayonlark backup`, `crayonlark weekly-report` (prints it), `crayonlark weekly-report --send`.
+
+**You need to:**
+1. **Deploy:** follow `docs/DEPLOY_COOLIFY.md` (DNS, Coolify resource, env vars, `create-admin`).
+2. **Off-site backups (recommended):** set `BACKUP_S3_*` to a B2/R2/Wasabi bucket. Then practise one restore.
+3. **Weekly report delivery:** set `SMTP_*` and `OWNER_EMAIL`, plus the Telegram vars, so the report reaches you.
+4. **Etsy sync:** connect Etsy for the sales sync. Each week, upload the KDP royalties CSV.
