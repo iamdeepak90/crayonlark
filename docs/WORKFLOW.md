@@ -37,7 +37,7 @@ approve image sets from the album the bot sends.
 - **Plan the week's KDP uploads** around the slot counter. It never lets you go over 2 + 2.
 
 ## Monthly
-- admin → Costs: spend by agent and book. Adjust `MONTHLY_BUDGET_INR` or the models in
+- admin → Costs: spend by agent and book. Adjust the cap in Settings → Monthly API budget, or the models in
   Settings → AI providers if needed. Also set a limit in each provider's own billing console.
 - admin → Subscribers: export the CSV if you send a newsletter.
 - Check that backups are listed (Settings → Backups). Every few months, practise a restore

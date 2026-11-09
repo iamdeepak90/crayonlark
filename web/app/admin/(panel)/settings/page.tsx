@@ -1,13 +1,14 @@
 import AISettings from "@/components/admin/AISettings";
 import BackupsCard from "@/components/admin/BackupsCard";
+import BudgetCard from "@/components/admin/BudgetCard";
 import SecurityCard from "@/components/admin/SecurityCard";
 import SettingEditor from "@/components/admin/SettingEditor";
 import { PageTitle } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
-import type { AIProviders, BackupsResponse } from "@/lib/types";
+import type { AIProviders, BackupsResponse, BudgetSettings } from "@/lib/types";
 
-// Edited in the "AI providers & models" card instead (it checks API keys before saving).
-const AI_KEYS = new Set(["agent_models", "image_provider"]);
+// Edited in their own cards instead (they validate before saving).
+const AI_KEYS = new Set(["agent_models", "image_provider", "budget"]);
 
 const HELP: Record<string, string> = {
   house_prompt_template: "Prompt template for coloring pages. {scene} is replaced by each scene idea.",
@@ -20,20 +21,22 @@ const HELP: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-  const [settings, me, ai, backups] = await Promise.all([
+  const [settings, me, ai, backups, budget] = await Promise.all([
     serverApi<Record<string, unknown>>("/api/admin/settings"),
     serverApi<{ email: string; totp_enabled: boolean }>("/api/auth/me"),
     serverApi<AIProviders>("/api/admin/ai/providers"),
     serverApi<BackupsResponse>("/api/admin/backups"),
+    serverApi<BudgetSettings>("/api/admin/budget"),
   ]);
   return (
     <>
       <PageTitle>Settings</PageTitle>
       <p className="mb-4 max-w-3xl text-sm text-slate-600">
-        Secrets (API keys, budget cap) live in Coolify environment variables. Everything here is stored in the database and every change is written to the audit log.
+        API keys and other secrets live in Coolify environment variables. Everything here is stored in the database and every change is written to the audit log.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
         <AISettings initial={ai} />
+        <BudgetCard initial={budget} />
         <BackupsCard backups={backups} />
         <SecurityCard email={me.email} totpEnabled={me.totp_enabled} />
         {Object.entries(settings)

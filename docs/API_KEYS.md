@@ -22,7 +22,7 @@ billed separately, by usage.
 | `WEBSEARCH_PROVIDER` + `WEBSEARCH_API_KEY` | brave.com/search/api or tavily.com | optional search for the research agent |
 
 **Spend limits:** set a monthly limit in each provider's billing console as well. Crayonlark's
-own guard (`MONTHLY_BUDGET_INR`, default ₹2,000) stops paid calls at 100 %, but a limit at the
+own guard (admin → Settings → Monthly API budget, default ₹2,000) stops paid calls at 100 %, but a limit at the
 provider is a second safety net.
 
 **Rough costs** (prices checked 2026-11-08; see `python/src/crayonlark/providers/pricing.py`):

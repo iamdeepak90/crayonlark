@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from crayonlark.core import budget
-from crayonlark.core.config import get_settings
 
 
 def test_evaluate_rule() -> None:
@@ -21,12 +20,10 @@ def test_month_key() -> None:
 
 
 @pytest.fixture
-def small_cap(monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
-    get_settings.cache_clear()
-    monkeypatch.setenv("MONTHLY_BUDGET_INR", "88")  # = $1.00 at 88 INR/USD
-    monkeypatch.setenv("USD_INR_RATE", "88")
+def small_cap(db):  # type: ignore[no-untyped-def]
+    with db() as s:  # = $1.00 at 88 INR/USD, saved the way admin → Settings saves it
+        budget.set_limits(s, 88, 88, "admin:test")
     yield
-    get_settings.cache_clear()
 
 
 def test_guard_reserves_settles_and_stops(db, small_cap) -> None:  # type: ignore[no-untyped-def]
@@ -48,3 +45,22 @@ def test_guard_reserves_settles_and_stops(db, small_cap) -> None:  # type: ignor
     with db() as s:
         assert s.get(BudgetMonth, budget.month_key()).stopped
         assert budget.summary(s)["state"] == "warn"
+
+
+def test_budget_is_set_in_admin_and_rearms_alerts(db) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.core.models import AuditLog, BudgetMonth
+
+    with db() as s:
+        assert budget.limits(s).cap_inr == 2000  # built-in start value
+        s.add(BudgetMonth(month=budget.month_key(), warned_80=True, stopped=True))
+        s.flush()
+        lim = budget.set_limits(s, 3500, 90, "admin:owner@example.com")
+        assert (lim.cap_inr, lim.usd_inr_rate) == (3500, 90)
+        assert lim.cap_usd == pytest.approx(3500 / 90)
+        row = s.get(BudgetMonth, budget.month_key())
+        assert not row.warned_80 and not row.stopped  # a raised cap warns again at its 80 %
+        assert s.query(AuditLog).filter_by(action="settings.update", entity_id="budget").count()
+        with pytest.raises(ValueError):
+            budget.set_limits(s, -1, 88, "admin:x")
+        with pytest.raises(ValueError):
+            budget.set_limits(s, 100, 0, "admin:x")

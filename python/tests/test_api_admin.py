@@ -90,3 +90,16 @@ def test_dashboard_has_slots_and_budget(client: TestClient) -> None:
     d = client.get("/api/admin/dashboard").json()
     assert d["kdp_slots"]["paperback_limit"] == 2
     assert d["budget"]["cap_inr"] > 0
+
+
+def test_budget_is_edited_in_settings(client: TestClient) -> None:
+    login(client)
+    assert client.get("/api/admin/budget").json()["cap_inr"] == 2000
+    r = client.put("/api/admin/budget", json={"monthly_inr": 3000, "usd_inr_rate": 90}, headers=H)
+    assert r.status_code == 200 and r.json()["cap_inr"] == 3000
+    assert client.get("/api/admin/dashboard").json()["budget"]["cap_inr"] == 3000
+    bad = client.put("/api/admin/budget", json={"monthly_inr": -5, "usd_inr_rate": 90}, headers=H)
+    assert bad.status_code == 422
+    assert (
+        client.put("/api/admin/settings/budget", json={"value": {}}, headers=H).status_code == 400
+    )

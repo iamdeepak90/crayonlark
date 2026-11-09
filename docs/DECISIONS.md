@@ -200,3 +200,8 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     and backs up on its own, and the site only needs `NEXT_PUBLIC_UMAMI_*`.
 61. **The load check is a small Python script (`scripts/loadcheck.py`, httpx)**, not k6 or hey,
     so there is nothing extra to install.
+62. **The monthly API budget and the ₹/US$ rate are set in admin → Settings** (setting
+    `budget`, its own validated card and endpoint, audited), not in env vars. It isn't a secret,
+    and I change it more often than I deploy. Until it's saved, the built-in start values apply
+    (₹2,000 at 88 ₹/US$). Saving re-arms this month's 80 % and 100 % alerts, so a raised cap warns
+    again. A cap of 0 blocks every paid call.

@@ -215,7 +215,7 @@ def _empty_report() -> dict[str, Any]:
     return {
         "start": "2026-11-02", "end": "2026-11-08",
         "sales": {"by_platform": [], "by_book": []},
-        "spend": {"week_usd": 0.0, "month": month},
+        "spend": {"week_usd": 0.0, "week_inr": 0, "month": month},
         "waiting": {}, "niches_to_review": 0, "posts_to_review": 0, "pending_images": 0,
         "slots": slots, "pins": {"posted": 0, "failed": 0}, "new_subscribers": 0, "pipeline": {},
     }  # fmt: skip

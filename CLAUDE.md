@@ -20,7 +20,7 @@ Crayonlark is a one-person business: AI-assisted kids' coloring/activity books s
 - **Kids' content only**: friendly, age-appropriate, factually correct.
 - **Human approval gates cannot be skipped by any agent**: niche, image set, cover, listing text, Etsy
   publish. Gate transitions only go through `core/approvals.py`, which requires a `HumanActor`.
-- **Budget guard**: every paid API call goes through `core/budget.py` (monthly cap `MONTHLY_BUDGET_INR`,
+- **Budget guard**: every paid API call goes through `core/budget.py` (monthly cap set in admin → Settings, setting `budget`,
   default ₹2,000; warn at 80 %, hard stop at 100 %).
 - Secrets only in env vars. Commit `.env.example` only.
 

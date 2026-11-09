@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     garage_admin_url: str = "http://localhost:3903"
     garage_admin_token: str = ""
 
-    # --- budget ---
+    # --- budget: starting values only; the owner edits them in admin → Settings → Budget ---
     monthly_budget_inr: float = 2000.0
     usd_inr_rate: float = 88.0
     budget_warn_ratio: float = 0.8
@@ -110,10 +110,6 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
-
-    @property
-    def monthly_budget_usd(self) -> float:
-        return self.monthly_budget_inr / self.usd_inr_rate
 
 
 @lru_cache

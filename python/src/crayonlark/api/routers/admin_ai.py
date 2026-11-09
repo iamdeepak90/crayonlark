@@ -110,7 +110,7 @@ def generate_images(
     if not targets:
         raise HTTPException(400, "no concepts waiting for a picture")
     estimate = len(targets) * pricing.image_price(cfg.get("model") or "")
-    left = get_settings().monthly_budget_usd - budget.spent_usd(s, budget.month_key())
+    left = budget.limits(s).cap_usd - budget.spent_usd(s, budget.month_key())
     if estimate > left:
         raise HTTPException(
             400,
@@ -155,6 +155,29 @@ async def upload_for_concept(
 # --------------------------------------------------------------------------- costs
 
 
+class BudgetIn(BaseModel):
+    monthly_inr: float = Field(ge=0, le=budget.MAX_CAP_INR)
+    usd_inr_rate: float = Field(ge=1, le=1000)
+
+
+@router.get("/budget")
+def get_budget(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
+    sm = budget.summary(s)
+    return {k: sm[k] for k in ("month", "spent_inr", "cap_inr", "usd_inr_rate", "ratio", "state")}
+
+
+@router.put("/budget")
+def put_budget(
+    body: BudgetIn, admin: Admin = Depends(require_admin), s: Session = Depends(db)
+) -> dict:
+    try:
+        budget.set_limits(s, body.monthly_inr, body.usd_inr_rate, admin.actor.name)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    s.commit()
+    return get_budget(admin, s)
+
+
 @router.get("/costs")
 def costs(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
     summary = budget.summary(s)
@@ -175,10 +198,8 @@ def costs(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> di
         .group_by(day)
         .order_by(day)
     ).all()
-    rate = get_settings().usd_inr_rate
     return {
         **summary,
-        "usd_inr_rate": rate,
         "daily": [{"day": d.date().isoformat(), "usd": round(float(u or 0), 4)} for d, u in daily],
         "by_book": [
             {"book_id": bid, "title": t, "usd": round(float(u or 0), 4), "calls": n}

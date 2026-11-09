@@ -48,6 +48,7 @@ test.describe("logged-in admin", () => {
     await expect(page.getByRole("group", { name: "concept" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Save AI settings" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Backups" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Monthly API budget" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Run backup now" })).toBeVisible();
   });
 

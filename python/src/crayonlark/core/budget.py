@@ -1,6 +1,7 @@
 """Budget guard for every paid API call (LLM, image, search, …).
 
-Monthly cap in INR (MONTHLY_BUDGET_INR, default ₹2,000). Each call:
+Monthly cap in INR, set in admin → Settings → Budget (setting "budget"; starts at ₹2,000 and
+88 INR per USD). Each call:
     with paid_call(provider, model, agent, kind, estimate_usd) as call:
         ... do the request ...
         call.actual_usd = cost_from_usage(...)
@@ -20,6 +21,7 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from crayonlark.core import app_settings
 from crayonlark.core.config import get_settings
 from crayonlark.core.db import session_scope
 from crayonlark.core.models import ApiCost, BudgetMonth
@@ -28,6 +30,47 @@ from crayonlark.core.notify import notify
 
 class BudgetExceeded(RuntimeError):
     pass
+
+
+@dataclass(frozen=True)
+class Limits:
+    cap_inr: float
+    usd_inr_rate: float
+    warn_ratio: float
+
+    @property
+    def cap_usd(self) -> float:
+        return self.cap_inr / self.usd_inr_rate if self.usd_inr_rate > 0 else 0.0
+
+
+MAX_CAP_INR = 1_000_000.0
+
+
+def limits(session: Session | None = None) -> Limits:
+    """The monthly cap and exchange rate from admin → Settings (built-in defaults until saved)."""
+    s_ = get_settings()
+    stored = app_settings.get("budget", session) or {}
+    return Limits(
+        cap_inr=float(stored.get("monthly_inr", s_.monthly_budget_inr)),
+        usd_inr_rate=float(stored.get("usd_inr_rate", s_.usd_inr_rate)),
+        warn_ratio=s_.budget_warn_ratio,
+    )
+
+
+def set_limits(session: Session, monthly_inr: float, usd_inr_rate: float, actor: str) -> Limits:
+    """Save a new cap/rate (audited). This month's 80 %/100 % alerts are re-armed, so a raised
+    cap warns again when the new 80 % is reached."""
+    if not 0 <= monthly_inr <= MAX_CAP_INR:
+        raise ValueError(f"monthly budget must be between ₹0 and ₹{MAX_CAP_INR:,.0f}")
+    if not 1 <= usd_inr_rate <= 1000:
+        raise ValueError("INR per USD must be between 1 and 1000")
+    value = {"monthly_inr": round(monthly_inr, 2), "usd_inr_rate": round(usd_inr_rate, 4)}
+    app_settings.set_value("budget", value, actor, session)
+    row = session.get(BudgetMonth, month_key())
+    if row is not None:
+        row.warned_80 = row.stopped = False
+    session.flush()
+    return limits(session)
 
 
 def month_key(now: datetime | None = None) -> str:
@@ -65,8 +108,7 @@ def _lock_month(session: Session, month: str) -> BudgetMonth:
     return row
 
 
-def _alerts(row: BudgetMonth, state: str, spent: float, cap: float) -> None:
-    rate = get_settings().usd_inr_rate
+def _alerts(row: BudgetMonth, state: str, spent: float, cap: float, rate: float) -> None:
     if state in ("warn", "stop") and not row.warned_80:
         row.warned_80 = True
         notify(
@@ -78,7 +120,7 @@ def _alerts(row: BudgetMonth, state: str, spent: float, cap: float) -> None:
         row.stopped = True
         notify(
             "🛑 Monthly API budget reached. Paid calls are stopped until next month "
-            "(or raise MONTHLY_BUDGET_INR).",
+            "(or raise it in admin → Settings → Budget).",
             kind="budget",
         )
 
@@ -92,19 +134,20 @@ def reserve(
     book_id: int | None = None,
     job_id: str | None = None,
 ) -> int:
-    s_ = get_settings()
-    cap = s_.monthly_budget_usd
     month = month_key()
     with session_scope() as s:
         row = _lock_month(s, month)
+        lim = limits(s)
+        cap = lim.cap_usd
         spent = spent_usd(s, month)
-        state = evaluate(spent, estimate_usd, cap, s_.budget_warn_ratio)
+        state = evaluate(spent, estimate_usd, cap, lim.warn_ratio)
         if state == "stop":
-            _alerts(row, "stop", spent, cap)  # flags are committed when the scope exits
+            # flags are committed when the scope exits
+            _alerts(row, "stop", spent, cap, lim.usd_inr_rate)
             blocked = True
         else:
             blocked = False
-            _alerts(row, state, spent + estimate_usd, cap)
+            _alerts(row, state, spent + estimate_usd, cap, lim.usd_inr_rate)
             cost = ApiCost(
                 month=month,
                 provider=provider,
@@ -113,7 +156,7 @@ def reserve(
                 kind=kind,
                 status="reserved",
                 cost_usd=estimate_usd,
-                cost_inr=estimate_usd * s_.usd_inr_rate,
+                cost_inr=estimate_usd * lim.usd_inr_rate,
                 book_id=book_id,
                 job_id=job_id,
             )
@@ -122,7 +165,7 @@ def reserve(
             cost_id = cost.id
     if blocked:
         raise BudgetExceeded(
-            f"monthly budget ₹{s_.monthly_budget_inr:.0f} reached "
+            f"monthly budget ₹{lim.cap_inr:.0f} reached "
             f"(spent ${spent:.2f} of ${cap:.2f}); {agent} call blocked"
         )
     return cost_id
@@ -137,8 +180,8 @@ def settle(
     model: str | None = None,
 ) -> None:
     """Commit the real cost (or release it with actual_usd=None after a failed call)."""
-    s_ = get_settings()
     with session_scope() as s:
+        lim = limits(s)
         cost = s.get(ApiCost, reservation_id)
         if cost is None:
             return
@@ -147,7 +190,7 @@ def settle(
             return
         cost.status = "committed"
         cost.cost_usd = actual_usd
-        cost.cost_inr = actual_usd * s_.usd_inr_rate
+        cost.cost_inr = actual_usd * lim.usd_inr_rate
         cost.input_tokens, cost.output_tokens, cost.images = input_tokens, output_tokens, images
         if model:  # e.g. a server-side fallback model answered instead
             cost.model = model[:100]
@@ -155,9 +198,10 @@ def settle(
         spent = spent_usd(s, cost.month)
         _alerts(
             row,
-            evaluate(spent, 0, s_.monthly_budget_usd, s_.budget_warn_ratio),
+            evaluate(spent, 0, lim.cap_usd, lim.warn_ratio),
             spent,
-            s_.monthly_budget_usd,
+            lim.cap_usd,
+            lim.usd_inr_rate,
         )
 
 
@@ -200,10 +244,10 @@ def paid_call(
 
 
 def summary(session: Session, now: datetime | None = None) -> dict[str, Any]:
-    s_ = get_settings()
+    lim = limits(session)
     month = month_key(now)
     spent = spent_usd(session, month)
-    cap = s_.monthly_budget_usd
+    cap = lim.cap_usd
     by_agent = session.execute(
         select(ApiCost.agent, ApiCost.provider, func.sum(ApiCost.cost_usd), func.count(ApiCost.id))
         .where(ApiCost.month == month, ApiCost.status == "committed")
@@ -212,10 +256,11 @@ def summary(session: Session, now: datetime | None = None) -> dict[str, Any]:
     return {
         "month": month,
         "spent_usd": round(spent, 4),
-        "spent_inr": round(spent * s_.usd_inr_rate, 2),
-        "cap_inr": s_.monthly_budget_inr,
+        "spent_inr": round(spent * lim.usd_inr_rate, 2),
+        "cap_inr": lim.cap_inr,
+        "usd_inr_rate": lim.usd_inr_rate,
         "ratio": round(spent / cap, 4) if cap else 1.0,
-        "state": evaluate(spent, 0, cap, s_.budget_warn_ratio),
+        "state": evaluate(spent, 0, cap, lim.warn_ratio),
         "by_agent": [
             {"agent": a, "provider": p, "usd": round(float(u or 0), 4), "calls": n}
             for a, p, u, n in by_agent

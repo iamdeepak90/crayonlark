@@ -1,7 +1,8 @@
 """Runtime settings stored in the `settings` table, editable from admin → Settings.
 
 Env vars hold secrets and infra; this table holds things I tune: models per agent,
-blocklist, prompt templates, Pinterest cadence, etc.
+blocklist, prompt templates, Pinterest cadence, the monthly budget ("budget", edited through
+its own validated endpoint), etc.
 """
 
 from __future__ import annotations

@@ -298,3 +298,5 @@ export type BackupRun = {
 export type BackupsResponse = { last: BackupRun | null; dumps: string[]; retention_days: number; offsite: boolean };
 
 export type WeeklyReport = { text: string; data: Record<string, unknown> };
+
+export type BudgetSettings = { month: string; spent_inr: number; cap_inr: number; usd_inr_rate: number; ratio: number; state: BudgetState };

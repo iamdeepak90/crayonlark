@@ -29,7 +29,6 @@ certificates. After that you can turn it on, with SSL mode "Full (strict)".
    at least the REQUIRED block from `.env.example`. Generate each secret on your own machine with
    the command shown next to it (`openssl rand -hex 32` and so on). Then set:
    - `PUBLIC_SITE_URL=https://crayonlark.com`, `ADMIN_SITE_URL=https://admin.crayonlark.com`
-   - `MONTHLY_BUDGET_INR` and `USD_INR_RATE`
    - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID` (strongly recommended: approvals, alerts, weekly report)
    - `SMTP_*` and `OWNER_EMAIL` (free-printable emails, contact form, weekly report)
    - API keys whenever you're ready (`docs/API_KEYS.md`)

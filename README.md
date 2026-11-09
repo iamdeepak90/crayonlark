@@ -48,7 +48,8 @@ Other commands: `make test`, `make check` (ruff, mypy, pytest, eslint, tsc), `ma
 With no API keys, every agent runs **offline** (free template text) and images are
 **manual**: you make pictures in the ChatGPT or Gemini apps from the prompts shown in admin, then upload them.
 Add keys later and pick models in admin → Settings → AI providers (see `docs/API_KEYS.md`). Every
-paid call goes through the budget guard (`MONTHLY_BUDGET_INR`, default ₹2,000).
+paid call goes through the budget guard: a monthly cap you set in admin → Settings → Monthly API budget
+(starts at ₹2,000).
 
 ## Maintenance
 

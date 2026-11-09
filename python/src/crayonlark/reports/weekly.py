@@ -61,6 +61,7 @@ def collect(session: Session, today: date | None = None) -> dict[str, Any]:
         "sales": sales.totals(session, start, end),
         "spend": {
             "week_usd": round(float(week_spend or 0), 2),
+            "week_inr": round(float(week_spend or 0) * budget.limits(session).usd_inr_rate),
             "month": budget.summary(session),
         },
         "pipeline": {str(k): int(v) for k, v in statuses.items()},
@@ -100,7 +101,6 @@ def _money(rows: list[dict[str, Any]]) -> str:
 
 
 def render(d: dict[str, Any]) -> str:
-    rate = get_settings().usd_inr_rate
     by_platform = d["sales"]["by_platform"]
     etsy = [r for r in by_platform if r["platform"] == "etsy"]
     kdp = [r for r in by_platform if r["platform"] == "kdp"]
@@ -118,7 +118,7 @@ def render(d: dict[str, Any]) -> str:
     lines += [
         "",
         "AI spend",
-        f"• this week ₹{d['spend']['week_usd'] * rate:.0f} (${d['spend']['week_usd']:.2f})",
+        f"• this week ₹{d['spend']['week_inr']:.0f} (${d['spend']['week_usd']:.2f})",
         f"• this month ₹{month['spent_inr']:.0f} of ₹{month['cap_inr']:.0f} "
         f"({month['ratio']:.0%}, {month['state']})",
         "",
