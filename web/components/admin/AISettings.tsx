@@ -102,7 +102,7 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
           const m = agents[a];
           const list = `models-${a}`;
           return (
-            <fieldset key={a} className="rounded-xl border border-slate-200 p-3">
+            <fieldset key={a} className="rounded-lg border border-slate-200 p-3">
               <legend className="px-1 text-sm font-bold">{a.replaceAll("_", " ")}</legend>
               <div className="flex flex-wrap items-end gap-2">
                 <label className="text-xs font-semibold">
@@ -139,7 +139,7 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
             </fieldset>
           );
         })}
-        <fieldset className="rounded-xl border border-slate-200 p-3">
+        <fieldset className="rounded-lg border border-slate-200 p-3">
           <legend className="px-1 text-sm font-bold">images</legend>
           <div className="flex flex-wrap items-end gap-2">
             <label className="text-xs font-semibold">

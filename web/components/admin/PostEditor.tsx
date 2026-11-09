@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
@@ -51,7 +52,7 @@ export default function PostEditor({ post }: { post?: AdminPost }) {
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Badge value={post.status} />
           {post.ai_generated && <span className="text-xs text-slate-500">drafted by the content agent</span>}
-          {post.published_at && <a className="text-sky-800 underline" href={`${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/blog/${post.slug}`}>view on site</a>}
+          {post.published_at && <a className="font-medium text-foreground underline-offset-4 underline" href={`${process.env.NEXT_PUBLIC_SITE_URL ?? ""}/blog/${post.slug}`}>view on site</a>}
         </div>
       )}
       <label className="block text-sm">
@@ -77,16 +78,16 @@ export default function PostEditor({ post }: { post?: AdminPost }) {
         </label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="ghost" onClick={() => run(save, "Saved")}>
+        <Button variant="outline" onClick={() => run(save, "Saved")}>
           {post ? "Save" : "Create draft"}
         </Button>
         {post && post.status !== "published" && (
-          <Button variant="ok" onClick={() => run(async () => { await save(); await api(`/api/admin/posts/${post.id}/decision`, { body: { approve: true } }); }, "Published")}>
-            ✅ Save & publish
+          <Button variant="success" onClick={() => run(async () => { await save(); await api(`/api/admin/posts/${post.id}/decision`, { body: { approve: true } }); }, "Published")}>
+            <Check aria-hidden="true" /> Save & publish
           </Button>
         )}
         {post && post.status !== "rejected" && (
-          <Button variant="danger" onClick={() => run(() => api(`/api/admin/posts/${post.id}/decision`, { body: { approve: false } }), post.status === "published" ? "Unpublished" : "Rejected")}>
+          <Button variant="destructive" onClick={() => run(() => api(`/api/admin/posts/${post.id}/decision`, { body: { approve: false } }), post.status === "published" ? "Unpublished" : "Rejected")}>
             {post.status === "published" ? "Unpublish" : "Reject"}
           </Button>
         )}

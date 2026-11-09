@@ -16,8 +16,8 @@ function PinRow({ p }: { p: PinItem }) {
       </div>
       <span className="text-xs text-slate-600">{fmtDate(p.posted_at ?? p.scheduled_at)}</span>
       <Badge value={p.status} />
-      {p.status === "scheduled" && <ActionButton path={`/api/admin/pins/${p.id}/cancel`} label="Cancel" variant="ghost" />}
-      {p.status === "failed" && <ActionButton path={`/api/admin/pins/${p.id}/retry`} label="Retry" variant="ghost" />}
+      {p.status === "scheduled" && <ActionButton path={`/api/admin/pins/${p.id}/cancel`} label="Cancel" variant="outline" />}
+      {p.status === "failed" && <ActionButton path={`/api/admin/pins/${p.id}/retry`} label="Retry" variant="outline" />}
     </li>
   );
 }
@@ -30,7 +30,7 @@ export default async function PinterestPage() {
       <ConnectCard name="pinterest" label="Pinterest" configured={data.configured} connection={data.connection}>
         {data.connection.connected && (
           <div className="mt-3">
-            <ActionButton path="/api/admin/pinterest/boards/sync" label="Sync boards from Pinterest" variant="ghost" />
+            <ActionButton path="/api/admin/pinterest/boards/sync" label="Sync boards from Pinterest" variant="outline" />
           </div>
         )}
       </ConnectCard>

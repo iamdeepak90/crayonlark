@@ -1,10 +1,12 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { ImageItem } from "@/lib/types";
 import { Badge, Button } from "./ui";
+import { tabClass, tabsListClass } from "@/components/ui/tabs";
 
 type Filter = "all" | "pending" | "approved" | "rejected";
 
@@ -77,10 +79,10 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
 
   return (
     <div>
-      <div className="sticky top-16 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white/90 p-3 backdrop-blur">
-        <div role="tablist" aria-label="Filter" className="flex gap-1">
+      <div className="sticky top-16 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-slate-200 bg-white/90 p-3 backdrop-blur">
+        <div role="tablist" aria-label="Filter" className={tabsListClass}>
           {(["all", "pending", "approved", "rejected"] as Filter[]).map((f) => (
-            <button key={f} role="tab" aria-selected={filter === f} onClick={() => { setFilter(f); setFocus(0); }} className={`rounded-lg px-2 py-1 text-sm font-semibold ${filter === f ? "bg-ink text-white" : "bg-slate-100"}`}>
+            <button key={f} role="tab" aria-selected={filter === f} onClick={() => { setFilter(f); setFocus(0); }} className={tabClass(filter === f)}>
               {f} ({f === "all" ? images.length : images.filter((i) => i.approval === f).length})
             </button>
           ))}
@@ -90,7 +92,7 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
         </span>
         <span className="hidden text-xs text-slate-500 lg:inline">Keys: arrows move · A keep · R reject · Z zoom 100%</span>
         <div className="ml-auto">
-          <Button variant="ok" disabled={status !== "awaiting_image_approval"} onClick={approveSet} title={status !== "awaiting_image_approval" ? "Book is not waiting for image approval" : ""}>
+          <Button variant="success" disabled={status !== "awaiting_image_approval"} onClick={approveSet} title={status !== "awaiting_image_approval" ? "Book is not waiting for image approval" : ""}>
             Approve image set
           </Button>
         </div>
@@ -100,7 +102,7 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
         {shown.map((img, idx) => {
           const q = img.qa;
           return (
-            <li key={img.id} id={`img-${img.id}`} onClick={() => setFocus(idx)} className={`rounded-xl border border-slate-200 bg-white p-2 ring-2 ${idx === focus ? "ring-sky" : img.approval === "approved" ? "ring-emerald-500" : img.approval === "rejected" ? "ring-rose-400" : "ring-transparent"}`}>
+            <li key={img.id} id={`img-${img.id}`} onClick={() => setFocus(idx)} className={`rounded-lg border border-slate-200 bg-white p-2 ring-2 ${idx === focus ? "ring-ring" : img.approval === "approved" ? "ring-emerald-500" : img.approval === "rejected" ? "ring-rose-400" : "ring-transparent"}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/api/admin/images/${img.id}/file?variant=thumb`} alt={img.scene_title || `image ${img.id}`} loading="lazy" className={`aspect-[3/4] w-full rounded bg-white object-contain ${img.approval === "rejected" ? "opacity-40" : ""}`} />
               <div className="mt-1 flex items-center justify-between gap-1 text-xs">
@@ -113,11 +115,11 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
                 <p className="mt-1 line-clamp-2 text-xs text-rose-700">{[...(q.failures ?? []), ...(img.vision?.issues ?? [])].join("; ")}</p>
               ) : null}
               <div className="mt-2 flex gap-1">
-                <Button variant={img.approval === "approved" ? "ok" : "ghost"} className="flex-1" aria-label={`Keep image ${img.id}`} onClick={() => decide(img, true)}>
-                  ✅
+                <Button variant={img.approval === "approved" ? "success" : "outline"} className="flex-1" aria-label={`Keep image ${img.id}`} onClick={() => decide(img, true)}>
+                  <Check aria-hidden="true" />
                 </Button>
-                <Button variant={img.approval === "rejected" ? "danger" : "ghost"} className="flex-1" aria-label={`Reject image ${img.id}`} onClick={() => decide(img, false)}>
-                  ❌
+                <Button variant={img.approval === "rejected" ? "destructive" : "outline"} className="flex-1" aria-label={`Reject image ${img.id}`} onClick={() => decide(img, false)}>
+                  <X aria-hidden="true" />
                 </Button>
               </div>
             </li>

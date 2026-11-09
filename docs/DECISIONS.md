@@ -243,14 +243,21 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     variable it has stored into every container, including empty leftovers it won't let me
     delete. An empty `MONTHLY_BUDGET_INR` used to crash startup (migrate exit 1, 2026-11-09).
     The weekly KDP limit (2+2) is a `ClassVar` now, so no stray env var can raise it.
-68. **Two looks: playful public site, minimalist admin.** The public site follows the owner's
-    `index.html` mockup (Plus Jakarta Sans + IBM Plex Serif, cream/sun/sky/coral/leaf). Sun,
-    sky and leaf text shades are darkened (`*-600`) to pass WCAG AA. Book grids show at most 3
-    per row. The admin deliberately does **not** copy that look. It is a neutral zinc
-    greyscale, sans only, with one blue accent and flat bordered surfaces. It is done by
-    re-pointing the palette CSS variables inside `.admin` (and `.dark .admin` for dark mode), so
-    the existing admin pages changed without per-page edits. Dark mode is saved in localStorage,
-    defaults to the OS setting and is applied before paint by an inline script.
+68. **Two looks: playful public site, shadcn admin (updated 2026-11-10).**
+    - **Public site:** follows the owner's `index.html` mockup (Plus Jakarta Sans + IBM Plex
+      Serif) with a strict **60/30/10** colour rule. Cream/white is the base, sun (soft
+      yellow) the secondary (hero band, age cards, footer), coral the accent (buttons, links,
+      the free-pages call-outs and the sign-up strip above the footer). Sky and leaf were
+      dropped, so variety comes from doodles and emoji. Measured with `pnpm colors`: whole site
+      66 / 26 / 8 at the time of the change.
+    - **Admin:** shadcn/ui style (zinc tokens, components in `components/ui` with cva +
+      tailwind-merge, written by hand, no Radix needed yet) and lucide-react icons. Older
+      admin markup follows the same palette because `.admin` re-points the slate/white
+      variables, in light and dark.
+    - **Radius:** at most 8px everywhere (shadcn's default card radius is larger, so cards use
+      `rounded-lg`).
+    - **Enforcement:** `scripts/check-design.mjs` runs inside `pnpm lint` (and so in CI) and
+      enforces the radius and site-palette rules.
 69. **Starter content never skips a gate.** `crayonlark starter-content` adds blog posts as
     DRAFTS and niches as PROPOSED, and builds the free printable from the 5 bundled, code-drawn
     pages (`ai_artwork=False`). `crayonlark demo-data` adds two "(Demo)" books that stop at

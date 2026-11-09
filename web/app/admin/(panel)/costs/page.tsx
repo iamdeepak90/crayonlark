@@ -34,7 +34,7 @@ export default async function CostsPage() {
           <p className="text-3xl font-bold">
             {inr(c.spent_inr)} <span className="text-base font-normal text-slate-500">of {inr(c.cap_inr)} · {usd(c.spent_usd)}</span>
           </p>
-          <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-label="Budget used" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <div className="mt-3 h-3 w-full overflow-hidden rounded-lg bg-slate-100" role="progressbar" aria-label="Budget used" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
             <div className={`h-full ${BAR[c.state] ?? BAR.ok}`} style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-2 text-sm text-slate-600">
@@ -47,7 +47,7 @@ export default async function CostsPage() {
               <li key={d.day} className="flex items-center gap-2">
                 <span className="w-20 shrink-0 text-slate-600">{d.day.slice(5)}</span>
                 <span className="h-2 flex-1 rounded bg-slate-100">
-                  <span className="block h-2 rounded bg-sky-600" style={{ width: `${maxDay ? (d.usd / maxDay) * 100 : 0}%` }} />
+                  <span className="block h-2 rounded bg-primary" style={{ width: `${maxDay ? (d.usd / maxDay) * 100 : 0}%` }} />
                 </span>
                 <span className="w-24 shrink-0 text-right">{inr(d.usd * c.usd_inr_rate)}</span>
               </li>
@@ -85,7 +85,7 @@ export default async function CostsPage() {
                 {c.by_book.map((b) => (
                   <tr key={b.book_id} className="border-b border-slate-100">
                     <td className={td}>
-                      <Link href={`/books/${b.book_id}`} className="text-sky-800 underline">{b.title}</Link>
+                      <Link href={`/books/${b.book_id}`} className="font-medium text-foreground underline-offset-4 underline">{b.title}</Link>
                     </td>
                     <td className={td}>{b.calls}</td>
                     <td className={td}>{inr(b.usd * c.usd_inr_rate)} <span className="text-slate-500">{usd(b.usd)}</span></td>
@@ -116,7 +116,7 @@ export default async function CostsPage() {
                     <td className={td}>{inr(r.inr)}</td>
                     <td className={td}>{usd(r.usd)}</td>
                     <td className={td}><Badge value={r.status} /></td>
-                    <td className={td}>{r.book_id ? <Link href={`/books/${r.book_id}`} className="text-sky-800 underline">#{r.book_id}</Link> : "—"}</td>
+                    <td className={td}>{r.book_id ? <Link href={`/books/${r.book_id}`} className="font-medium text-foreground underline-offset-4 underline">#{r.book_id}</Link> : "—"}</td>
                   </tr>
                 ))}
               </tbody>

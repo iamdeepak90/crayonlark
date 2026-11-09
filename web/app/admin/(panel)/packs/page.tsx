@@ -1,4 +1,6 @@
+import { Download } from "lucide-react";
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import ActionButton from "@/components/admin/ActionButton";
 import ManualKdpSteps from "@/components/admin/ManualKdpSteps";
 import { Badge, Card, PageTitle, fileUrl } from "@/components/admin/ui";
@@ -41,7 +43,7 @@ export default async function PacksPage() {
                 </p>
                 {p.kdp_asin && <p>ASIN {p.kdp_asin}</p>}
                 {p.amazon_url && (
-                  <a className="text-sky-800 underline" href={p.amazon_url} target="_blank" rel="noreferrer">
+                  <a className="font-medium text-foreground underline-offset-4 underline" href={p.amazon_url} target="_blank" rel="noreferrer">
                     Amazon page
                   </a>
                 )}
@@ -49,8 +51,8 @@ export default async function PacksPage() {
               <ul className="text-sm">
                 {p.pack_key ? (
                   <li>
-                    <a className="font-semibold text-sky-800 underline" href={fileUrl(p.pack_key)}>
-                      ⬇ KDP upload pack (.zip)
+                    <a className={buttonVariants({ variant: "outline", size: "sm" })} href={fileUrl(p.pack_key)}>
+                      <Download aria-hidden="true" /> KDP upload pack (.zip)
                     </a>
                   </li>
                 ) : (
@@ -58,19 +60,19 @@ export default async function PacksPage() {
                 )}
                 {p.interior_key && (
                   <li>
-                    <a className="text-sky-800 underline" href={fileUrl(p.interior_key)}>interior.pdf</a>
+                    <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(p.interior_key)}>interior.pdf</a>
                   </li>
                 )}
                 {p.cover_key && (
                   <li>
-                    <a className="text-sky-800 underline" href={fileUrl(p.cover_key)}>cover.pdf</a>
+                    <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(p.cover_key)}>cover.pdf</a>
                   </li>
                 )}
                 {p.etsy.map((e) => (
                   <li key={e.id} className="text-slate-700">
                     Etsy {e.product_kind.replaceAll("_", " ")}:{" "}
                     {Object.entries(e.file_keys).map(([paper, key]) => (
-                      <a key={paper} className="mr-2 text-sky-800 underline" href={fileUrl(key)}>
+                      <a key={paper} className="mr-2 font-medium text-foreground underline-offset-4 underline" href={fileUrl(key)}>
                         {paper}
                       </a>
                     ))}
@@ -80,7 +82,7 @@ export default async function PacksPage() {
               </ul>
               <div className="flex flex-col items-start gap-2">
                 <ManualKdpSteps bookId={p.id} status={p.status} />
-                {p.status === "kdp_pack_ready" && <ActionButton path={`/api/admin/books/${p.id}/pack/rebuild`} label="Rebuild pack" variant="ghost" />}
+                {p.status === "kdp_pack_ready" && <ActionButton path={`/api/admin/books/${p.id}/pack/rebuild`} label="Rebuild pack" variant="outline" />}
               </div>
             </div>
           </Card>

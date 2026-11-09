@@ -23,11 +23,17 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
+    def db_ping() -> None:
+        # `with` returns the connection to the pool. Closing only the result used to leak one
+        # pooled connection per health check, until the pool ran out and requests got 500s.
+        with get_engine().connect() as conn:
+            conn.execute(text("select 1"))
+
     @app.get("/api/health")
     def health() -> JSONResponse:
         checks: dict[str, Any] = {}
         for name, fn in (
-            ("db", lambda: get_engine().connect().execute(text("select 1")).close()),
+            ("db", db_ping),
             ("redis", lambda: get_redis().ping()),
             ("storage", storage.ping),
         ):

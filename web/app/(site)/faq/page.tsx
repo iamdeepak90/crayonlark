@@ -19,7 +19,7 @@ export default function FaqPage() {
       <div className="mt-10">
         <FaqList items={FAQ} />
       </div>
-      <div className="mt-12 rounded-3xl bg-white p-6 ring-1 ring-line sm:p-8">
+      <div className="mt-12 rounded-lg bg-white p-6 ring-1 ring-line sm:p-8">
         <p className="font-display text-xl font-semibold">Still have a question?</p>
         <p className="mt-1 text-muted">
           Send us a message on the <Link href="/contact" className="font-semibold text-ink underline underline-offset-4">contact page</Link>. We usually reply

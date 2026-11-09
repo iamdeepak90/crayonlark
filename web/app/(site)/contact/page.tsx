@@ -17,7 +17,7 @@ export default async function ContactPage() {
         title="Say hello"
         intro="Questions about a book or a printable, spotted a mistake, or have an idea? Send us a message."
       />
-      <div className="mt-10 rounded-3xl bg-white p-6 ring-1 ring-line sm:p-10">
+      <div className="mt-10 rounded-lg bg-white p-6 ring-1 ring-line sm:p-10">
         <ContactForm turnstileSiteKey={turnstile_site_key} />
       </div>
       <p className="mt-8 text-sm text-muted">

@@ -87,17 +87,17 @@ export default async function PostPage({ params }: { params: Params }) {
           </p>
         </header>
         {post.cover_url && (
-          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-3xl bg-sun-50">
+          <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-lg bg-sun-50">
             <Image src={post.cover_url} alt="" fill priority sizes="(min-width: 768px) 720px, 95vw" className="object-cover" />
           </div>
         )}
         <Prose html={post.html} className="mt-6" />
-        <aside className="mt-12 grid items-center gap-6 rounded-3xl bg-sky-50 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+        <aside className="mt-12 grid items-center gap-6 rounded-lg bg-coral-50 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
           <div>
             <p className="font-display text-xl font-semibold">Want free coloring pages?</p>
             <p className="mt-1 text-sm text-muted">Join our email list and we&apos;ll send you a free printable pack.</p>
           </div>
-          <ButtonLink href="/free-printables" variant="dark" size="sm">
+          <ButtonLink href="/free-printables" variant="primary" size="sm">
             Get free pages
           </ButtonLink>
         </aside>

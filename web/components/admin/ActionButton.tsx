@@ -1,28 +1,32 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { Button } from "./ui";
+import { Button, type ButtonProps } from "@/components/ui/button";
 
 /** Small client button that POSTs to the API and refreshes the page. */
 export default function ActionButton({
   path,
   body,
   label,
-  variant = "primary",
+  variant = "default",
   confirm,
   method = "POST",
   success,
+  icon,
 }: {
   path: string;
   body?: unknown;
   label: string;
-  variant?: "primary" | "ghost" | "danger" | "ok";
+  variant?: ButtonProps["variant"];
   confirm?: string;
   method?: string;
   /** Shown after the call succeeds, e.g. "Queued: done in a minute." */
   success?: string;
+  /** A lucide icon shown before the label. */
+  icon?: React.ReactNode;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -49,10 +53,11 @@ export default function ActionButton({
           }
         }}
       >
-        {busy ? "…" : label}
+        {busy ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : icon}
+        {label}
       </Button>
-      {done && <span role="status" className="mt-1 max-w-xs text-xs text-emerald-700">{done}</span>}
-      {error && <span role="alert" className="mt-1 max-w-xs text-xs text-rose-700">{error}</span>}
+      {done && <span role="status" className="mt-1 max-w-xs text-xs text-emerald-700 dark:text-emerald-400">{done}</span>}
+      {error && <span role="alert" className="mt-1 max-w-xs text-xs text-destructive">{error}</span>}
     </span>
   );
 }

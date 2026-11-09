@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
@@ -46,11 +47,11 @@ export default function CoverControls({
     <div className="space-y-4">
       {pending && coverId && (
         <div className="flex flex-wrap gap-2">
-          <Button variant="ok" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: true } }), "Cover approved. The listing agent is writing listings.")}>
-            ✅ Approve cover
+          <Button variant="success" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: true } }), "Cover approved. The listing agent is writing listings.")}>
+            <Check aria-hidden="true" /> Approve cover
           </Button>
-          <Button variant="danger" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: false } }), "Rejected. A new version is being built.")}>
-            ❌ Reject (build new version)
+          <Button variant="destructive" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: false } }), "Rejected. A new version is being built.")}>
+            <X aria-hidden="true" /> Reject (build new version)
           </Button>
         </div>
       )}
@@ -91,7 +92,7 @@ export default function CoverControls({
             <textarea value={blurb} maxLength={600} onChange={(e) => setBlurb(e.target.value)} rows={2} className="mt-1 block w-full rounded-lg border px-2 py-1" />
           </label>
           <div>
-            <Button variant="ghost" disabled={busy} type="submit">
+            <Button variant="outline" disabled={busy} type="submit">
               Build another version
             </Button>
           </div>

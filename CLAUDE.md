@@ -36,6 +36,17 @@ Crayonlark is a one-person business: AI-assisted kids' coloring/activity books s
 - Providers: `providers/llm/*` and `providers/image/*` behind one interface each; `offline` LLM and
   `manual` image provider cost nothing and are used by tests and `make demo`.
 
+## Design rules (always)
+- **Public site colours follow 60/30/10:** cream/white base ≈ 60 %, sun (soft yellow) secondary
+  ≈ 30 %, coral accent ≈ 10 % (buttons, links, highlights, the free-pages call-outs). Ink is for
+  text. No other hues on the site. Measure with `pnpm colors` in `web/` against a running site.
+- **Corner radius at most 8px** on site and admin (`rounded-lg` is the largest; no
+  `rounded-xl/2xl/3xl/full`).
+- **Admin uses shadcn/ui style + lucide-react icons:** components in `web/components/ui`
+  (cva + `cn`), zinc tokens under `.admin` in `globals.css`. No emoji as icons.
+- `pnpm lint` runs `web/scripts/check-design.mjs`, which fails on radius > 8px or off-palette
+  colours on the site.
+
 ## Conventions
 - Keep code simple and readable; the owner maintains this alone.
 - Every agent output is a Pydantic model; jobs are idempotent and retried with backoff.

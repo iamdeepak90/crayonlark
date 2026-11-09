@@ -4,6 +4,7 @@ import NicheForm from "@/components/admin/NicheForm";
 import { Badge, Card, PageTitle, fmtDate } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
 import type { AIProviders } from "@/lib/types";
+import { buttonVariants } from "@/components/ui/button";
 
 type Niche = { id: number; theme: string; name: string; age_range: string; angle: string; risks: string; seasonality: string; notes: string; source: string; status: string; approved_by: string | null; created_at: string };
 
@@ -24,12 +25,12 @@ export default async function NichesPage() {
               <div className="mt-3 flex gap-2">
                 {n.status === "proposed" && (
                   <>
-                    <ActionButton path={`/api/admin/niches/${n.id}/decision`} body={{ approve: true }} label="Approve" variant="ok" />
-                    <ActionButton path={`/api/admin/niches/${n.id}/decision`} body={{ approve: false }} label="Reject" variant="ghost" />
+                    <ActionButton path={`/api/admin/niches/${n.id}/decision`} body={{ approve: true }} label="Approve" variant="success" />
+                    <ActionButton path={`/api/admin/niches/${n.id}/decision`} body={{ approve: false }} label="Reject" variant="outline" />
                   </>
                 )}
                 {n.status === "approved" && (
-                  <Link href={`/books/new?niche=${n.id}`} className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white">Create book</Link>
+                  <Link href={`/books/new?niche=${n.id}`} className={buttonVariants({ size: "sm" })}>Create book</Link>
                 )}
               </div>
             </Card>

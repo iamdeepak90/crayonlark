@@ -86,7 +86,7 @@ function bookJsonLd(book: BookDetail) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-line">
+    <div className="rounded-lg bg-white px-4 py-3 ring-1 ring-line">
       <dt className="text-sm text-muted">{label}</dt>
       <dd className="mt-0.5 text-lg font-bold">{value}</dd>
     </div>
@@ -112,8 +112,8 @@ export default async function BookPage({ params }: { params: Params }) {
       <article className="mt-6">
         <div className="grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12">
           <div className="relative mx-auto w-full max-w-sm md:max-w-none">
-            <div className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-[2rem] bg-sky-100 sm:translate-x-5 sm:translate-y-5" />
-            <div className="grid place-items-center rounded-[2rem] bg-sun-50 p-10">
+            <div className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-lg bg-sun-100 sm:translate-x-5 sm:translate-y-5" />
+            <div className="grid place-items-center rounded-lg bg-sun-50 p-10">
               <div className="w-[78%]">
                 <BookCover book={book} sizes="(min-width: 768px) 35vw, 70vw" priority />
               </div>
@@ -139,7 +139,7 @@ export default async function BookPage({ params }: { params: Params }) {
             {(book.amazon_url || book.etsy_url) && (
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 {book.amazon_url && (
-                  <ButtonLink href={book.amazon_url} external rel="sponsored noopener" variant="dark">
+                  <ButtonLink href={book.amazon_url} external rel="sponsored noopener" variant="primary">
                     Buy the paperback on Amazon
                   </ButtonLink>
                 )}
@@ -157,7 +157,7 @@ export default async function BookPage({ params }: { params: Params }) {
                   <li key={theme}>
                     <Link
                       href={`/books?theme=${slugify(theme)}`}
-                      className="inline-block rounded-full bg-white px-3 py-1 text-sm font-semibold capitalize ring-1 ring-line hover:text-coral-600"
+                      className="inline-block rounded-lg bg-white px-3 py-1 text-sm font-semibold capitalize ring-1 ring-line hover:text-coral-600"
                     >
                       {theme}
                     </Link>
@@ -168,7 +168,7 @@ export default async function BookPage({ params }: { params: Params }) {
 
             {book.description_html && <Prose html={book.description_html} className="mt-4" />}
 
-            {book.ai_note && <p className="mt-6 rounded-2xl bg-sun-50 px-4 py-3 text-sm text-muted ring-1 ring-sun-100">{book.ai_note}</p>}
+            {book.ai_note && <p className="mt-6 rounded-lg bg-sun-50 px-4 py-3 text-sm text-muted ring-1 ring-sun-100">{book.ai_note}</p>}
           </div>
         </div>
 
@@ -179,7 +179,7 @@ export default async function BookPage({ params }: { params: Params }) {
             </h2>
             <ul className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
               {book.preview_urls.map((src, i) => (
-                <li key={src} className="relative aspect-[17/22] overflow-hidden rounded-2xl bg-white p-2 shadow-soft ring-1 ring-line">
+                <li key={src} className="relative aspect-[17/22] overflow-hidden rounded-lg bg-white p-2 shadow-soft ring-1 ring-line">
                   <Image
                     src={src}
                     alt={`Sample page ${i + 1} from ${book.title}`}

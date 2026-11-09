@@ -1,4 +1,6 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 import { PageTitle, fmtDate } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
 
@@ -10,7 +12,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageTitle>Audit log</PageTitle>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
@@ -34,9 +36,17 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           </tbody>
         </table>
       </div>
-      <div className="mt-3 flex gap-3 text-sm">
-        {page > 0 && <Link className="underline" href={`/audit?page=${page - 1}`}>← newer</Link>}
-        {rows.length === 100 && <Link className="underline" href={`/audit?page=${page + 1}`}>older →</Link>}
+      <div className="mt-3 flex gap-2">
+        {page > 0 && (
+          <Link className={buttonVariants({ variant: "outline", size: "sm" })} href={`/audit?page=${page - 1}`}>
+            <ChevronLeft aria-hidden="true" /> Newer
+          </Link>
+        )}
+        {rows.length === 100 && (
+          <Link className={buttonVariants({ variant: "outline", size: "sm" })} href={`/audit?page=${page + 1}`}>
+            Older <ChevronRight aria-hidden="true" />
+          </Link>
+        )}
       </div>
     </>
   );

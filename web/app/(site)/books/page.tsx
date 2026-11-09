@@ -37,8 +37,8 @@ function FilterChip({ href, active, children }: { href: string; active: boolean;
       <Link
         href={href}
         aria-current={active ? "true" : undefined}
-        className={`inline-block rounded-full px-4 py-2 text-sm font-semibold capitalize transition ${
-          active ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink"
+        className={`inline-block rounded-lg px-4 py-2 text-sm font-semibold capitalize transition ${
+          active ? "bg-coral-600 text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink"
         }`}
       >
         {children}
@@ -61,7 +61,7 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
       />
 
       {filters && (filters.ages.length > 0 || filters.themes.length > 0) && (
-        <nav aria-label="Filter books" className="mt-10 space-y-5 rounded-3xl bg-white p-6 ring-1 ring-line">
+        <nav aria-label="Filter books" className="mt-10 space-y-5 rounded-lg bg-white p-6 ring-1 ring-line">
           {filters.ages.length > 0 && (
             <div>
               <h2 className="mb-3 font-sans text-sm font-semibold uppercase tracking-wider text-muted">Age</h2>

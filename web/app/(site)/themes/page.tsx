@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/site/PageHeader";
-import { THEMES, TINT_BG } from "@/lib/content";
+import { THEMES } from "@/lib/content";
 import { getFilters, pageMetadata, slugify } from "@/lib/public";
 
 export const metadata = pageMetadata({
@@ -28,10 +28,10 @@ export default async function ThemesPage() {
           const inner = (
             <>
               <div className="flex items-start justify-between gap-4">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-2xl shadow-soft" aria-hidden="true">
+                <span className="grid h-12 w-12 place-items-center rounded-lg bg-sun-50 text-2xl" aria-hidden="true">
                   {t.emoji}
                 </span>
-                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${count ? "bg-ink text-white" : "bg-white/80 text-muted ring-1 ring-line"}`}>
+                <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${count ? "bg-coral-600 text-white" : "bg-white/80 text-muted ring-1 ring-line"}`}>
                   {count ? `${count} book${count > 1 ? "s" : ""}` : "Coming soon"}
                 </span>
               </div>
@@ -47,18 +47,18 @@ export default async function ThemesPage() {
           return (
             <li key={t.slug}>
               {count ? (
-                <Link href={`/books?theme=${t.slug}`} className={`group block h-full rounded-3xl p-7 transition hover:shadow-soft ${TINT_BG[t.tint]}`}>
+                <Link href={`/books?theme=${t.slug}`} className="group block h-full rounded-lg bg-white p-7 ring-1 ring-line transition hover:shadow-soft">
                   {inner}
                 </Link>
               ) : (
-                <div className={`h-full rounded-3xl p-7 ${TINT_BG[t.tint]}`}>{inner}</div>
+                <div className="h-full rounded-lg bg-white p-7 ring-1 ring-line">{inner}</div>
               )}
             </li>
           );
         })}
         {extra.map((t) => (
           <li key={t.slug}>
-            <Link href={`/books?theme=${t.slug}`} className="group block h-full rounded-3xl bg-white p-7 ring-1 ring-line transition hover:shadow-soft">
+            <Link href={`/books?theme=${t.slug}`} className="group block h-full rounded-lg bg-white p-7 ring-1 ring-line transition hover:shadow-soft">
               <h2 className="font-display text-xl font-semibold capitalize">{t.name}</h2>
               <p className="mt-1 text-sm text-muted">
                 {t.count} book{t.count > 1 ? "s" : ""}

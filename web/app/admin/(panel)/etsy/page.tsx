@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ConnectCard from "@/components/admin/ConnectCard";
@@ -39,14 +40,14 @@ export default async function EtsyPage() {
               )}
               <div className="space-y-4">
                 {b.listings.map((l) => (
-                  <div key={l.id} className="rounded-xl border border-slate-200 p-3">
+                  <div key={l.id} className="rounded-lg border border-slate-200 p-3">
                     <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
                       <b>{l.product_kind.replaceAll("_", " ")}</b>
                       <span className="truncate text-slate-600">{l.title}</span>
                       <span>${(l.price_cents / 100).toFixed(2)}</span>
                       {l.etsy && <Badge value={l.etsy.state} />}
                       {l.etsy?.url && (
-                        <a className="text-sky-800 underline" href={l.etsy.url} target="_blank" rel="noreferrer">
+                        <a className="font-medium text-foreground underline-offset-4 underline" href={l.etsy.url} target="_blank" rel="noreferrer">
                           view on Etsy
                         </a>
                       )}
@@ -67,12 +68,12 @@ export default async function EtsyPage() {
                 ))}
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <ActionButton path={`/api/admin/books/${b.id}/mockups`} label="Rebuild mockups" variant="ghost" />
+                <ActionButton path={`/api/admin/books/${b.id}/mockups`} label="Rebuild mockups" variant="outline" />
                 {ready && b.etsy_status === "none" && <ActionButton path={`/api/admin/books/${b.id}/etsy/drafts`} label="Create Etsy drafts" />}
                 {b.etsy_status === "etsy_drafts_created" && (
                   <>
-                    <ActionButton path={`/api/admin/books/${b.id}/etsy/drafts`} label="Retry uploads" variant="ghost" />
-                    <ActionButton path={`/api/admin/books/${b.id}/etsy/approve-publish`} label="✅ Approve & publish on Etsy" variant="ok" confirm="Publish these listings on Etsy now? They go live for buyers." />
+                    <ActionButton path={`/api/admin/books/${b.id}/etsy/drafts`} label="Retry uploads" variant="outline" />
+                    <ActionButton path={`/api/admin/books/${b.id}/etsy/approve-publish`} label="Approve & publish on Etsy" icon={<Check aria-hidden="true" />} variant="success" confirm="Publish these listings on Etsy now? They go live for buyers." />
                   </>
                 )}
               </div>

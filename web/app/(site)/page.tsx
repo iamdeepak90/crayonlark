@@ -22,13 +22,13 @@ export const metadata = pageMetadata({
 
 const VALUES = [
   { bar: "bg-sun-400", title: "Clear, bold lines", text: "Easy to color inside the lines, even for small hands." },
-  { bar: "bg-sky-400", title: "Made for each age", text: "Simple shapes for toddlers, more detail as kids grow." },
-  { bar: "bg-coral-400", title: "Screen-free time", text: "Quiet, creative play that builds focus and fine motor skills." },
-  { bar: "bg-leaf-400", title: "Reviewed page by page", text: "A person checks every design before it goes into a book." },
+  { bar: "bg-coral-500", title: "Made for each age", text: "Simple shapes for toddlers, more detail as kids grow." },
+  { bar: "bg-coral-500", title: "Screen-free time", text: "Quiet, creative play that builds focus and fine motor skills." },
+  { bar: "bg-coral-500", title: "Reviewed page by page", text: "A person checks every design before it goes into a book." },
 ];
 
 const Check = () => (
-  <span className="text-leaf-600" aria-hidden="true">
+  <span className="text-coral-600" aria-hidden="true">
     ✓
   </span>
 );
@@ -50,86 +50,89 @@ export default async function HomePage() {
       />
 
       {/* Hero */}
-      <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-14 md:grid-cols-2 md:pb-28 md:pt-20">
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-full bg-sun-50 px-3 py-1 text-sm font-semibold text-sun-600 ring-1 ring-sun-100">
-            <span className="h-1.5 w-1.5 rounded-full bg-sun-400" /> Coloring &amp; activity books · Ages 2–10
-          </p>
-          <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.5rem]">
-            Little books for <span className="text-coral-500">big imaginations</span>
-          </h1>
-          <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">
-            Thoughtfully designed coloring pages, mazes and tracing activities with clear, bold lines. Order a paperback on Amazon or print at home in
-            minutes.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <ButtonLink href="/books">Browse books</ButtonLink>
-            <ButtonLink href="/free-printables" variant="outline">
-              Get free pages
-            </ButtonLink>
+      {/* hero on the secondary colour band (60/30/10) */}
+      <div className="bg-sun-50">
+        <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-20 pt-14 md:grid-cols-2 md:pb-28 md:pt-20">
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1 text-sm font-semibold text-sun-600 ring-1 ring-sun-100">
+              <span className="h-1.5 w-1.5 rounded-lg bg-sun-400" /> Coloring &amp; activity books · Ages 2–10
+            </p>
+            <h1 className="mt-5 font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl lg:text-[3.5rem]">
+              Little books for <span className="text-coral-600">big imaginations</span>
+            </h1>
+            <p className="mt-5 max-w-md text-lg leading-relaxed text-muted">
+              Thoughtfully designed coloring pages, mazes and tracing activities with clear, bold lines. Order a paperback on Amazon or print at home in
+              minutes.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <ButtonLink href="/books">Browse books</ButtonLink>
+              <ButtonLink href="/free-printables" variant="outline">
+                Get free pages
+              </ButtonLink>
+            </div>
+            <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6">
+              <div>
+                <dt className="text-sm text-muted">Printed</dt>
+                <dd className="mt-1 text-xl font-bold">One side</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-muted">Print sizes</dt>
+                <dd className="mt-1 text-xl font-bold">Letter &amp; A4</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-muted">Ages</dt>
+                <dd className="mt-1 text-xl font-bold">2–10</dd>
+              </div>
+            </dl>
           </div>
-          <dl className="mt-10 grid max-w-md grid-cols-3 gap-6 border-t border-line pt-6">
-            <div>
-              <dt className="text-sm text-muted">Printed</dt>
-              <dd className="mt-1 text-xl font-bold">One side</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-muted">Print sizes</dt>
-              <dd className="mt-1 text-xl font-bold">Letter &amp; A4</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-muted">Ages</dt>
-              <dd className="mt-1 text-xl font-bold">2–10</dd>
-            </div>
-          </dl>
-        </div>
 
-        <div className="relative mx-auto w-full max-w-md">
-          <div className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-[2rem] bg-sky-100 sm:translate-x-6 sm:translate-y-6" />
-          <div className="rounded-[2rem] bg-white p-6 shadow-lift">
-            <div className="grid grid-cols-2 gap-4">
-              {hero ? (
-                <Link href={`/books/${hero.slug}`} className="col-span-2 flex items-center gap-5 rounded-2xl bg-sun-50 p-5 transition hover:ring-1 hover:ring-sun-100">
-                  <div className="w-24 shrink-0">
-                    <BookCover book={hero} sizes="96px" priority />
+          <div className="relative mx-auto w-full max-w-md">
+            <div className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-lg bg-sun-100 sm:translate-x-6 sm:translate-y-6" />
+            <div className="rounded-lg bg-white p-6 shadow-lift">
+              <div className="grid grid-cols-2 gap-4">
+                {hero ? (
+                  <Link href={`/books/${hero.slug}`} className="col-span-2 flex items-center gap-5 rounded-lg bg-sun-50 p-5 transition hover:ring-1 hover:ring-sun-100">
+                    <div className="w-24 shrink-0">
+                      <BookCover book={hero} sizes="96px" priority />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-sun-600">Newest book</p>
+                      <p className="mt-1 font-bold leading-snug">{hero.title}</p>
+                      <p className="mt-1 text-sm text-muted">
+                        {hero.page_count} pages · {ageLabel(hero)}
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="col-span-2 flex items-center gap-5 rounded-lg bg-sun-50 p-5">
+                    <div className="grid h-28 w-24 shrink-0 place-items-center rounded-lg bg-sun-400 shadow-soft">
+                      <DinoDoodle />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-sun-600">Coming soon</p>
+                      <p className="mt-1 font-bold leading-snug">Our first coloring books</p>
+                      <p className="mt-1 text-sm text-muted">Animals, ocean, space and more</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-sun-600">Newest book</p>
-                    <p className="mt-1 font-bold leading-snug">{hero.title}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {hero.page_count} pages · {ageLabel(hero)}
-                    </p>
-                  </div>
-                </Link>
-              ) : (
-                <div className="col-span-2 flex items-center gap-5 rounded-2xl bg-sun-50 p-5">
-                  <div className="grid h-28 w-24 shrink-0 place-items-center rounded-xl bg-sun-400 shadow-soft">
-                    <DinoDoodle />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-sun-600">Coming soon</p>
-                    <p className="mt-1 font-bold leading-snug">Our first coloring books</p>
-                    <p className="mt-1 text-sm text-muted">Animals, ocean, space and more</p>
-                  </div>
+                )}
+                <div className="aspect-square rounded-lg border border-line p-4">
+                  <HouseDoodle />
                 </div>
-              )}
-              <div className="aspect-square rounded-2xl border border-line p-4">
-                <HouseDoodle />
+                <div className="aspect-square rounded-lg border border-line p-4">
+                  <RocketDoodle />
+                </div>
               </div>
-              <div className="aspect-square rounded-2xl border border-line p-4">
-                <RocketDoodle />
+              <div className="mt-4 flex items-center justify-between rounded-lg bg-cream px-4 py-3 text-sm">
+                <span className="hidden font-medium text-muted sm:inline">Available as</span>
+                <span className="flex w-full justify-center gap-2 sm:w-auto">
+                  <span className="whitespace-nowrap rounded-lg bg-white px-3 py-1 font-semibold ring-1 ring-line">Paperback</span>
+                  <span className="whitespace-nowrap rounded-lg bg-white px-3 py-1 font-semibold ring-1 ring-line">Printable PDF</span>
+                </span>
               </div>
-            </div>
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-cream px-4 py-3 text-sm">
-              <span className="hidden font-medium text-muted sm:inline">Available as</span>
-              <span className="flex w-full justify-center gap-2 sm:w-auto">
-                <span className="whitespace-nowrap rounded-full bg-white px-3 py-1 font-semibold ring-1 ring-line">Paperback</span>
-                <span className="whitespace-nowrap rounded-full bg-white px-3 py-1 font-semibold ring-1 ring-line">Printable PDF</span>
-              </span>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* Shop by age */}
       <section className="bg-white" aria-labelledby="by-age">
@@ -142,7 +145,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-10 grid gap-5 sm:grid-cols-3">
             {AGE_GROUPS.map((g) => (
-              <Link key={g.title} href={`/books?age=${g.age}`} className={`group rounded-3xl p-7 transition hover:shadow-soft ${g.bg}`}>
+              <Link key={g.title} href={`/books?age=${g.age}`} className={`group rounded-lg p-7 transition hover:shadow-soft ${g.bg}`}>
                 <p className={`text-sm font-semibold ${g.eyebrow}`}>{g.label}</p>
                 <h3 className="mt-2 font-display text-xl font-semibold">{g.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted">{g.text}</p>
@@ -166,13 +169,13 @@ export default async function HomePage() {
             filters && filters.themes.length > 0 ? (
               <ul className="flex flex-wrap gap-2 text-sm font-semibold" aria-label="Browse by theme">
                 <li>
-                  <Link href="/books" className="inline-block rounded-full bg-ink px-4 py-2 text-white">
+                  <Link href="/books" className="inline-block rounded-lg bg-coral-600 px-4 py-2 text-white">
                     All
                   </Link>
                 </li>
                 {filters.themes.slice(0, 4).map((t) => (
                   <li key={t.slug}>
-                    <Link href={`/books?theme=${t.slug}`} className="inline-block rounded-full px-4 py-2 capitalize text-muted ring-1 ring-line hover:text-ink">
+                    <Link href={`/books?theme=${t.slug}`} className="inline-block rounded-lg px-4 py-2 capitalize text-muted ring-1 ring-line hover:text-ink">
                       {t.name}
                     </Link>
                   </li>
@@ -193,7 +196,7 @@ export default async function HomePage() {
             </EmptyState>
           )}
         </div>
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl bg-white px-6 py-5 ring-1 ring-line sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-lg bg-white px-6 py-5 ring-1 ring-line sm:flex-row">
           <p className="text-sm text-muted">
             <span className="font-semibold text-ink">New books added regularly.</span> Browse the full collection by age or theme.
           </p>
@@ -213,8 +216,8 @@ export default async function HomePage() {
             <p className="mt-2 text-muted">The same designs, in the format that suits your family.</p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <div className="rounded-3xl border border-line p-8">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-sun-50 text-sun-600">
+            <div className="rounded-lg border border-line p-8">
+              <div className="grid h-12 w-12 place-items-center rounded-lg bg-sun-50 text-sun-600">
                 <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5z" />
                   <path d="M4 19a2 2 0 0 1 2-2h12" />
@@ -227,12 +230,12 @@ export default async function HomePage() {
                 <li className="flex gap-3"><Check /> Large 8.5 × 11 in format</li>
                 <li className="flex gap-3"><Check /> Fast delivery with Amazon</li>
               </ul>
-              <ButtonLink href="/books" variant="dark" size="sm" className="mt-8">
+              <ButtonLink href="/books" variant="primary" size="sm" className="mt-8">
                 Shop paperbacks
               </ButtonLink>
             </div>
-            <div className="rounded-3xl border border-line p-8">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-coral-50 text-coral-600">
+            <div className="rounded-lg border border-line p-8">
+              <div className="grid h-12 w-12 place-items-center rounded-lg bg-coral-50 text-coral-600">
                 <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M6 9V3h12v6" />
                   <rect x="3" y="9" width="18" height="8" rx="2" />
@@ -269,7 +272,7 @@ export default async function HomePage() {
           <div className="grid gap-8 sm:grid-cols-2">
             {VALUES.map((v) => (
               <div key={v.title}>
-                <div className={`h-1 w-10 rounded-full ${v.bar}`} />
+                <div className={`h-1 w-10 rounded-lg ${v.bar}`} />
                 <h3 className="mt-4 font-bold">{v.title}</h3>
                 <p className="mt-1 text-sm leading-relaxed text-muted">{v.text}</p>
               </div>
@@ -280,9 +283,9 @@ export default async function HomePage() {
 
       {/* Free printables */}
       <section id="free" className="mx-auto max-w-6xl px-5 pb-24" aria-labelledby="free-title">
-        <div className="grid items-center gap-10 overflow-hidden rounded-[2rem] bg-sky-50 p-8 md:grid-cols-[1.3fr_1fr] md:p-14">
+        <div className="grid items-center gap-10 overflow-hidden rounded-lg bg-coral-50 p-8 md:grid-cols-[1.3fr_1fr] md:p-14">
           <div>
-            <p className="text-sm font-semibold text-sky-600">Free download</p>
+            <p className="text-sm font-semibold text-coral-600">Free download</p>
             <h2 id="free-title" className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
               {free?.available && free.pages ? `Get ${free.pages} free coloring pages` : "Get free coloring pages"}
             </h2>
@@ -292,8 +295,8 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="relative mx-auto h-56 w-48" aria-hidden="true">
-            <div className="absolute inset-0 translate-x-4 rotate-6 rounded-2xl bg-white shadow-soft" />
-            <div className="absolute inset-0 rounded-2xl bg-white p-5 shadow-lift">
+            <div className="absolute inset-0 translate-x-4 rotate-6 rounded-lg bg-white shadow-soft" />
+            <div className="absolute inset-0 rounded-lg bg-white p-5 shadow-lift">
               <FishDoodle />
             </div>
           </div>
@@ -306,7 +309,7 @@ export default async function HomePage() {
           <SectionHeading
             id="blog-title"
             eyebrow="Ideas & tips"
-            eyebrowClass="text-sky-600"
+            eyebrowClass="text-coral-600"
             title="From the blog"
             intro="Activity ideas, learning tips and printable help for busy parents and teachers."
             action={<ButtonLink href="/blog" variant="outline" size="sm">All articles →</ButtonLink>}

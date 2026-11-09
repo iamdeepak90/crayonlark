@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /** Manual drop: upload images generated in the ChatGPT/Gemini apps. */
 export default function Uploader({ bookId }: { bookId: number }) {
@@ -47,11 +49,11 @@ export default function Uploader({ bookId }: { bookId: number }) {
         setDrag(false);
         send(e.dataTransfer.files);
       }}
-      className={`rounded-xl border border-dashed p-6 text-center ${drag ? "border-sky bg-sky-soft" : "border-slate-300 bg-white"}`}
+      className={`rounded-lg border border-dashed p-6 text-center ${drag ? "border-ring bg-accent" : "border-slate-300 bg-white"}`}
     >
       <p className="font-semibold">Drop PNG/JPG/WebP images here</p>
       <p className="text-sm text-slate-500">or</p>
-      <label className="mt-2 inline-block cursor-pointer rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white">
+      <label className={cn(buttonVariants({ size: "sm" }), "mt-2 cursor-pointer")}>
         Choose files
         <input type="file" accept="image/*" multiple className="sr-only" disabled={busy} onChange={(e) => e.target.files && send(e.target.files)} />
       </label>

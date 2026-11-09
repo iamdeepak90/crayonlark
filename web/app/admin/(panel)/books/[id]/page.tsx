@@ -1,3 +1,4 @@
+import { Bot, Hand } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ConceptsPanel from "@/components/admin/ConceptsPanel";
@@ -6,6 +7,7 @@ import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui"
 import Uploader from "@/components/admin/Uploader";
 import { serverApi } from "@/lib/api";
 import type { BookDetail } from "@/lib/types";
+import { buttonVariants } from "@/components/ui/button";
 
 const AI_FIELDS: [string, string][] = [
   ["ai_interior_images", "Interior images"],
@@ -38,7 +40,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         {b.title}
       </PageTitle>
       <div className="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-3">
-        <Card title="Images" className="lg:col-span-2" actions={<Link href={`/books/${b.id}/images`} className="text-sm font-semibold text-sky-800 underline">Open approval grid →</Link>}>
+        <Card title="Images" className="lg:col-span-2" actions={<Link href={`/books/${b.id}/images`} className="text-sm font-medium text-foreground underline-offset-4 underline">Open approval grid →</Link>}>
           <p className="mb-3 text-sm text-slate-600">
             {pictures.length} images · {b.approved_count} approved · {pending} pending
           </p>
@@ -72,8 +74,8 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           <h3 className="mt-4 text-sm font-bold">AI disclosure</h3>
           <ul className="text-sm">
             {AI_FIELDS.map(([k, label]) => (
-              <li key={k}>
-                {f[k] ? "🤖" : "✋"} {label}: {f[k] ? "AI-generated" : "not AI"}
+              <li key={k} className="flex items-center gap-2">
+                {f[k] ? <Bot className="size-4 text-muted-foreground" aria-hidden="true" /> : <Hand className="size-4 text-muted-foreground" aria-hidden="true" />} {label}: {f[k] ? "AI-generated" : "not AI"}
               </li>
             ))}
             {f.ai_tools ? <li className="text-slate-600">Tools: {String(f.ai_tools)}</li> : null}
@@ -82,17 +84,17 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
           <ul className="text-sm">
             {b.interior_key && (
               <li>
-                <a className="text-sky-800 underline" href={fileUrl(b.interior_key)}>interior.pdf</a>
+                <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(b.interior_key)}>interior.pdf</a>
               </li>
             )}
             {b.cover_key && (
               <li>
-                <a className="text-sky-800 underline" href={fileUrl(b.cover_key)}>cover.pdf</a>
+                <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(b.cover_key)}>cover.pdf</a>
               </li>
             )}
             {b.pack_key && (
               <li>
-                <a className="text-sky-800 underline" href={fileUrl(b.pack_key)}>KDP upload pack (.zip)</a>
+                <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(b.pack_key)}>KDP upload pack (.zip)</a>
               </li>
             )}
             {!b.interior_key && !b.cover_key && <li className="text-slate-500">nothing built yet</li>}
@@ -101,20 +103,20 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         {showConcepts && <ConceptsPanel bookId={b.id} />}
         <Card title="Next steps" className="lg:col-span-2">
           <div className="flex flex-wrap gap-2">
-            {b.status === "awaiting_image_approval" && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/images`}>Review images</Link>}
-            {b.status === "awaiting_cover_approval" && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/cover`}>Review cover</Link>}
-            {["listing_draft", "awaiting_listing_approval"].includes(b.status) && <Link className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white" href={`/books/${b.id}/listings`}>Edit & approve listings</Link>}
+            {b.status === "awaiting_image_approval" && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/images`}>Review images</Link>}
+            {b.status === "awaiting_cover_approval" && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/cover`}>Review cover</Link>}
+            {["listing_draft", "awaiting_listing_approval"].includes(b.status) && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/listings`}>Edit & approve listings</Link>}
             <ManualKdpSteps bookId={b.id} status={b.status} />
             {b.status === "live" && (
               <ActionButton
                 path={`/api/admin/books/${b.id}/website`}
                 body={{ is_public: !f.is_public }}
                 label={f.is_public ? "Hide from website" : "Show on website"}
-                variant="ghost"
+                variant="outline"
               />
             )}
-            {b.approved_count > 0 && <ActionButton path={`/api/admin/books/${b.id}/free-printable`} label="Use as free printable (3 pages)" variant="ghost" confirm="Replace the website's free printable with 3 pages from this book?" />}
-            <ActionButton path={`/api/admin/books/${b.id}/status/archive`} label="Archive" variant="ghost" confirm="Archive this book?" />
+            {b.approved_count > 0 && <ActionButton path={`/api/admin/books/${b.id}/free-printable`} label="Use as free printable (3 pages)" variant="outline" confirm="Replace the website's free printable with 3 pages from this book?" />}
+            <ActionButton path={`/api/admin/books/${b.id}/status/archive`} label="Archive" variant="outline" confirm="Archive this book?" />
           </div>
         </Card>
         <Card title="Recent jobs">

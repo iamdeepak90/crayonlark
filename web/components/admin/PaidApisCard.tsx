@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import type { PaidApis } from "@/lib/types";
 import { Card } from "./ui";
 
@@ -31,7 +32,7 @@ export default function PaidApisCard({ data }: { data: PaidApis }) {
                   </div>
                 </td>
                 <td className="px-2 py-2 whitespace-nowrap">
-                  {a.key_set ? <span className="font-semibold text-emerald-700">✓ set</span> : <span className="text-slate-500">missing</span>}
+                  {a.key_set ? <span className="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400"><Check className="size-3.5" aria-hidden="true" /> set</span> : <span className="text-slate-500">missing</span>}
                 </td>
                 <td className="px-2 py-2">{a.used_by.length ? a.used_by.join(", ") : <span className="text-slate-500">—</span>}</td>
                 <td className="px-2 py-2 whitespace-nowrap">{inr(a.month_inr)}</td>

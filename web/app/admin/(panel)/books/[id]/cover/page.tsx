@@ -45,7 +45,7 @@ export default async function CoverPage({ params }: { params: Promise<{ id: stri
               />
               <ul className="mt-4 space-y-1 text-sm">
                 <li>
-                  <a className="text-sky-800 underline" href={fileUrl(latest.files.pdf)}>cover.pdf</a> (print file)
+                  <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(latest.files.pdf)}>cover.pdf</a> (print file)
                 </li>
                 <li>Theme: {String(latest.options.theme ?? "—")}</li>
                 <li>Cover image AI-generated: {latest.ai_generated ? "yes" : "no"}</li>

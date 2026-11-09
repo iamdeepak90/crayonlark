@@ -99,7 +99,7 @@ export default function ListingEditor({ item }: { item: ListingItem }) {
           <input disabled={locked} type="number" step="0.01" min={kdp ? 9.99 : 0.5} value={price} onChange={(e) => setPrice(e.target.value)} className={`${field} w-28`} />
         </label>
         {!locked && (
-          <Button variant="ghost" onClick={save}>
+          <Button variant="outline" onClick={save}>
             Save
           </Button>
         )}

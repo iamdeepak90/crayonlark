@@ -1,39 +1,41 @@
+import type { VariantProps } from "class-variance-authority";
 import Link from "next/link";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Badge as UiBadge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { CardAction, CardContent, CardHeader, CardTitle, Card as UiCard } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-/** Minimal admin UI kit: flat surfaces, hairline borders, one accent. Colours follow light/dark via CSS variables. */
+/**
+ * Admin building blocks on top of the shadcn/ui components in components/ui.
+ * Style rules: zinc palette, lucide icons, corner radius at most 8px.
+ */
 
-export function Monogram({ className = "h-7 w-7 text-xs" }: { className?: string }) {
+export { Button } from "@/components/ui/button";
+
+export function Monogram({ className }: { className?: string }) {
   return (
-    <span aria-hidden="true" className={`grid shrink-0 place-items-center rounded-md bg-ink font-bold text-white ${className}`}>
+    <span aria-hidden="true" className={cn("grid size-7 shrink-0 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground", className)}>
       C
     </span>
   );
 }
 
-export function Card({ title, children, actions, className = "" }: { title?: ReactNode; children: ReactNode; actions?: ReactNode; className?: string }) {
+export function Card({ title, children, actions, className }: { title?: ReactNode; children: ReactNode; actions?: ReactNode; className?: string }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white p-5 ${className}`}>
+    <UiCard className={cn("gap-4", className)}>
       {(title || actions) && (
-        <div className="mb-4 flex items-center justify-between gap-3">
-          {title && <h2 className="text-sm font-semibold tracking-tight">{title}</h2>}
-          {actions}
-        </div>
+        <CardHeader>
+          {title && <CardTitle className="text-base">{title}</CardTitle>}
+          {actions && <CardAction className="flex flex-wrap items-center gap-2">{actions}</CardAction>}
+        </CardHeader>
       )}
-      {children}
-    </section>
+      <CardContent>{children}</CardContent>
+    </UiCard>
   );
 }
 
-const TONES = {
-  neutral: "bg-slate-100 text-slate-600 ring-slate-200",
-  warn: "bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-300 dark:ring-amber-400/20",
-  info: "bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-400/10 dark:text-blue-300 dark:ring-blue-400/20",
-  ok: "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-300 dark:ring-emerald-400/20",
-  bad: "bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-400/10 dark:text-rose-300 dark:ring-rose-400/20",
-} as const;
-
-export type Tone = keyof typeof TONES;
+export type Tone = "neutral" | "warn" | "info" | "ok" | "bad";
 
 const STATUS_TONE: Record<string, Tone> = {
   awaiting_image_approval: "warn",
@@ -56,33 +58,15 @@ const STATUS_TONE: Record<string, Tone> = {
   failed: "bad",
 };
 
+/** Status pill: soft colour for states that matter, plain outline for everything else. */
 export function Badge({ value, tone }: { value: string; tone?: Tone }) {
-  return (
-    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${TONES[tone ?? STATUS_TONE[value] ?? "neutral"]}`}>
-      {value.replaceAll("_", " ")}
-    </span>
-  );
+  const t = tone ?? STATUS_TONE[value] ?? "neutral";
+  return <UiBadge variant={t === "neutral" ? "outline" : t}>{value.replaceAll("_", " ")}</UiBadge>;
 }
 
-export function Button({ variant = "primary", className = "", ...props }: ComponentProps<"button"> & { variant?: "primary" | "ghost" | "danger" | "ok" }) {
-  const styles = {
-    primary: "bg-ink text-white hover:opacity-90",
-    ghost: "border border-slate-200 bg-white text-ink hover:bg-slate-50",
-    danger: "bg-rose-600 text-white hover:bg-rose-700",
-    ok: "bg-emerald-600 text-white hover:bg-emerald-700",
-  }[variant];
+export function ButtonLink({ href, children, variant = "default", size = "sm" }: { href: string; children: ReactNode } & VariantProps<typeof buttonVariants>) {
   return (
-    <button
-      {...props}
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${styles} ${className}`}
-    />
-  );
-}
-
-export function ButtonLink({ href, children, variant = "primary" }: { href: string; children: ReactNode; variant?: "primary" | "ghost" }) {
-  const styles = variant === "primary" ? "bg-ink text-white hover:opacity-90" : "border border-slate-200 bg-white text-ink hover:bg-slate-50";
-  return (
-    <Link href={href} className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium transition ${styles}`}>
+    <Link href={href} className={buttonVariants({ variant, size })}>
       {children}
     </Link>
   );
@@ -91,26 +75,29 @@ export function ButtonLink({ href, children, variant = "primary" }: { href: stri
 export function PageTitle({ children, actions, description }: { children: ReactNode; actions?: ReactNode; description?: ReactNode }) {
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-      <div>
+      <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
-        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+        {description && <p className="text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-export function StatTile({ label, value, sub, href, tone }: { label: string; value: ReactNode; sub?: ReactNode; href?: string; tone?: "bad" | "warn" }) {
+export function StatTile({ label, value, sub, href, icon, tone }: { label: string; value: ReactNode; sub?: ReactNode; href?: string; icon?: ReactNode; tone?: "bad" }) {
   const body = (
     <>
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-semibold tracking-tight tabular-nums ${tone === "bad" ? "text-rose-600 dark:text-rose-400" : ""}`}>{value}</p>
-      {sub && <div className="mt-1 text-xs text-slate-500">{sub}</div>}
+      <div className="flex items-center justify-between gap-2 text-sm font-medium text-muted-foreground">
+        {label}
+        {icon && <span className="text-muted-foreground [&_svg]:size-4">{icon}</span>}
+      </div>
+      <div className={cn("mt-2 text-2xl font-semibold tracking-tight tabular-nums", tone === "bad" && "text-destructive dark:text-red-400")}>{value}</div>
+      {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
     </>
   );
-  const cls = "block rounded-xl border border-slate-200 bg-white p-4";
+  const cls = "block rounded-lg border bg-card p-5 text-card-foreground shadow-xs";
   return href ? (
-    <Link href={href} className={`${cls} transition-colors hover:border-slate-300`}>
+    <Link href={href} className={cn(cls, "transition-colors hover:bg-accent/40")}>
       {body}
     </Link>
   ) : (

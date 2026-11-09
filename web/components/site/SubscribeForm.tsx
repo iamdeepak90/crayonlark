@@ -35,7 +35,7 @@ export function SubscribeForm({ variant = "default", button = "Send my pages" }:
 
   if (status.kind === "done") {
     return (
-      <p role="status" className={`rounded-2xl p-4 text-sm font-semibold ${footer ? "bg-white/10 text-white" : "bg-white ring-1 ring-line"}`}>
+      <p role="status" className={`rounded-lg p-4 text-sm font-semibold ${"bg-white ring-1 ring-line"}`}>
         {status.message}
       </p>
     );
@@ -58,8 +58,8 @@ export function SubscribeForm({ variant = "default", button = "Send my pages" }:
           placeholder={footer ? "Email address" : "Your email address"}
           className={
             footer
-              ? "min-w-0 flex-1 rounded-full border-0 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-sun-400"
-              : "min-w-0 flex-1 rounded-full border-0 bg-white px-5 py-3 ring-1 ring-line placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-sky-400"
+              ? "min-w-0 flex-1 rounded-lg border-0 bg-white px-4 py-2.5 text-sm ring-1 ring-coral-600/20 placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-coral-600"
+              : "min-w-0 flex-1 rounded-lg border-0 bg-white px-5 py-3 ring-1 ring-line placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-coral-600"
           }
         />
         <button
@@ -67,8 +67,8 @@ export function SubscribeForm({ variant = "default", button = "Send my pages" }:
           disabled={status.kind === "sending"}
           className={
             footer
-              ? "rounded-full bg-sun-400 px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-sun-100 disabled:opacity-60"
-              : "rounded-full bg-ink px-6 py-3 font-semibold text-white transition hover:bg-ink/85 disabled:opacity-60"
+              ? "rounded-lg bg-coral-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-coral-700 disabled:opacity-60"
+              : "rounded-lg bg-coral-600 px-6 py-3 font-semibold text-white transition hover:bg-coral-700 disabled:opacity-60"
           }
         >
           {status.kind === "sending" ? "Sending…" : footer ? "Join" : button}
@@ -77,7 +77,7 @@ export function SubscribeForm({ variant = "default", button = "Send my pages" }:
       <Honeypot value={website} onChange={setWebsite} />
       {!footer && <p className="mt-3 text-sm text-muted">We&apos;ll email you a link to confirm. No spam, unsubscribe anytime.</p>}
       {status.kind === "error" && (
-        <p role="alert" className={`mt-2 text-sm font-semibold ${footer ? "text-coral-100" : "text-coral-600"}`}>
+        <p role="alert" className={`mt-2 text-sm font-semibold ${"text-coral-600"}`}>
           {status.message}
         </p>
       )}

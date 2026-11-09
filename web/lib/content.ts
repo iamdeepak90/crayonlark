@@ -41,33 +41,27 @@ export const FAQ: Faq[] = [
   },
 ];
 
-export type Theme = { slug: string; name: string; blurb: string; tint: "sun" | "sky" | "leaf" | "coral"; emoji: string };
+export type Theme = { slug: string; name: string; blurb: string; emoji: string };
 
 /** The themes we make books about. A theme links to the catalogue once it has a live book. */
 export const THEMES: Theme[] = [
-  { slug: "farm-animals", name: "Farm animals", blurb: "Cows, pigs, ducks and a big red barn.", tint: "sun", emoji: "🐮" },
-  { slug: "ocean", name: "Ocean", blurb: "Friendly fish, whales and coral reefs.", tint: "sky", emoji: "🐠" },
-  { slug: "dinosaurs", name: "Dinosaurs", blurb: "Cute, not scary, dinosaurs.", tint: "leaf", emoji: "🦕" },
-  { slug: "space", name: "Space", blurb: "Rockets, planets and astronauts.", tint: "sky", emoji: "🚀" },
-  { slug: "vehicles", name: "Trucks & trains", blurb: "Diggers, fire trucks and trains.", tint: "coral", emoji: "🚂" },
-  { slug: "bugs", name: "Bugs & gardens", blurb: "Ladybugs, bees and butterflies.", tint: "leaf", emoji: "🐞" },
-  { slug: "jungle", name: "Jungle safari", blurb: "Lions, elephants and parrots.", tint: "sun", emoji: "🦁" },
-  { slug: "alphabet", name: "ABC & tracing", blurb: "Letters to trace and colour.", tint: "coral", emoji: "🔤" },
-  { slug: "numbers", name: "Numbers & counting", blurb: "Count, connect the dots, colour.", tint: "sky", emoji: "🔢" },
-  { slug: "seasons", name: "Seasons", blurb: "Snow days, spring flowers, summer fun.", tint: "sun", emoji: "🍂" },
-  { slug: "toddler-shapes", name: "First shapes", blurb: "Very big, simple shapes for little hands.", tint: "leaf", emoji: "🟡" },
-  { slug: "kind-monsters", name: "Kind monsters", blurb: "Silly monsters doing everyday things.", tint: "coral", emoji: "👾" },
+  { slug: "farm-animals", name: "Farm animals", blurb: "Cows, pigs, ducks and a big red barn.", emoji: "🐮" },
+  { slug: "ocean", name: "Ocean", blurb: "Friendly fish, whales and coral reefs.", emoji: "🐠" },
+  { slug: "dinosaurs", name: "Dinosaurs", blurb: "Cute, not scary, dinosaurs.", emoji: "🦕" },
+  { slug: "space", name: "Space", blurb: "Rockets, planets and astronauts.", emoji: "🚀" },
+  { slug: "vehicles", name: "Trucks & trains", blurb: "Diggers, fire trucks and trains.", emoji: "🚂" },
+  { slug: "bugs", name: "Bugs & gardens", blurb: "Ladybugs, bees and butterflies.", emoji: "🐞" },
+  { slug: "jungle", name: "Jungle safari", blurb: "Lions, elephants and parrots.", emoji: "🦁" },
+  { slug: "alphabet", name: "ABC & tracing", blurb: "Letters to trace and colour.", emoji: "🔤" },
+  { slug: "numbers", name: "Numbers & counting", blurb: "Count, connect the dots, colour.", emoji: "🔢" },
+  { slug: "seasons", name: "Seasons", blurb: "Snow days, spring flowers, summer fun.", emoji: "🍂" },
+  { slug: "toddler-shapes", name: "First shapes", blurb: "Very big, simple shapes for little hands.", emoji: "🟡" },
+  { slug: "kind-monsters", name: "Kind monsters", blurb: "Silly monsters doing everyday things.", emoji: "👾" },
 ];
 
-export const TINT_BG: Record<Theme["tint"], string> = {
-  sun: "bg-sun-50",
-  sky: "bg-sky-50",
-  leaf: "bg-leaf-50",
-  coral: "bg-coral-50",
-};
 
 export const AGE_GROUPS = [
-  { age: 3, label: "Ages 2–4", title: "Toddlers", text: "Big shapes, first words and simple tracing.", bg: "bg-sky-50", eyebrow: "text-sky-600" },
-  { age: 6, label: "Ages 4–8", title: "Little artists", text: "Cute scenes, mazes, dot-to-dot and ABCs.", bg: "bg-sun-50", eyebrow: "text-sun-600" },
-  { age: 9, label: "Ages 8–12", title: "Big kids", text: "Detailed designs, word searches and puzzles.", bg: "bg-coral-50", eyebrow: "text-coral-600" },
+  { age: 3, label: "Ages 2–4", title: "Toddlers", text: "Big shapes, first words and simple tracing.", bg: "bg-sun-50", eyebrow: "text-coral-600" },
+  { age: 6, label: "Ages 4–8", title: "Little artists", text: "Cute scenes, mazes, dot-to-dot and ABCs.", bg: "bg-sun-50", eyebrow: "text-coral-600" },
+  { age: 9, label: "Ages 8–12", title: "Big kids", text: "Detailed designs, word searches and puzzles.", bg: "bg-sun-50", eyebrow: "text-coral-600" },
 ];

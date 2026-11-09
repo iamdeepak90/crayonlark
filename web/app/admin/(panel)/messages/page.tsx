@@ -13,7 +13,7 @@ export default async function MessagesPage() {
           <Card key={m.id}>
             <div className="mb-1 flex flex-wrap items-center gap-2 text-sm">
               <b>{m.name}</b>
-              <a className="text-sky-800 underline" href={`mailto:${m.email}`}>
+              <a className="font-medium text-foreground underline-offset-4 underline" href={`mailto:${m.email}`}>
                 {m.email}
               </a>
               <span className="text-slate-500">{fmtDate(m.created_at)}</span>

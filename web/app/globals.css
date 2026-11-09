@@ -4,9 +4,11 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Crayonlark design tokens (docs/design: index.html mockup, 2026-11-10).
- * Warm cream background, ink text, soft sun / sky / coral / leaf tints, Plus Jakarta Sans for
- * text and IBM Plex Serif for headings. Not Crayola-like: no chevrons, no waxy wordmark.
+ * Crayonlark design tokens (index.html mockup, 2026-11-10). Two hard rules, see CLAUDE.md:
+ * - 60/30/10 colour on the public site: cream/white base ~60 %, sun (secondary) ~30 %,
+ *   coral (accent: buttons, links, highlights) ~10 %. Ink is text. No other hues.
+ * - Corner radius at most 8px (rounded-lg) on site and admin; `pnpm lint` checks both.
+ * Plus Jakarta Sans for text, IBM Plex Serif for site headings. Not Crayola-like.
  */
 @theme {
   --color-ink: #1f2430;
@@ -19,33 +21,19 @@
   --color-sun-100: #fff0bf;
   --color-sun-400: #ffd45c;
   --color-sun-600: #8a6500; /* darkened from the mockup's #C99500 for AA text contrast */
-  --color-sky-50: #eef8fe;
-  --color-sky-100: #dcf0fc;
-  --color-sky-400: #7cc6f2;
-  --color-sky-600: #1f6f9f; /* AA on white and sky-50 */
   --color-coral-50: #fff1ed;
   --color-coral-100: #ffe1d9;
   --color-coral-400: #ff8a72;
   --color-coral-500: #f4705a;
   --color-coral-600: #c9412c; /* AA for text and button labels */
-  --color-leaf-50: #eef8f0;
-  --color-leaf-400: #6cc487;
-  --color-leaf-600: #2f7d48;
-
-  /* older names, still used in a few places */
-  --color-sun: #ffd45c;
-  --color-sun-soft: #fff8e1;
-  --color-sky: #7cc6f2;
-  --color-sky-soft: #eef8fe;
-  --color-coral: #f4705a;
-  --color-coral-dark: #c9412c;
+  --color-coral-700: #a8341f; /* button hover */
+  --color-focus: #c9412c;
 
   --font-sans: var(--font-jakarta), system-ui, sans-serif;
   --font-display: var(--font-plex), Georgia, serif;
 
   --shadow-soft: 0 1px 2px rgb(31 36 48 / 0.04), 0 8px 24px rgb(31 36 48 / 0.06);
   --shadow-lift: 0 2px 4px rgb(31 36 48 / 0.05), 0 16px 40px rgb(31 36 48 / 0.1);
-  --radius-blob: 1.5rem;
 }
 
 @layer base {
@@ -60,7 +48,7 @@
     letter-spacing: -0.01em;
   }
   :focus-visible {
-    outline: 3px solid var(--color-sky-400);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
   summary::-webkit-details-marker {
@@ -69,16 +57,63 @@
 }
 
 /*
- * Admin: its own minimalist look, separate from the playful public site. A zinc greyscale with
- * one blue accent and sans type only. Re-pointing the palette variables inside .admin means every
- * bg-white / slate-* / sky-* utility on the admin pages follows, in light and dark, without
- * per-page dark: classes.
+ * Admin: shadcn/ui style (zinc), separate from the playful public site. Components live in
+ * components/ui (shadcn patterns: cva + cn) and read the shadcn tokens below. The slate-* and
+ * white re-pointing keeps older admin markup in the same palette in light and dark.
+ * `--color-muted` stays the site's text colour, so admin uses bg-secondary instead of bg-muted.
  */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+}
+
 .admin {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --primary: #18181b;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #3f3f46;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+
   --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --color-focus: var(--ring);
   --color-white: #ffffff;
-  --color-cream: #fafafa;
-  --color-ink: #18181b;
+  --color-cream: #ffffff;
+  --color-ink: #09090b;
   --color-ink-soft: #3f3f46;
   --color-line: #e4e4e7;
   --color-slate-50: #fafafa;
@@ -91,30 +126,42 @@
   --color-slate-700: #3f3f46;
   --color-slate-800: #27272a;
   --color-slate-900: #18181b;
-  /* single accent (links, focus, info) */
-  --color-sky: #2563eb;
-  --color-sky-soft: #eff6ff;
-  --color-sky-50: #eff6ff;
-  --color-sky-100: #dbeafe;
-  --color-sky-400: #3b82f6;
-  --color-sky-600: #2563eb;
-  --color-sky-800: #1d4ed8;
-  --color-sky-900: #1e3a8a;
-  --color-coral-dark: #18181b;
-  --color-sun: #f59e0b;
   font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
-  font-feature-settings: "cv11", "ss01";
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .dark .admin {
   color-scheme: dark;
-  --color-white: #111113;
-  --color-cream: #0b0b0d;
-  --color-ink: #f4f4f5;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #09090b;
+  --card-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted-foreground: #a1a1aa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --destructive: #b91c1c;
+  --success: #15803d;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #71717a;
+  --sidebar: #111113;
+  --sidebar-foreground: #d4d4d8;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: #27272a;
+
+  --color-white: #09090b;
+  --color-cream: #09090b;
+  --color-ink: #fafafa;
   --color-ink-soft: #d4d4d8;
   --color-line: #27272a;
-  --color-slate-50: #09090b;
-  --color-slate-100: #18181b;
+  --color-slate-50: #111113;
+  --color-slate-100: #27272a;
   --color-slate-200: #27272a;
   --color-slate-300: #3f3f46;
   --color-slate-400: #71717a;
@@ -122,58 +169,57 @@
   --color-slate-600: #b4b4bb;
   --color-slate-700: #d4d4d8;
   --color-slate-800: #e4e4e7;
-  --color-slate-900: #f4f4f5;
-  --color-sky: #60a5fa;
-  --color-sky-soft: #0f1a2e;
-  --color-sky-50: #0f1a2e;
-  --color-sky-100: #172554;
-  --color-sky-400: #60a5fa;
-  --color-sky-600: #60a5fa;
-  --color-sky-800: #93c5fd;
-  --color-sky-900: #bfdbfe;
-  --color-coral-dark: #f4f4f5;
+  --color-slate-900: #fafafa;
 }
 
 body:has(.admin) {
-  background-color: #fafafa;
+  background-color: #ffffff;
 }
 .dark body:has(.admin) {
   background-color: #09090b;
 }
 
-/* Quiet defaults for the admin's forms and tables; :where() keeps them overridable by utilities. */
+/* shadcn-like defaults for raw admin form fields and tables; :where() keeps utilities in charge. */
 @layer base {
   .admin :where(*, ::before, ::after) {
-    border-color: var(--color-slate-200);
+    border-color: var(--border);
   }
   .admin :where(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) {
-    border-color: var(--color-slate-200);
-    background-color: var(--color-white);
-    color: var(--color-ink);
-    border-radius: 0.5rem;
+    border: 1px solid var(--input);
+    background-color: transparent;
+    color: var(--foreground);
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+  .dark .admin :where(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) {
+    background-color: rgb(255 255 255 / 0.03);
+  }
+  .admin :where(select) option {
+    background-color: var(--background);
   }
   .admin :where(input, select, textarea):focus-visible {
-    outline: 2px solid var(--color-sky-400);
-    outline-offset: 0;
-    border-color: transparent;
+    outline: none;
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--ring) 50%, transparent);
   }
   .admin :where(input, textarea)::placeholder {
-    color: var(--color-slate-400);
+    color: var(--muted-foreground);
   }
   .admin :where(input[type="checkbox"], input[type="radio"]) {
-    accent-color: var(--color-ink);
+    accent-color: var(--primary);
   }
   .admin :where(table) {
     border-collapse: collapse;
   }
   .admin :where(tbody tr) {
-    border-top: 1px solid var(--color-slate-100);
+    border-top: 1px solid var(--border);
+  }
+  .admin :where(tbody tr):hover {
+    background-color: color-mix(in oklab, var(--accent) 50%, transparent);
   }
   .admin :where(thead th) {
     font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-  .admin :where(hr) {
-    border-color: var(--color-slate-200);
+    color: var(--muted-foreground);
   }
 }

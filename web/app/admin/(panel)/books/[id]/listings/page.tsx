@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ListingEditor from "@/components/admin/ListingEditor";
@@ -20,8 +21,8 @@ export default async function ListingsPage({ params }: { params: Promise<{ id: s
             <Badge value={data.book.status} />
             {awaiting && (
               <>
-                <ActionButton path={`/api/admin/books/${id}/listings/redraft`} label="Redraft all" variant="ghost" confirm="Throw away these drafts and ask the listing agent again?" />
-                <ActionButton path={`/api/admin/books/${id}/listings/approve`} label={blocked ? `Fix ${blocked} first` : "✅ Approve all listings"} variant="ok" />
+                <ActionButton path={`/api/admin/books/${id}/listings/redraft`} label="Redraft all" variant="outline" confirm="Throw away these drafts and ask the listing agent again?" />
+                <ActionButton path={`/api/admin/books/${id}/listings/approve`} label={blocked ? `Fix ${blocked} first` : "Approve all listings"} icon={<Check aria-hidden="true" />} variant="success" />
               </>
             )}
           </div>
@@ -46,7 +47,7 @@ export default async function ListingsPage({ params }: { params: Promise<{ id: s
             title={`Etsy · ${l.product_kind.replaceAll("_", " ")}`}
             actions={
               awaiting && l.status !== "rejected" ? (
-                <ActionButton path={`/api/admin/listings/${l.id}/decision`} body={{ approve: false }} label="Skip this product" variant="ghost" />
+                <ActionButton path={`/api/admin/listings/${l.id}/decision`} body={{ approve: false }} label="Skip this product" variant="outline" />
               ) : undefined
             }
           >

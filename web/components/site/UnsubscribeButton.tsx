@@ -22,7 +22,7 @@ export function UnsubscribeButton({ token }: { token: string }) {
 
   if (state === "done") {
     return (
-      <p role="status" className="rounded-2xl bg-sky-50 p-4 text-lg font-semibold">
+      <p role="status" className="rounded-lg bg-sun-50 p-4 text-lg font-semibold">
         You&apos;re unsubscribed. We won&apos;t email you again. Thanks for coloring with us!
       </p>
     );
@@ -33,7 +33,7 @@ export function UnsubscribeButton({ token }: { token: string }) {
         type="button"
         onClick={unsubscribe}
         disabled={state === "sending"}
-        className="rounded-full bg-ink px-6 py-3 font-semibold text-white transition hover:bg-ink/85 disabled:opacity-60"
+        className="rounded-lg bg-coral-600 px-6 py-3 font-semibold text-white transition hover:bg-coral-700 disabled:opacity-60"
       >
         {state === "sending" ? "Unsubscribing…" : "Unsubscribe me"}
       </button>

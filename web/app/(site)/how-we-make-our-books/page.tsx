@@ -41,13 +41,13 @@ export default function HowWeMakePage() {
       />
       <ol className="mt-12 space-y-4">
         {STEPS.map((s) => (
-          <li key={s.t} className="rounded-3xl bg-white p-7 ring-1 ring-line">
+          <li key={s.t} className="rounded-lg bg-white p-7 ring-1 ring-line">
             <h2 className="font-display text-xl font-semibold">{s.t}</h2>
             <p className="mt-2 leading-relaxed text-muted">{s.d}</p>
           </li>
         ))}
       </ol>
-      <div className="mt-12 rounded-3xl bg-sun-50 p-7 ring-1 ring-sun-100">
+      <div className="mt-12 rounded-lg bg-sun-50 p-7 ring-1 ring-sun-100">
         <h2 className="font-display text-xl font-semibold">Our promise about AI</h2>
         <p className="mt-2 leading-relaxed text-muted">
           Our books are designed by Crayonlark with the help of AI tools, then edited and checked by a person. They are not hand-drawn, and we will never

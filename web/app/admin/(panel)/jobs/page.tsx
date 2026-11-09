@@ -3,6 +3,7 @@ import ActionButton from "@/components/admin/ActionButton";
 import { Badge, PageTitle, fmtDate } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
 import type { Job } from "@/lib/types";
+import { tabClass, tabsListClass } from "@/components/ui/tabs";
 
 export default async function JobsPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status } = await searchParams;
@@ -10,14 +11,14 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
   return (
     <>
       <PageTitle>Job monitor</PageTitle>
-      <div className="mb-3 flex gap-2 text-sm">
+      <nav aria-label="Status" className={`mb-3 ${tabsListClass}`}>
         {["", "queued", "running", "failed", "succeeded"].map((s) => (
-          <Link key={s} href={s ? `/jobs?status=${s}` : "/jobs"} className={`rounded-lg px-2 py-1 font-semibold ${status === s || (!status && !s) ? "bg-ink text-white" : "bg-white"}`}>
+          <Link key={s} href={s ? `/jobs?status=${s}` : "/jobs"} className={tabClass(status === s || (!status && !s))}>
             {s || "all"}
           </Link>
         ))}
-      </div>
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      </nav>
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
@@ -49,7 +50,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
                     </details>
                   ) : null}
                 </td>
-                <td className="p-3">{(j.status === "failed" || j.status === "queued") && <ActionButton path={`/api/admin/jobs/${j.id}/retry`} label="Retry" variant="ghost" />}</td>
+                <td className="p-3">{(j.status === "failed" || j.status === "queued") && <ActionButton path={`/api/admin/jobs/${j.id}/retry`} label="Retry" variant="outline" />}</td>
               </tr>
             ))}
           </tbody>

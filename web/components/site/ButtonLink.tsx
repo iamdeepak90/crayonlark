@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const VARIANTS = {
-  primary: "bg-coral-600 text-white shadow-soft hover:bg-ink",
-  dark: "bg-ink text-white hover:bg-ink/85",
+  // colour roles (60/30/10, see CLAUDE.md): coral = accent, sun = secondary, white = base
+  primary: "bg-coral-600 text-white shadow-soft hover:bg-coral-700",
+  secondary: "bg-sun-100 text-ink hover:bg-sun-400",
   outline: "bg-white text-ink ring-1 ring-line hover:ring-ink/25",
-  sun: "bg-sun-400 text-ink hover:bg-sun-100",
 };
 
 type Variant = keyof typeof VARIANTS;
@@ -20,11 +20,11 @@ type Props = {
 };
 
 export const buttonClass = (variant: Variant = "primary", size: "md" | "sm" = "md") =>
-  `inline-flex items-center justify-center gap-1.5 rounded-full text-center font-semibold transition ${
+  `inline-flex items-center justify-center gap-1.5 rounded-lg text-center font-semibold transition ${
     size === "sm" ? "px-5 py-2.5 text-sm" : "px-6 py-3"
   } ${VARIANTS[variant]}`;
 
-/** A link that looks like a pill button. External links open in a new tab. */
+/** A link that looks like a button. External links open in a new tab. */
 export function ButtonLink({ href, children, variant = "primary", size = "md", external, rel, className = "" }: Props) {
   const cls = `${buttonClass(variant, size)} ${className}`;
   if (external) {

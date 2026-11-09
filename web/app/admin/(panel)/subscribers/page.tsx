@@ -1,3 +1,5 @@
+import { Download } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
 
@@ -13,8 +15,8 @@ export default async function SubscribersPage() {
     <>
       <PageTitle
         actions={
-          <a href="/api/admin/subscribers.csv" className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white">
-            ⬇ Export confirmed (CSV)
+          <a href="/api/admin/subscribers.csv" className={buttonVariants({ size: "sm" })}>
+            <Download aria-hidden="true" /> Export confirmed (CSV)
           </a>
         }
       >
@@ -31,7 +33,7 @@ export default async function SubscribersPage() {
           {d.free_printable ? (
             <p className="text-sm">
               {d.free_printable.title} ({d.free_printable.pages} pages) ·{" "}
-              <a className="text-sky-800 underline" href={fileUrl(d.free_printable.key)}>
+              <a className="font-medium text-foreground underline-offset-4 underline" href={fileUrl(d.free_printable.key)}>
                 PDF
               </a>
             </p>

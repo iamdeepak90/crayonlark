@@ -60,7 +60,7 @@ function GroupForm({ group, onSaved }: { group: IntegrationGroup; onSaved: (g: I
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 p-4" aria-labelledby={`int-${group.id}`}>
+    <section className="rounded-lg border border-slate-200 p-4" aria-labelledby={`int-${group.id}`}>
       <div className="flex items-center justify-between gap-3">
         <h3 id={`int-${group.id}`} className="font-semibold">
           {group.title}
@@ -115,7 +115,7 @@ function FieldInput({
   if (f.from_env) status = "set by an env var (wins over this field)";
   else if (f.secret && f.unreadable) status = "saved with an older SECRET_KEY: enter it again";
   else if (f.secret && cleared) status = "will be removed on save";
-  else if (f.secret && f.set) status = "✓ saved";
+  else if (f.secret && f.set) status = "saved";
   return (
     <div>
       <label htmlFor={id} className="flex flex-wrap items-baseline justify-between gap-x-2 text-sm font-semibold">
@@ -146,7 +146,7 @@ function FieldInput({
           />
         )}
         {f.secret && f.set && !cleared && (
-          <Button type="button" variant="ghost" onClick={onClear} aria-label={`Remove saved ${f.label}`}>
+          <Button type="button" variant="outline" onClick={onClear} aria-label={`Remove saved ${f.label}`}>
             Remove
           </Button>
         )}

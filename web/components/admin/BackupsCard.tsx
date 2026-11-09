@@ -1,3 +1,4 @@
+import { CircleCheck, CircleX } from "lucide-react";
 import ActionButton from "./ActionButton";
 import { Card, fmtDate } from "./ui";
 import type { BackupsResponse } from "@/lib/types";
@@ -15,7 +16,7 @@ export default function BackupsCard({ backups: b }: { backups: BackupsResponse }
   const warn = needsAttention(b);
   const last = b.last;
   return (
-    <Card title="Backups" className={warn ? "border-amber-400 bg-amber-50" : ""} actions={<ActionButton path="/api/admin/backups/run" label="Run backup now" variant="ghost" success="Backup started: refresh in a few minutes." />}>
+    <Card title="Backups" className={warn ? "border-amber-400 bg-amber-50" : ""} actions={<ActionButton path="/api/admin/backups/run" label="Run backup now" variant="outline" success="Backup started: refresh in a few minutes." />}>
       {warn && (
         <p role="alert" className="mb-2 text-sm font-semibold text-amber-900">
           {!last ? "No backup has run yet." : !last.ok ? `The last backup (${last.day}) failed.` : `The last backup is from ${last.day}, more than ${MAX_AGE_DAYS} days ago.`}
@@ -24,7 +25,10 @@ export default function BackupsCard({ backups: b }: { backups: BackupsResponse }
       {last && (
         <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
           <dt className="text-slate-500">Last run</dt>
-          <dd>{last.day} {last.ok ? "✓" : "✗ failed"}</dd>
+          <dd className="flex items-center gap-1.5">
+            {last.day}{" "}
+            {last.ok ? <CircleCheck className="size-4 text-emerald-600" aria-label="ok" /> : <span className="inline-flex items-center gap-1 text-destructive"><CircleX className="size-4" aria-hidden="true" /> failed</span>}
+          </dd>
           <dt className="text-slate-500">Finished</dt>
           <dd>{fmtDate(last.finished_at)}</dd>
           {last.error && (

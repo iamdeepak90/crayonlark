@@ -28,13 +28,13 @@ export default function ManualKdpSteps({ bookId, status }: { bookId: number; sta
     return (
       <div className="flex flex-wrap items-end gap-2">
         {status === "kdp_uploaded" && (
-          <Button variant="ghost" onClick={() => go("proof-ordered")}>
+          <Button variant="outline" onClick={() => go("proof-ordered")}>
             Proof ordered
           </Button>
         )}
         <input aria-label="ASIN" placeholder="ASIN" value={asin} onChange={(e) => setAsin(e.target.value)} className="w-32 rounded-lg border px-2 py-1 text-sm" />
         <input aria-label="Amazon URL" placeholder="Amazon URL" value={url} onChange={(e) => setUrl(e.target.value)} className="w-64 rounded-lg border px-2 py-1 text-sm" />
-        <Button variant="ok" onClick={() => go("live")}>
+        <Button variant="success" onClick={() => go("live")}>
           Mark live
         </Button>
         {err && <span className="text-sm text-rose-700">{err}</span>}

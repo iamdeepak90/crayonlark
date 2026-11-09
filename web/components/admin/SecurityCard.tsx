@@ -43,7 +43,7 @@ export default function SecurityCard({ email, totpEnabled }: { email: string; to
         <div className="mt-3 flex gap-2">
           <input aria-label="Current 2FA code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="code to disable" className="rounded-lg border px-3 py-1.5" />
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={async () => {
               try {
                 await api("/api/auth/totp/disable", { body: { code } });

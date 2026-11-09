@@ -16,7 +16,7 @@ export function LarkMark({ className = "h-8 w-8" }: { className?: string }) {
 
 export function Logo({ dark = false }: { dark?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 rounded-full" aria-label="Crayonlark home">
+    <Link href="/" className="flex items-center gap-2.5 rounded-lg" aria-label="Crayonlark home">
       <LarkMark />
       <span className={`font-display text-xl font-semibold tracking-tight ${dark ? "text-white" : ""}`}>Crayonlark</span>
     </Link>

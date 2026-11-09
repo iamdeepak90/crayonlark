@@ -18,7 +18,7 @@ export function RocketDoodle() {
   return (
     <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
       <path d="M50 10 C66 26 68 50 60 70 L40 70 C32 50 34 26 50 10 Z" {...S} />
-      <circle cx="50" cy="38" r="8" fill="#DCF0FC" stroke="#1F2430" strokeWidth="3" />
+      <circle cx="50" cy="38" r="8" fill="#FFF0BF" stroke="#1F2430" strokeWidth="3" />
       <path d="M40 58 L28 76 L42 71 Z M60 58 L72 76 L58 71 Z" {...S} />
       <path d="M44 72 Q50 92 56 72" {...S} />
     </svg>

@@ -1,12 +1,11 @@
 import Image from "next/image";
 import type { PublicBook } from "@/lib/public";
 import { LarkMark } from "./Logo";
-import { tintFor } from "./tints";
+import { TINT as tint } from "./tints";
 
 /** The real cover image, or a simple stand-in "book" in the brand colours until a cover exists. */
 export function BookCover({ book, sizes, priority }: { book: PublicBook; sizes: string; priority?: boolean }) {
   const shape = book.trim === "8.5x8.5" ? "aspect-square" : "aspect-[17/22]";
-  const tint = tintFor(book.slug);
   if (book.cover_url) {
     return (
       <div className={`relative ${shape} w-full overflow-hidden rounded-r-lg rounded-l-sm bg-white shadow-lift`}>

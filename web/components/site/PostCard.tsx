@@ -2,13 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatDate, type PostSummary } from "@/lib/public";
 import { CloudDoodle, DinoDoodle, FishDoodle, HouseDoodle, RocketDoodle } from "./Doodles";
-import { tintFor } from "./tints";
+import { TINT as tint } from "./tints";
 
 const DOODLES = [HouseDoodle, RocketDoodle, FishDoodle, CloudDoodle];
 
 /** Cover image, or a soft tinted tile with a doodle when the post has no image. */
 function PostArt({ post, featured }: { post: PostSummary; featured?: boolean }) {
-  const tint = tintFor(post.slug);
   if (post.cover_url) {
     return <Image src={post.cover_url} alt="" fill sizes={featured ? "(min-width: 1024px) 55vw, 90vw" : "160px"} className="object-cover transition duration-500 group-hover:scale-[1.04]" />;
   }
@@ -24,12 +23,12 @@ function PostArt({ post, featured }: { post: PostSummary; featured?: boolean }) 
   }
   return (
     <div className={`relative grid h-full w-full place-items-center ${tint.bg}`}>
-      <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-white/50" />
+      <div className="absolute -right-10 -top-10 h-48 w-48 rounded-lg bg-white/50" />
       <div className="relative flex gap-4 transition duration-500 group-hover:scale-[1.04]">
-        <div className="h-32 w-28 -rotate-6 rounded-xl bg-white p-4 shadow-lift sm:h-44 sm:w-36">
+        <div className="h-32 w-28 -rotate-6 rounded-lg bg-white p-4 shadow-lift sm:h-44 sm:w-36">
           <DinoDoodle className="h-full w-full" />
         </div>
-        <div className="h-32 w-28 rotate-3 rounded-xl bg-white p-4 shadow-lift sm:h-44 sm:w-36">
+        <div className="h-32 w-28 rotate-3 rounded-lg bg-white p-4 shadow-lift sm:h-44 sm:w-36">
           <Doodle />
         </div>
       </div>
@@ -51,7 +50,7 @@ export function FeaturedPost({ post }: { post: PostSummary }) {
   return (
     <article className="group">
       <Link href={`/blog/${post.slug}`} className="block">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-3xl">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-lg">
           <PostArt post={post} featured />
         </div>
         <div className="mt-6">
@@ -70,8 +69,8 @@ export function FeaturedPost({ post }: { post: PostSummary }) {
 export function PostRow({ post }: { post: PostSummary }) {
   return (
     <article className="group">
-      <Link href={`/blog/${post.slug}`} className="flex gap-5 rounded-3xl p-3 transition hover:bg-cream">
-        <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-2xl sm:w-36">
+      <Link href={`/blog/${post.slug}`} className="flex gap-5 rounded-lg p-3 transition hover:bg-cream">
+        <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg sm:w-36">
           <PostArt post={post} />
         </div>
         <div className="min-w-0 py-1">
@@ -87,8 +86,8 @@ export function PostRow({ post }: { post: PostSummary }) {
 export function PostCard({ post }: { post: PostSummary }) {
   return (
     <article className="group h-full">
-      <Link href={`/blog/${post.slug}`} className="flex h-full flex-col rounded-3xl bg-white p-3 ring-1 ring-line transition duration-300 hover:-translate-y-1 hover:shadow-lift">
-        <div className="relative aspect-[16/10] overflow-hidden rounded-2xl">
+      <Link href={`/blog/${post.slug}`} className="flex h-full flex-col rounded-lg bg-white p-3 ring-1 ring-line transition duration-300 hover:-translate-y-1 hover:shadow-lift">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-lg">
           <PostArt post={post} />
         </div>
         <div className="flex flex-1 flex-col px-2 pb-2 pt-4">

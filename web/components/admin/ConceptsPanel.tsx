@@ -107,7 +107,7 @@ export default function ConceptsPanel({ bookId }: { bookId: number }) {
         {manual && " — copy a prompt, make the picture yourself, then upload it on its row (or drop files in Images)."}
       </p>
       <div className="flex flex-wrap items-end gap-2">
-        <Button variant="ghost" disabled={busy || !data.can_make_concepts} onClick={writePrompts} title={data.can_make_concepts ? "" : `Book is ${data.status}`}>
+        <Button variant="outline" disabled={busy || !data.can_make_concepts} onClick={writePrompts} title={data.can_make_concepts ? "" : `Book is ${data.status}`}>
           Write scene prompts
         </Button>
         {!manual && (
@@ -124,13 +124,13 @@ export default function ConceptsPanel({ bookId }: { bookId: number }) {
             </span>
           </>
         )}
-        <Button variant="ghost" disabled={!all.length} onClick={() => copy(all.map((c) => `${c.position}. ${c.scene_title}\n${c.prompt}`).join("\n\n"), "all prompts")}>
+        <Button variant="outline" disabled={!all.length} onClick={() => copy(all.map((c) => `${c.position}. ${c.scene_title}\n${c.prompt}`).join("\n\n"), "all prompts")}>
           Copy all prompts
         </Button>
-        <Button variant="ghost" onClick={() => { load(); router.refresh(); }}>Refresh</Button>
+        <Button variant="outline" onClick={() => { load(); router.refresh(); }}>Refresh</Button>
       </div>
       {msg && <p role="status" className="mt-2 text-sm">{msg}</p>}
-      <ul className="mt-3 max-h-[32rem] divide-y divide-slate-100 overflow-y-auto rounded-xl border border-slate-200">
+      <ul className="mt-3 max-h-[32rem] divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
         {all.map((c) => (
           <li key={c.id} className="p-2 text-sm">
             <div className="flex flex-wrap items-center gap-2">
@@ -138,7 +138,7 @@ export default function ConceptsPanel({ bookId }: { bookId: number }) {
               <span className="min-w-0 flex-1 truncate font-semibold">{c.scene_title || `#${c.id}`}</span>
               <Badge value={c.status} />
               {c.status === "failed" && !manual && (
-                <Button variant="ghost" disabled={busy || !data.can_generate} onClick={() => generate({ image_ids: [c.id] })}>Retry</Button>
+                <Button variant="outline" disabled={busy || !data.can_generate} onClick={() => generate({ image_ids: [c.id] })}>Retry</Button>
               )}
               {c.status !== "generating" && (
                 <label className="cursor-pointer rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold hover:bg-slate-50">
@@ -162,7 +162,7 @@ export default function ConceptsPanel({ bookId }: { bookId: number }) {
             <details className="mt-1 pl-10">
               <summary className="cursor-pointer text-xs text-slate-500">Prompt</summary>
               <p className="mt-1 whitespace-pre-wrap text-xs">{c.prompt}</p>
-              <Button variant="ghost" className="mt-1" onClick={() => copy(c.prompt, `prompt ${c.position}`)}>Copy prompt</Button>
+              <Button variant="outline" className="mt-1" onClick={() => copy(c.prompt, `prompt ${c.position}`)}>Copy prompt</Button>
             </details>
           </li>
         ))}

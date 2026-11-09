@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /** Upload the KDP royalties report (CSV). Re-uploading the same file only skips rows already imported. */
 export default function KdpCsvUpload() {
@@ -33,7 +35,7 @@ export default function KdpCsvUpload() {
       <p className="text-sm text-slate-600">
         KDP → Reports → Royalties (or Prior months) → download, save as CSV, upload here. Re-uploading the same file is safe.
       </p>
-      <label className="mt-2 inline-block cursor-pointer rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white">
+      <label className={cn(buttonVariants({ size: "sm" }), "mt-2 cursor-pointer")}>
         {busy ? "Importing…" : "Upload KDP CSV"}
         <input
           type="file"
