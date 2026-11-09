@@ -22,8 +22,9 @@ certificates. After that you can turn it on, with SSL mode "Full (strict)".
 1. Coolify → Projects → New → **Docker Compose** → from your GitHub repo `crayonlark`, branch
    `main`, compose file `docker-compose.yml` (not the dev file).
 2. **Domains:** set them on the `web` service only:
-   `https://crayonlark.com,https://www.crayonlark.com,https://admin.crayonlark.com`, port 3000.
-   Leave every other service without a domain.
+   `https://crayonlark.com:3000,https://www.crayonlark.com:3000,https://admin.crayonlark.com:3000`.
+   The `:3000` tells Coolify's proxy which container port to use. It does not appear in the
+   public URL. Leave every other service without a domain.
 3. **Environment variables:** Coolify lists every `${VAR}` it finds in the compose file. Fill in
    at least the REQUIRED block from `.env.example`. Generate each secret on your own machine with
    the command shown next to it (`openssl rand -hex 32` and so on). Then set:
