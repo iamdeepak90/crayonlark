@@ -300,3 +300,6 @@ export type BackupsResponse = { last: BackupRun | null; dumps: string[]; retenti
 export type WeeklyReport = { text: string; data: Record<string, unknown> };
 
 export type BudgetSettings = { month: string; spent_inr: number; cap_inr: number; usd_inr_rate: number; ratio: number; state: BudgetState };
+
+export type PaidApi = { id: string; name: string; used_for: string; env: string[]; url: string; key_set: boolean; used_by: string[]; month_usd: number; month_inr: number };
+export type PaidApis = { month: string; apis: PaidApi[] };

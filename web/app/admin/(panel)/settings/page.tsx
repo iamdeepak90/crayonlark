@@ -1,11 +1,12 @@
 import AISettings from "@/components/admin/AISettings";
 import BackupsCard from "@/components/admin/BackupsCard";
 import BudgetCard from "@/components/admin/BudgetCard";
+import PaidApisCard from "@/components/admin/PaidApisCard";
 import SecurityCard from "@/components/admin/SecurityCard";
 import SettingEditor from "@/components/admin/SettingEditor";
 import { PageTitle } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
-import type { AIProviders, BackupsResponse, BudgetSettings } from "@/lib/types";
+import type { AIProviders, BackupsResponse, BudgetSettings, PaidApis } from "@/lib/types";
 
 // Edited in their own cards instead (they validate before saving).
 const AI_KEYS = new Set(["agent_models", "image_provider", "budget"]);
@@ -21,12 +22,13 @@ const HELP: Record<string, string> = {
 };
 
 export default async function SettingsPage() {
-  const [settings, me, ai, backups, budget] = await Promise.all([
+  const [settings, me, ai, backups, budget, paid] = await Promise.all([
     serverApi<Record<string, unknown>>("/api/admin/settings"),
     serverApi<{ email: string; totp_enabled: boolean }>("/api/auth/me"),
     serverApi<AIProviders>("/api/admin/ai/providers"),
     serverApi<BackupsResponse>("/api/admin/backups"),
     serverApi<BudgetSettings>("/api/admin/budget"),
+    serverApi<PaidApis>("/api/admin/paid-apis"),
   ]);
   return (
     <>
@@ -35,8 +37,9 @@ export default async function SettingsPage() {
         API keys and other secrets live in Coolify environment variables. Everything here is stored in the database and every change is written to the audit log.
       </p>
       <div className="grid gap-4 lg:grid-cols-2">
-        <AISettings initial={ai} />
+        <PaidApisCard data={paid} />
         <BudgetCard initial={budget} />
+        <AISettings initial={ai} />
         <BackupsCard backups={backups} />
         <SecurityCard email={me.email} totpEnabled={me.totp_enabled} />
         {Object.entries(settings)

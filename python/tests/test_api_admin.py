@@ -103,3 +103,18 @@ def test_budget_is_edited_in_settings(client: TestClient) -> None:
     assert (
         client.put("/api/admin/settings/budget", json={"value": {}}, headers=H).status_code == 400
     )
+
+
+def test_paid_apis_overview_never_shows_keys(client: TestClient, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.core.config import get_settings
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-secret-value")
+    get_settings.cache_clear()
+    login(client)
+    r = client.get("/api/admin/paid-apis")
+    get_settings.cache_clear()
+    assert "sk-secret-value" not in r.text
+    apis = {a["id"]: a for a in r.json()["apis"]}
+    assert set(apis) == {"anthropic", "openai", "gemini", "websearch"}
+    assert apis["openai"]["key_set"] and not apis["anthropic"]["key_set"]
+    assert apis["openai"]["used_by"] == []  # nothing uses it until chosen in AI settings

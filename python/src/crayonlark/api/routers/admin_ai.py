@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
@@ -222,6 +224,85 @@ def costs(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> di
                 "book_id": c.book_id,
             }
             for c in recent
+        ],
+    }
+
+
+# --------------------------------------------------------------------------- paid APIs overview
+
+PAID_APIS: list[dict[str, Any]] = [
+    {
+        "id": "anthropic",
+        "name": "Anthropic (Claude)",
+        "used_for": "AI text agents (research, scene ideas, listings, blog) and the vision check",
+        "env": ["ANTHROPIC_API_KEY"],
+        "url": "https://console.anthropic.com",
+    },
+    {
+        "id": "openai",
+        "name": "OpenAI",
+        "used_for": "AI text agents, the vision check and image generation",
+        "env": ["OPENAI_API_KEY"],
+        "url": "https://platform.openai.com",
+    },
+    {
+        "id": "gemini",
+        "name": "Google Gemini",
+        "used_for": "AI text agents, the vision check and image generation",
+        "env": ["GEMINI_API_KEY"],
+        "url": "https://aistudio.google.com",
+    },
+    {
+        "id": "websearch",
+        "name": "Web search (Brave or Tavily)",
+        "used_for": "Optional web search for the research agent (Amazon and Etsy are excluded)",
+        "env": ["WEBSEARCH_PROVIDER", "WEBSEARCH_API_KEY"],
+        "url": "https://brave.com/search/api/ · https://tavily.com",
+    },
+]
+
+
+@router.get("/paid-apis")
+def paid_apis(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
+    """Every paid API: key set or not (never the key itself), who uses it, spend this month."""
+    st = get_settings()
+    keys = {
+        "anthropic": bool(st.anthropic_api_key),
+        "openai": bool(st.openai_api_key),
+        "gemini": bool(st.gemini_api_key),
+        "websearch": websearch.configured(),
+    }
+    users: dict[str, list[str]] = {k: [] for k in keys}
+    models = app_settings.get("agent_models", s) or {}
+    for agent, cfg in models.items():
+        if cfg.get("provider") in users:
+            users[cfg["provider"]].append(agent)
+    image = (app_settings.get("image_provider", s) or {}).get("provider")
+    if image in users:
+        users[image].append("images")
+    if keys["websearch"]:
+        users["websearch"].append("research (when “Use web search” is ticked)")
+    month = budget.month_key()
+    spend = dict(
+        s.execute(
+            select(ApiCost.provider, func.sum(ApiCost.cost_usd))
+            .where(ApiCost.month == month, ApiCost.status == "committed")
+            .group_by(ApiCost.provider)
+        ).all()
+    )
+    spend["websearch"] = sum(float(spend.pop(p, 0) or 0) for p in ("brave", "tavily"))
+    rate = budget.limits(s).usd_inr_rate
+    return {
+        "month": month,
+        "apis": [
+            {
+                **api,
+                "key_set": keys[api["id"]],
+                "used_by": users[api["id"]],
+                "month_usd": round(float(spend.get(api["id"]) or 0), 4),
+                "month_inr": round(float(spend.get(api["id"]) or 0) * rate, 2),
+            }
+            for api in PAID_APIS
         ],
     }
 
