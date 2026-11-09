@@ -5,13 +5,17 @@ const PAGES: { path: string; heading: RegExp }[] = [
   { path: "/", heading: /Little books for big imaginations/ },
   { path: "/books", heading: /Coloring & activity books/ },
   { path: "/books?age=4&theme=ocean-animals", heading: /Coloring & activity books/ },
-  { path: "/free-printables", heading: /Free printable coloring pages/ },
+  { path: "/free-printables", heading: /free (printable )?coloring pages/i },
   { path: "/free-printables/confirm?token=not-a-real-token", heading: /didn.t work/ },
   { path: "/unsubscribe", heading: /Unsubscribe/ },
   { path: "/unsubscribe?token=abc", heading: /Unsubscribe/ },
-  { path: "/blog", heading: /Blog/ },
+  { path: "/blog", heading: /blog/i },
+  { path: "/themes", heading: /favourite/ },
+  { path: "/faq", heading: /Frequently asked questions/ },
+  { path: "/parents-and-teachers", heading: /grow with your kids/ },
+  { path: "/how-we-make-our-books", heading: /How we make our books/ },
   { path: "/about", heading: /About Crayonlark/ },
-  { path: "/contact", heading: /Contact us/ },
+  { path: "/contact", heading: /Say hello/ },
   { path: "/privacy", heading: /Privacy policy/ },
   { path: "/terms", heading: /Terms of use/ },
   { path: "/license", heading: /Printable license/ },
@@ -57,10 +61,11 @@ test("legal pages carry the hidden template note", async ({ request }) => {
 test("forms have a hidden honeypot", async ({ page }) => {
   await page.goto("/contact");
   await expect(page.getByLabel("Your name")).toBeVisible();
-  await expect(page.locator('input[name="website"]')).not.toBeInViewport();
+  for (const hp of await page.locator('input[name="website"]').all()) await expect(hp).not.toBeInViewport();
   await page.goto("/free-printables");
-  await expect(page.getByLabel("Your email address")).toBeVisible();
-  await expect(page.locator('input[name="website"]')).not.toBeInViewport();
+  await expect(page.getByLabel("Your email address", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Email address for free pages")).toBeAttached(); // footer sign-up
+  for (const hp of await page.locator('input[name="website"]').all()) await expect(hp).not.toBeInViewport();
 });
 
 test("admin is not served on the public host", async ({ request }) => {

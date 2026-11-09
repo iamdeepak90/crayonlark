@@ -135,13 +135,16 @@ GROUPS: tuple[Group, ...] = (
         "website",
         "Website extras",
         "Amazon Associates tag on Amazon links, Cloudflare Turnstile on the contact form, Umami "
-        "analytics. The website picks up changes within 5 minutes.",
+        "analytics, social links in the footer. The website picks up changes within 5 minutes.",
         (
             Field("amazon_associates_tag", "Amazon Associates tag", placeholder="crayonlark-20"),
             Field("turnstile_site_key", "Turnstile site key"),
             Field("turnstile_secret", "Turnstile secret key", True),
             Field("umami_url", "Umami URL", placeholder="https://stats.crayonlark.com"),
             Field("umami_website_id", "Umami website id"),
+            Field("pinterest_profile_url", "Pinterest profile URL (footer icon)"),
+            Field("instagram_url", "Instagram URL (footer icon)"),
+            Field("etsy_shop_url", "Etsy shop URL (footer icon)"),
         ),
     ),
 )
@@ -325,4 +328,12 @@ def public_site_config() -> dict[str, str]:
         "turnstile_site_key": s.turnstile_site_key,
         "umami_url": s.umami_url.rstrip("/"),
         "umami_website_id": s.umami_website_id,
+        "pinterest_profile_url": _https(s.pinterest_profile_url),
+        "instagram_url": _https(s.instagram_url),
+        "etsy_shop_url": _https(s.etsy_shop_url),
     }
+
+
+def _https(url: str) -> str:
+    """Only plain https links go into the public footer."""
+    return url if url.startswith("https://") and " " not in url else ""

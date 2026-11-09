@@ -11,15 +11,16 @@ export const metadata = pageMetadata({
 export default async function ContactPage() {
   const { turnstile_site_key } = await getSiteConfig();
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-3xl px-5 py-14 sm:py-20">
       <PageHeader
-        title="Contact us"
+        eyebrow="Contact"
+        title="Say hello"
         intro="Questions about a book or a printable, spotted a mistake, or have an idea? Send us a message."
       />
-      <div className="mt-8">
+      <div className="mt-10 rounded-3xl bg-white p-6 ring-1 ring-line sm:p-10">
         <ContactForm turnstileSiteKey={turnstile_site_key} />
       </div>
-      <p className="mt-8 text-sm text-ink-soft">
+      <p className="mt-8 text-sm text-muted">
         For orders, returns and shipping of paperbacks, please contact Amazon. For printable downloads bought on Etsy, you
         can also message us through Etsy.
       </p>

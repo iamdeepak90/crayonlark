@@ -11,10 +11,18 @@ from sqlalchemy.orm import Session
 
 from crayonlark.api.deps import Admin, db, require_admin
 from crayonlark.core import app_settings, approvals, budget, jobs_admin, kdp_slots
-from crayonlark.core.enums import BookStatus, JobStatus, NicheStatus
-from crayonlark.core.models import AuditLog, Book, Job, Niche
+from crayonlark.core.enums import BookStatus, JobStatus, NicheStatus, PostStatus, SubscriberStatus
+from crayonlark.core.models import AuditLog, BlogPost, Book, ContactMessage, Job, Niche, Subscriber
 
 router = APIRouter(prefix="/api/admin", tags=["admin-ops"])
+
+
+NEEDS_YOU_STATUSES = (
+    BookStatus.AWAITING_IMAGE_APPROVAL,
+    BookStatus.AWAITING_COVER_APPROVAL,
+    BookStatus.AWAITING_LISTING_APPROVAL,
+    BookStatus.KDP_PACK_READY,
+)
 
 
 @router.get("/dashboard")
@@ -31,7 +39,24 @@ def dashboard(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
         "statuses": [st.value for st in BookStatus],
         "failed_jobs": failed_jobs,
         "pending_niches": pending_niches,
+        "posts_to_review": s.scalar(
+            select(func.count(BlogPost.id)).where(
+                BlogPost.status.in_([PostStatus.DRAFT, PostStatus.AWAITING_APPROVAL])
+            )
+        )
+        or 0,
+        "subscribers": s.scalar(
+            select(func.count(Subscriber.id)).where(Subscriber.status == SubscriberStatus.CONFIRMED)
+        )
+        or 0,
+        "messages": s.scalar(select(func.count(ContactMessage.id))) or 0,
     }
+    # everything waiting for a human decision (the top-bar counter)
+    out["needs_you"] = (
+        sum(by_status.get(st, 0) for st in NEEDS_YOU_STATUSES)
+        + pending_niches
+        + out["posts_to_review"]
+    )
     out["kdp_slots"] = kdp_slots.summary(s)
     out["budget"] = budget.summary(s)
     return out

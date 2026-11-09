@@ -13,19 +13,19 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Sear
   const downloadUrl = result?.ok && result.download_url.startsWith("/") ? result.download_url : null;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
+    <div className="mx-auto max-w-2xl px-5 py-20">
       {downloadUrl ? (
         <div className="text-center">
-          <h1 className="text-4xl font-bold">You&apos;re in!</h1>
-          <p className="mt-4 text-lg text-ink-soft">Thanks for confirming your email. Your free coloring pages are ready.</p>
+          <h1 className="font-display text-4xl font-semibold tracking-tight">You&apos;re in!</h1>
+          <p className="mt-4 text-lg text-muted">Thanks for confirming your email. Your free coloring pages are ready.</p>
           <a href={downloadUrl} className={`mt-8 ${buttonClass("primary")}`}>
             Download the printable (PDF)
           </a>
-          <p className="mt-6 text-sm text-ink-soft">Tip: print on plain A4 or US Letter paper, “fit to page”.</p>
+          <p className="mt-6 text-sm text-muted">Tip: print on plain A4 or US Letter paper, “fit to page”.</p>
         </div>
       ) : (
         <>
-          <h1 className="mb-6 text-center text-4xl font-bold">Hmm, that link didn&apos;t work</h1>
+          <h1 className="mb-6 text-center font-display text-4xl font-semibold tracking-tight">Hmm, that link didn&apos;t work</h1>
           <EmptyState title="The confirmation link is invalid or has expired.">
             <p>Links can only be used for a while. Sign up again and we&apos;ll send you a fresh one.</p>
             <div className="mt-5">

@@ -53,6 +53,44 @@ def demo(out: str = "/demo-output") -> None:
         typer.echo(f"  {f}")
 
 
+@app.command("starter-content")
+def starter_content(rebuild_free_pack: bool = False) -> None:
+    """Add starter blog drafts, proposed niche ideas and the free sample printable (idempotent).
+
+    Nothing is published or approved: you review the drafts in admin → Blog and the niche
+    ideas in admin → Niches.
+    """
+    from crayonlark.core import starter_content as sc
+    from crayonlark.core.db import session_scope
+
+    with session_scope() as s:
+        posts = sc.seed_blog_drafts(s)
+        niches = sc.seed_niche_proposals(s)
+    typer.echo(f"blog drafts added: {posts} (publish them in admin → Blog)")
+    typer.echo(f"niche ideas proposed: {niches} (approve or reject in admin → Niches)")
+    with session_scope() as s:
+        pack = sc.build_free_sample_pack(s, force=rebuild_free_pack)
+    if pack:
+        typer.echo(f"free sample printable built: {pack['pages']} pages, Letter + A4")
+    else:
+        typer.echo("free printable already set (use --rebuild-free-pack to replace it)")
+
+
+@app.command("demo-data")
+def demo_data(remove: bool = False) -> None:
+    """Add two example books to the admin (never public), or remove them with --remove."""
+    from crayonlark.core import starter_content as sc
+    from crayonlark.core.db import session_scope
+
+    if remove:
+        with session_scope() as s:
+            n = sc.remove_demo_books(s)
+        typer.echo(f"demo books removed: {n}")
+        return
+    titles = sc.add_demo_books()
+    typer.echo("demo books added: " + ", ".join(titles) if titles else "demo books already exist")
+
+
 @app.command("etsy-taxonomy")
 def etsy_taxonomy(search: str = "coloring") -> None:
     """Find the Etsy taxonomy id for Settings → Integrations → Etsy (needs Etsy connected)."""

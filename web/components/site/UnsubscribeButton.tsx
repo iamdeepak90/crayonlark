@@ -22,7 +22,7 @@ export function UnsubscribeButton({ token }: { token: string }) {
 
   if (state === "done") {
     return (
-      <p role="status" className="rounded-2xl bg-sky-soft p-4 text-lg font-semibold">
+      <p role="status" className="rounded-2xl bg-sky-50 p-4 text-lg font-semibold">
         You&apos;re unsubscribed. We won&apos;t email you again. Thanks for coloring with us!
       </p>
     );
@@ -33,12 +33,12 @@ export function UnsubscribeButton({ token }: { token: string }) {
         type="button"
         onClick={unsubscribe}
         disabled={state === "sending"}
-        className="min-h-12 rounded-full bg-ink px-6 font-display text-lg font-semibold text-white hover:bg-ink-soft disabled:opacity-60"
+        className="rounded-full bg-ink px-6 py-3 font-semibold text-white transition hover:bg-ink/85 disabled:opacity-60"
       >
         {state === "sending" ? "Unsubscribing…" : "Unsubscribe me"}
       </button>
       {state === "error" && (
-        <p role="alert" className="font-semibold text-coral-dark">
+        <p role="alert" className="font-semibold text-coral-600">
           That link didn&apos;t work. It may be old or already used. You can also write to us on the contact page and we&apos;ll remove you.
         </p>
       )}

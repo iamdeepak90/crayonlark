@@ -77,6 +77,10 @@ export type Dashboard = {
   statuses: string[];
   failed_jobs: number;
   pending_niches: number;
+  posts_to_review: number;
+  subscribers: number;
+  messages: number;
+  needs_you: number;
   kdp_slots: {
     week_start: string;
     resets_at: string;

@@ -105,11 +105,17 @@ def book_out(b: Book) -> dict[str, Any]:
     }
 
 
+def reading_minutes(markdown: str) -> int:
+    """About 200 words per minute, at least 1."""
+    return max(1, round(len(markdown.split()) / 200))
+
+
 def post_summary(p: BlogPost) -> dict[str, Any]:
     return {
         "slug": p.slug,
         "title": p.title,
         "excerpt": p.excerpt,
+        "reading_minutes": reading_minutes(p.body_md),
         "published_at": p.published_at,
         "cover_url": media_url(p.cover_image_key),
     }

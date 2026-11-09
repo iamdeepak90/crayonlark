@@ -37,8 +37,8 @@ function FilterChip({ href, active, children }: { href: string; active: boolean;
       <Link
         href={href}
         aria-current={active ? "true" : undefined}
-        className={`inline-block rounded-full border-2 px-4 py-1.5 font-semibold ${
-          active ? "border-ink bg-ink text-white" : "border-ink/15 bg-white hover:border-ink"
+        className={`inline-block rounded-full px-4 py-2 text-sm font-semibold capitalize transition ${
+          active ? "bg-ink text-white" : "bg-white text-muted ring-1 ring-line hover:text-ink"
         }`}
       >
         {children}
@@ -53,17 +53,18 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
   const filtered = current.age !== undefined || current.theme !== undefined;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-6xl px-5 py-14 sm:py-20">
       <PageHeader
+        eyebrow="Our books"
         title="Coloring & activity books"
-        intro="Find our books as paperbacks on Amazon and as printable PDFs on Etsy. Pick an age or a theme to narrow things down."
+        intro="Paperbacks shipped by Amazon. Printable PDFs delivered instantly on Etsy. Pick an age or a theme to narrow things down."
       />
 
       {filters && (filters.ages.length > 0 || filters.themes.length > 0) && (
-        <nav aria-label="Filter books" className="mt-8 space-y-4">
+        <nav aria-label="Filter books" className="mt-10 space-y-5 rounded-3xl bg-white p-6 ring-1 ring-line">
           {filters.ages.length > 0 && (
             <div>
-              <h2 className="mb-2 text-lg font-semibold">Age</h2>
+              <h2 className="mb-3 font-sans text-sm font-semibold uppercase tracking-wider text-muted">Age</h2>
               <ul className="flex flex-wrap gap-2">
                 <FilterChip href={hrefWith(current, { age: null })} active={current.age === undefined}>
                   All ages
@@ -78,7 +79,7 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
           )}
           {filters.themes.length > 0 && (
             <div>
-              <h2 className="mb-2 text-lg font-semibold">Theme</h2>
+              <h2 className="mb-3 font-sans text-sm font-semibold uppercase tracking-wider text-muted">Theme</h2>
               <ul className="flex flex-wrap gap-2">
                 <FilterChip href={hrefWith(current, { theme: null })} active={current.theme === undefined}>
                   All themes
@@ -102,14 +103,18 @@ export default async function BooksPage({ searchParams }: { searchParams: Search
         ) : books.length === 0 ? (
           <EmptyState title={filtered ? "No books match those filters yet" : "Our first books are on their way!"}>
             {filtered ? (
-              <Link href="/books" className="font-semibold text-coral-dark underline">
+              <Link href="/books" className="font-semibold text-coral-600 underline underline-offset-4">
                 Show all books
               </Link>
             ) : (
               <p>
                 In the meantime, try our{" "}
-                <Link href="/free-printables" className="font-semibold text-coral-dark underline">
+                <Link href="/free-printables" className="font-semibold text-coral-600 underline underline-offset-4">
                   free printable pack
+                </Link>{" "}
+                or see the{" "}
+                <Link href="/themes" className="font-semibold text-coral-600 underline underline-offset-4">
+                  themes we&apos;re working on
                 </Link>
                 .
               </p>

@@ -77,7 +77,7 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
 
   return (
     <div>
-      <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-white p-3 shadow-sm">
+      <div className="sticky top-16 z-10 mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white/90 p-3 backdrop-blur">
         <div role="tablist" aria-label="Filter" className="flex gap-1">
           {(["all", "pending", "approved", "rejected"] as Filter[]).map((f) => (
             <button key={f} role="tab" aria-selected={filter === f} onClick={() => { setFilter(f); setFocus(0); }} className={`rounded-lg px-2 py-1 text-sm font-semibold ${filter === f ? "bg-ink text-white" : "bg-slate-100"}`}>
@@ -100,7 +100,7 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
         {shown.map((img, idx) => {
           const q = img.qa;
           return (
-            <li key={img.id} id={`img-${img.id}`} onClick={() => setFocus(idx)} className={`rounded-xl bg-white p-2 shadow-sm ring-2 ${idx === focus ? "ring-sky" : img.approval === "approved" ? "ring-emerald-500" : img.approval === "rejected" ? "ring-rose-400" : "ring-transparent"}`}>
+            <li key={img.id} id={`img-${img.id}`} onClick={() => setFocus(idx)} className={`rounded-xl border border-slate-200 bg-white p-2 ring-2 ${idx === focus ? "ring-sky" : img.approval === "approved" ? "ring-emerald-500" : img.approval === "rejected" ? "ring-rose-400" : "ring-transparent"}`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`/api/admin/images/${img.id}/file?variant=thumb`} alt={img.scene_title || `image ${img.id}`} loading="lazy" className={`aspect-[3/4] w-full rounded bg-white object-contain ${img.approval === "rejected" ? "opacity-40" : ""}`} />
               <div className="mt-1 flex items-center justify-between gap-1 text-xs">

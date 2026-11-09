@@ -1,35 +1,179 @@
 @import "tailwindcss";
 
-/* Crayonlark brand tokens. Deliberately NOT Crayola: no green/yellow chevron, no waxy wordmark. */
+/* Admin dark mode: <html class="dark"> (toggle in the admin top bar). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Crayonlark design tokens (docs/design: index.html mockup, 2026-11-10).
+ * Warm cream background, ink text, soft sun / sky / coral / leaf tints, Plus Jakarta Sans for
+ * text and IBM Plex Serif for headings. Not Crayola-like: no chevrons, no waxy wordmark.
+ */
 @theme {
-  --color-sun: #ffc93c;
-  --color-sun-soft: #fff1c7;
-  --color-sky: #5bc0eb;
-  --color-sky-soft: #dff3fb;
-  --color-coral: #ff6f59;
-  --color-coral-dark: #c9412c; /* AA contrast on warm white for text/links */
-  --color-cream: #fff8ee;
-  --color-ink: #1f2333;
-  --color-ink-soft: #4a4f63;
-  --font-display: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
-  --font-body: var(--font-nunito), system-ui, sans-serif;
-  --radius-blob: 1.75rem;
+  --color-ink: #1f2430;
+  --color-ink-soft: #5b6271; /* "muted" in the mockup */
+  --color-muted: #5b6271;
+  --color-line: #ece7de;
+  --color-cream: #fffcf7;
+
+  --color-sun-50: #fff8e1;
+  --color-sun-100: #fff0bf;
+  --color-sun-400: #ffd45c;
+  --color-sun-600: #8a6500; /* darkened from the mockup's #C99500 for AA text contrast */
+  --color-sky-50: #eef8fe;
+  --color-sky-100: #dcf0fc;
+  --color-sky-400: #7cc6f2;
+  --color-sky-600: #1f6f9f; /* AA on white and sky-50 */
+  --color-coral-50: #fff1ed;
+  --color-coral-100: #ffe1d9;
+  --color-coral-400: #ff8a72;
+  --color-coral-500: #f4705a;
+  --color-coral-600: #c9412c; /* AA for text and button labels */
+  --color-leaf-50: #eef8f0;
+  --color-leaf-400: #6cc487;
+  --color-leaf-600: #2f7d48;
+
+  /* older names, still used in a few places */
+  --color-sun: #ffd45c;
+  --color-sun-soft: #fff8e1;
+  --color-sky: #7cc6f2;
+  --color-sky-soft: #eef8fe;
+  --color-coral: #f4705a;
+  --color-coral-dark: #c9412c;
+
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-display: var(--font-plex), Georgia, serif;
+
+  --shadow-soft: 0 1px 2px rgb(31 36 48 / 0.04), 0 8px 24px rgb(31 36 48 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(31 36 48 / 0.05), 0 16px 40px rgb(31 36 48 / 0.1);
+  --radius-blob: 1.5rem;
 }
 
-html {
-  background: var(--color-cream);
-  color: var(--color-ink);
+@layer base {
+  html {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    scroll-behavior: smooth;
+  }
+  .site h1,
+  .site h2 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-sky-400);
+    outline-offset: 2px;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
 }
 
-body {
-  font-family: var(--font-body);
+/*
+ * Admin: its own minimalist look, separate from the playful public site. A zinc greyscale with
+ * one blue accent and sans type only. Re-pointing the palette variables inside .admin means every
+ * bg-white / slate-* / sky-* utility on the admin pages follows, in light and dark, without
+ * per-page dark: classes.
+ */
+.admin {
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --color-white: #ffffff;
+  --color-cream: #fafafa;
+  --color-ink: #18181b;
+  --color-ink-soft: #3f3f46;
+  --color-line: #e4e4e7;
+  --color-slate-50: #fafafa;
+  --color-slate-100: #f4f4f5;
+  --color-slate-200: #e4e4e7;
+  --color-slate-300: #d4d4d8;
+  --color-slate-400: #a1a1aa;
+  --color-slate-500: #71717a;
+  --color-slate-600: #52525b;
+  --color-slate-700: #3f3f46;
+  --color-slate-800: #27272a;
+  --color-slate-900: #18181b;
+  /* single accent (links, focus, info) */
+  --color-sky: #2563eb;
+  --color-sky-soft: #eff6ff;
+  --color-sky-50: #eff6ff;
+  --color-sky-100: #dbeafe;
+  --color-sky-400: #3b82f6;
+  --color-sky-600: #2563eb;
+  --color-sky-800: #1d4ed8;
+  --color-sky-900: #1e3a8a;
+  --color-coral-dark: #18181b;
+  --color-sun: #f59e0b;
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
+.dark .admin {
+  color-scheme: dark;
+  --color-white: #111113;
+  --color-cream: #0b0b0d;
+  --color-ink: #f4f4f5;
+  --color-ink-soft: #d4d4d8;
+  --color-line: #27272a;
+  --color-slate-50: #09090b;
+  --color-slate-100: #18181b;
+  --color-slate-200: #27272a;
+  --color-slate-300: #3f3f46;
+  --color-slate-400: #71717a;
+  --color-slate-500: #a1a1aa;
+  --color-slate-600: #b4b4bb;
+  --color-slate-700: #d4d4d8;
+  --color-slate-800: #e4e4e7;
+  --color-slate-900: #f4f4f5;
+  --color-sky: #60a5fa;
+  --color-sky-soft: #0f1a2e;
+  --color-sky-50: #0f1a2e;
+  --color-sky-100: #172554;
+  --color-sky-400: #60a5fa;
+  --color-sky-600: #60a5fa;
+  --color-sky-800: #93c5fd;
+  --color-sky-900: #bfdbfe;
+  --color-coral-dark: #f4f4f5;
 }
 
-:focus-visible {
-  outline: 3px solid var(--color-sky);
-  outline-offset: 2px;
+body:has(.admin) {
+  background-color: #fafafa;
+}
+.dark body:has(.admin) {
+  background-color: #09090b;
+}
+
+/* Quiet defaults for the admin's forms and tables; :where() keeps them overridable by utilities. */
+@layer base {
+  .admin :where(*, ::before, ::after) {
+    border-color: var(--color-slate-200);
+  }
+  .admin :where(input:not([type="checkbox"], [type="radio"], [type="file"]), select, textarea) {
+    border-color: var(--color-slate-200);
+    background-color: var(--color-white);
+    color: var(--color-ink);
+    border-radius: 0.5rem;
+  }
+  .admin :where(input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-sky-400);
+    outline-offset: 0;
+    border-color: transparent;
+  }
+  .admin :where(input, textarea)::placeholder {
+    color: var(--color-slate-400);
+  }
+  .admin :where(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--color-ink);
+  }
+  .admin :where(table) {
+    border-collapse: collapse;
+  }
+  .admin :where(tbody tr) {
+    border-top: 1px solid var(--color-slate-100);
+  }
+  .admin :where(thead th) {
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .admin :where(hr) {
+    border-color: var(--color-slate-200);
+  }
 }

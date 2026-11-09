@@ -8,15 +8,17 @@ import { getSiteConfig } from "@/lib/public";
 export const revalidate = 300;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const { umami_url: UMAMI_URL, umami_website_id: UMAMI_ID, amazon_associates_tag } = await getSiteConfig();
+  const config = await getSiteConfig();
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="site flex min-h-dvh flex-col bg-cream">
       <SiteHeader />
       <main id="main" className="flex-1">
         {children}
       </main>
-      <SiteFooter associates={Boolean(amazon_associates_tag)} />
-      {UMAMI_URL && UMAMI_ID && <Script src={`${UMAMI_URL}/script.js`} data-website-id={UMAMI_ID} strategy="afterInteractive" />}
+      <SiteFooter config={config} />
+      {config.umami_url && config.umami_website_id && (
+        <Script src={`${config.umami_url}/script.js`} data-website-id={config.umami_website_id} strategy="afterInteractive" />
+      )}
     </div>
   );
 }

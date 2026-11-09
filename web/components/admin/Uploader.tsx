@@ -47,7 +47,7 @@ export default function Uploader({ bookId }: { bookId: number }) {
         setDrag(false);
         send(e.dataTransfer.files);
       }}
-      className={`rounded-2xl border-2 border-dashed p-6 text-center ${drag ? "border-sky bg-sky-soft" : "border-slate-300 bg-white"}`}
+      className={`rounded-xl border border-dashed p-6 text-center ${drag ? "border-sky bg-sky-soft" : "border-slate-300 bg-white"}`}
     >
       <p className="font-semibold">Drop PNG/JPG/WebP images here</p>
       <p className="text-sm text-slate-500">or</p>

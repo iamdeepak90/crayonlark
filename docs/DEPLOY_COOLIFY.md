@@ -54,6 +54,17 @@ crayonlark create-admin        # asks for email and password; then turn on 2FA i
 Open https://admin.crayonlark.com and log in. Check the dashboard: KDP slots, budget, and jobs
 (the scheduler heartbeat appears within 5 minutes).
 
+Optional starter content (same terminal; safe to run again):
+
+```sh
+crayonlark starter-content     # 10 blog DRAFTS, 12 PROPOSED niche ideas, the free sample printable
+crayonlark demo-data           # 2 example books in the admin pipeline (never public)
+crayonlark demo-data --remove  # delete the example books again
+```
+
+Nothing goes live by itself: publish the drafts in admin → Blog posts and approve or reject the
+niche ideas in admin → Niche ideas.
+
 ## 4. Connect the outside services (optional, any time)
 
 | Service | Steps |

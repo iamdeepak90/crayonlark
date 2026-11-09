@@ -86,9 +86,9 @@ function bookJsonLd(book: BookDetail) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-ink/5">
-      <dt className="text-sm text-ink-soft">{label}</dt>
-      <dd className="font-display text-lg font-semibold">{value}</dd>
+    <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-line">
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="mt-0.5 text-lg font-bold">{value}</dd>
     </div>
   );
 }
@@ -99,7 +99,7 @@ export default async function BookPage({ params }: { params: Params }) {
   if (!book) notFound();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+    <div className="mx-auto max-w-6xl px-5 py-10 sm:py-14">
       <JsonLd data={bookJsonLd(book)} />
       <Breadcrumbs
         items={[
@@ -111,19 +111,24 @@ export default async function BookPage({ params }: { params: Params }) {
 
       <article className="mt-6">
         <div className="grid gap-8 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:gap-12">
-          <div className="mx-auto w-full max-w-sm md:max-w-none">
-            <BookCover book={book} sizes="(min-width: 768px) 40vw, 90vw" priority />
+          <div className="relative mx-auto w-full max-w-sm md:max-w-none">
+            <div className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rounded-[2rem] bg-sky-100 sm:translate-x-5 sm:translate-y-5" />
+            <div className="grid place-items-center rounded-[2rem] bg-sun-50 p-10">
+              <div className="w-[78%]">
+                <BookCover book={book} sizes="(min-width: 768px) 35vw, 70vw" priority />
+              </div>
+            </div>
           </div>
 
           <div className="min-w-0">
             {book.series && (
-              <p className="font-semibold text-coral-dark">
+              <p className="text-sm font-semibold text-coral-600">
                 {book.series}
                 {book.volume > 0 ? ` · Book ${book.volume}` : ""}
               </p>
             )}
-            <h1 className="text-3xl font-bold leading-tight tracking-tight break-words sm:text-5xl">{book.title}</h1>
-            {book.subtitle && <p className="mt-3 text-lg text-ink-soft sm:text-xl">{book.subtitle}</p>}
+            <h1 className="mt-2 font-display text-3xl font-semibold leading-[1.1] tracking-tight break-words sm:text-5xl">{book.title}</h1>
+            {book.subtitle && <p className="mt-3 text-lg leading-relaxed text-muted">{book.subtitle}</p>}
 
             <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <Fact label="Ages" value={ageLabel(book).replace(/^Ages? /, "")} />
@@ -139,7 +144,7 @@ export default async function BookPage({ params }: { params: Params }) {
                   </ButtonLink>
                 )}
                 {book.etsy_url && (
-                  <ButtonLink href={book.etsy_url} external variant="sun">
+                  <ButtonLink href={book.etsy_url} external variant="outline">
                     Get the printable on Etsy
                   </ButtonLink>
                 )}
@@ -152,7 +157,7 @@ export default async function BookPage({ params }: { params: Params }) {
                   <li key={theme}>
                     <Link
                       href={`/books?theme=${slugify(theme)}`}
-                      className="inline-block rounded-full bg-sky-soft px-3 py-1 text-sm font-semibold hover:underline"
+                      className="inline-block rounded-full bg-white px-3 py-1 text-sm font-semibold capitalize ring-1 ring-line hover:text-coral-600"
                     >
                       {theme}
                     </Link>
@@ -163,18 +168,18 @@ export default async function BookPage({ params }: { params: Params }) {
 
             {book.description_html && <Prose html={book.description_html} className="mt-4" />}
 
-            {book.ai_note && <p className="mt-6 rounded-2xl bg-sun-soft px-4 py-3 text-ink-soft">{book.ai_note}</p>}
+            {book.ai_note && <p className="mt-6 rounded-2xl bg-sun-50 px-4 py-3 text-sm text-muted ring-1 ring-sun-100">{book.ai_note}</p>}
           </div>
         </div>
 
         {book.preview_urls.length > 0 && (
           <section aria-labelledby="peek" className="mt-14">
-            <h2 id="peek" className="text-2xl font-bold sm:text-3xl">
+            <h2 id="peek" className="font-display text-2xl font-semibold sm:text-3xl">
               Peek inside
             </h2>
-            <ul className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+            <ul className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
               {book.preview_urls.map((src, i) => (
-                <li key={src} className="relative aspect-[17/22] overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-ink/5">
+                <li key={src} className="relative aspect-[17/22] overflow-hidden rounded-2xl bg-white p-2 shadow-soft ring-1 ring-line">
                   <Image
                     src={src}
                     alt={`Sample page ${i + 1} from ${book.title}`}
@@ -191,10 +196,10 @@ export default async function BookPage({ params }: { params: Params }) {
 
       {book.related.length > 0 && (
         <section aria-labelledby="related" className="mt-16">
-          <h2 id="related" className="mb-5 text-2xl font-bold sm:text-3xl">
+          <h2 id="related" className="mb-6 font-display text-2xl font-semibold sm:text-3xl">
             You might also like
           </h2>
-          <BookGrid books={book.related.slice(0, 4)} />
+          <BookGrid books={book.related.slice(0, 3)} />
         </section>
       )}
     </div>

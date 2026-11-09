@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { api, ApiError } from "@/lib/api";
 import { Honeypot } from "./Honeypot";
 import { useStartedAt } from "./useStartedAt";
 
 type Status = { kind: "idle" | "sending" | "done" | "error"; message?: string };
 
-/** Email sign-up for the free printable (double opt-in: the API sends a confirmation email). */
-export function SubscribeForm() {
+/**
+ * Email sign-up for the free printable (double opt-in: the API sends a confirmation email).
+ * `variant="footer"` is the compact version on the dark footer.
+ */
+export function SubscribeForm({ variant = "default", button = "Send my pages" }: { variant?: "default" | "footer"; button?: string }) {
+  const id = useId();
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const startedAt = useStartedAt();
+  const footer = variant === "footer";
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,43 +35,49 @@ export function SubscribeForm() {
 
   if (status.kind === "done") {
     return (
-      <p role="status" className="rounded-2xl bg-sky-soft p-4 font-semibold">
+      <p role="status" className={`rounded-2xl p-4 text-sm font-semibold ${footer ? "bg-white/10 text-white" : "bg-white ring-1 ring-line"}`}>
         {status.message}
       </p>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} method="post" className="relative flex flex-col gap-3">
-      <label htmlFor="subscribe-email" className="font-semibold">
-        Your email address
+    <form onSubmit={onSubmit} method="post" className="relative">
+      <label htmlFor={id} className="sr-only">
+        {footer ? "Email address for free pages" : "Your email address"}
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className={`flex gap-2 ${footer ? "" : "max-w-md flex-col gap-3 sm:flex-row"}`}>
         <input
-          id="subscribe-email"
+          id={id}
           type="email"
           name="email"
           required
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="min-h-12 w-full min-w-0 flex-1 rounded-full border-2 border-ink/20 bg-white px-5 text-lg focus:border-sky"
+          placeholder={footer ? "Email address" : "Your email address"}
+          className={
+            footer
+              ? "min-w-0 flex-1 rounded-full border-0 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-sun-400"
+              : "min-w-0 flex-1 rounded-full border-0 bg-white px-5 py-3 ring-1 ring-line placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-sky-400"
+          }
         />
         <button
           type="submit"
           disabled={status.kind === "sending"}
-          className="min-h-12 rounded-full bg-coral-dark px-6 font-display text-lg font-semibold text-white hover:bg-ink disabled:opacity-60"
+          className={
+            footer
+              ? "rounded-full bg-sun-400 px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-sun-100 disabled:opacity-60"
+              : "rounded-full bg-ink px-6 py-3 font-semibold text-white transition hover:bg-ink/85 disabled:opacity-60"
+          }
         >
-          {status.kind === "sending" ? "Sending…" : "Send me the printable"}
+          {status.kind === "sending" ? "Sending…" : footer ? "Join" : button}
         </button>
       </div>
       <Honeypot value={website} onChange={setWebsite} />
-      <p className="text-sm text-ink-soft">
-        We&apos;ll email you a link to confirm. No spam, and you can unsubscribe any time.
-      </p>
+      {!footer && <p className="mt-3 text-sm text-muted">We&apos;ll email you a link to confirm. No spam, unsubscribe anytime.</p>}
       {status.kind === "error" && (
-        <p role="alert" className="font-semibold text-coral-dark">
+        <p role="alert" className={`mt-2 text-sm font-semibold ${footer ? "text-coral-100" : "text-coral-600"}`}>
           {status.message}
         </p>
       )}

@@ -17,7 +17,7 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
           </Link>
         ))}
       </div>
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>

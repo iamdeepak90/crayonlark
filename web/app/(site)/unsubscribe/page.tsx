@@ -11,11 +11,11 @@ export default async function UnsubscribePage({ searchParams }: { searchParams: 
   const valid = typeof token === "string" && token.length > 0;
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-14 sm:px-6">
-      <h1 className="text-4xl font-bold">Unsubscribe</h1>
+    <div className="mx-auto max-w-2xl px-5 py-20">
+      <h1 className="font-display text-4xl font-semibold tracking-tight">Unsubscribe</h1>
       {valid ? (
         <div className="mt-6 space-y-6">
-          <p className="text-lg text-ink-soft">Sorry to see you go! Click below and we&apos;ll stop emailing you.</p>
+          <p className="text-lg text-muted">Sorry to see you go! Click below and we&apos;ll stop emailing you.</p>
           <UnsubscribeButton token={token} />
         </div>
       ) : (

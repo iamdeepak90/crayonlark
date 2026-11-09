@@ -97,6 +97,9 @@ class Settings(BaseSettings):
     turnstile_secret: str = ""
     umami_url: str = ""
     umami_website_id: str = ""
+    pinterest_profile_url: str = ""
+    instagram_url: str = ""
+    etsy_shop_url: str = ""
 
     # --- worker ---
     upscale_enabled: bool = False

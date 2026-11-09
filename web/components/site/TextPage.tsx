@@ -8,19 +8,21 @@ import { PROSE_CLASS } from "./Prose";
 export function TextPage({
   title,
   intro,
+  eyebrow,
   template,
   children,
 }: {
   title: string;
   intro?: string;
+  eyebrow?: string;
   template?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-3xl px-5 py-14 sm:py-20">
       {template && <div hidden dangerouslySetInnerHTML={{ __html: "<!-- Template — review before launch -->" }} />}
-      <PageHeader title={title} intro={intro} />
-      <div className={`mt-6 ${PROSE_CLASS}`}>{children}</div>
+      <PageHeader title={title} intro={intro} eyebrow={eyebrow} />
+      <div className={`mt-8 rounded-3xl bg-white p-6 ring-1 ring-line sm:p-10 ${PROSE_CLASS} max-w-none [&>*:first-child]:mt-0`}>{children}</div>
     </div>
   );
 }

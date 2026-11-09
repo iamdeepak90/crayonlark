@@ -243,3 +243,16 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     variable it has stored into every container, including empty leftovers it won't let me
     delete. An empty `MONTHLY_BUDGET_INR` used to crash startup (migrate exit 1, 2026-11-09).
     The weekly KDP limit (2+2) is a `ClassVar` now, so no stray env var can raise it.
+68. **Two looks: playful public site, minimalist admin.** The public site follows the owner's
+    `index.html` mockup (Plus Jakarta Sans + IBM Plex Serif, cream/sun/sky/coral/leaf). Sun,
+    sky and leaf text shades are darkened (`*-600`) to pass WCAG AA. Book grids show at most 3
+    per row. The admin deliberately does **not** copy that look. It is a neutral zinc
+    greyscale, sans only, with one blue accent and flat bordered surfaces. It is done by
+    re-pointing the palette CSS variables inside `.admin` (and `.dark .admin` for dark mode), so
+    the existing admin pages changed without per-page edits. Dark mode is saved in localStorage,
+    defaults to the OS setting and is applied before paint by an inline script.
+69. **Starter content never skips a gate.** `crayonlark starter-content` adds blog posts as
+    DRAFTS and niches as PROPOSED, and builds the free printable from the 5 bundled, code-drawn
+    pages (`ai_artwork=False`). `crayonlark demo-data` adds two "(Demo)" books that stop at
+    "awaiting image approval" and are removed with `--remove`. Its idea approvals are the owner
+    acting from the terminal (`cli:demo-data`).

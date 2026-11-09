@@ -8,7 +8,7 @@ import { useStartedAt } from "./useStartedAt";
 
 type Status = { kind: "idle" | "sending" | "done" | "error"; message?: string };
 
-const inputClass = "w-full min-w-0 rounded-2xl border-2 border-ink/20 bg-white px-4 py-3 text-lg focus:border-sky";
+const inputClass = "w-full min-w-0 rounded-2xl border-0 bg-white px-4 py-3 ring-1 ring-line placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-sky-400";
 
 /** `turnstileSiteKey`: from admin → Settings → Integrations → Website extras ("" = off). */
 export function ContactForm({ turnstileSiteKey: TURNSTILE_SITE_KEY }: { turnstileSiteKey: string }) {
@@ -47,7 +47,7 @@ export function ContactForm({ turnstileSiteKey: TURNSTILE_SITE_KEY }: { turnstil
 
   if (status.kind === "done") {
     return (
-      <p role="status" className="rounded-2xl bg-sky-soft p-5 text-lg font-semibold">
+      <p role="status" className="rounded-2xl bg-sky-50 p-5 text-lg font-semibold">
         Thank you! Your message is on its way. We usually reply within a few days.
       </p>
     );
@@ -79,13 +79,13 @@ export function ContactForm({ turnstileSiteKey: TURNSTILE_SITE_KEY }: { turnstil
         <button
           type="submit"
           disabled={status.kind === "sending"}
-          className="min-h-12 rounded-full bg-coral-dark px-8 font-display text-lg font-semibold text-white hover:bg-ink disabled:opacity-60"
+          className="rounded-full bg-coral-600 px-8 py-3 font-semibold text-white shadow-soft transition hover:bg-ink disabled:opacity-60"
         >
           {status.kind === "sending" ? "Sending…" : "Send message"}
         </button>
       </div>
       {status.kind === "error" && (
-        <p role="alert" className="font-semibold text-coral-dark">
+        <p role="alert" className="font-semibold text-coral-600">
           {status.message}
         </p>
       )}

@@ -10,7 +10,7 @@ export const metadata = pageMetadata({
 
 export default function AboutPage() {
   return (
-    <TextPage title="About Crayonlark" intro="A tiny studio making friendly coloring and activity books for kids.">
+    <TextPage eyebrow="About us" title="About Crayonlark" intro="A tiny studio making friendly coloring and activity books for kids.">
       <p>
         Crayonlark is a one-person studio. We make coloring and activity books for children, for parents who want a
         calm activity at home and for teachers who need something simple for the classroom.
