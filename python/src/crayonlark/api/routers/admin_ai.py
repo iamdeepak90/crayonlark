@@ -253,6 +253,13 @@ PAID_APIS: list[dict[str, Any]] = [
         "url": "https://aistudio.google.com",
     },
     {
+        "id": "openrouter",
+        "name": "OpenRouter",
+        "used_for": "One key for many models (Claude, GPT, Gemini, …) for text, vision and images",
+        "env": ["OPENROUTER_API_KEY"],
+        "url": "https://openrouter.ai/keys",
+    },
+    {
         "id": "websearch",
         "name": "Web search (Brave or Tavily)",
         "used_for": "Optional web search for the research agent (Amazon and Etsy are excluded)",
@@ -270,6 +277,7 @@ def paid_apis(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
         "anthropic": bool(st.anthropic_api_key),
         "openai": bool(st.openai_api_key),
         "gemini": bool(st.gemini_api_key),
+        "openrouter": bool(st.openrouter_api_key),
         "websearch": websearch.configured(),
     }
     users: dict[str, list[str]] = {k: [] for k in keys}
@@ -321,6 +329,7 @@ def providers(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
             "anthropic": bool(st.anthropic_api_key),
             "openai": bool(st.openai_api_key),
             "gemini": bool(st.gemini_api_key),
+            "openrouter": bool(st.openrouter_api_key),
             "websearch": websearch.configured(),
         },
         "agents": AGENTS,
@@ -333,14 +342,14 @@ def providers(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
 
 
 class AgentModel(BaseModel):
-    provider: str = Field(pattern="^(offline|anthropic|openai|gemini)$")
+    provider: str = Field(pattern="^(offline|anthropic|openai|gemini|openrouter)$")
     model: str = Field(default="", max_length=100)
     effort: str = Field(default="", pattern="^(|low|medium|high|xhigh|max)$")
 
 
 class AISettingsIn(BaseModel):
     agent_models: dict[str, AgentModel]
-    image_provider: str = Field(pattern="^(manual|openai|gemini)$")
+    image_provider: str = Field(pattern="^(manual|openai|gemini|openrouter)$")
     image_model: str = Field(default="", max_length=100)
 
 
@@ -353,6 +362,7 @@ def save_providers(
         "anthropic": st.anthropic_api_key,
         "openai": st.openai_api_key,
         "gemini": st.gemini_api_key,
+        "openrouter": st.openrouter_api_key,
     }
     unknown = set(body.agent_models) - set(AGENTS)
     if unknown:
@@ -360,8 +370,12 @@ def save_providers(
     for agent, m in body.agent_models.items():
         if m.provider != "offline" and not have[m.provider]:
             raise HTTPException(400, f"{agent}: {m.provider.upper()}_API_KEY is not set")
+        if m.provider == "openrouter" and not m.model.strip():
+            raise HTTPException(400, f"{agent}: pick an OpenRouter model")
     if body.image_provider != "manual" and not have[body.image_provider]:
         raise HTTPException(400, f"images: {body.image_provider.upper()}_API_KEY is not set")
+    if body.image_provider == "openrouter" and not body.image_model.strip():
+        raise HTTPException(400, "images: pick an OpenRouter image model")
     models = {
         a: {k: v for k, v in m.model_dump().items() if v} for a, m in body.agent_models.items()
     }
@@ -374,3 +388,13 @@ def save_providers(
     )
     s.commit()
     return {"ok": True}
+
+
+@router.get("/ai/openrouter-models")
+def openrouter_models(admin: Admin = Depends(require_admin)) -> dict:
+    """Live OpenRouter model lists (cached 6 h) for the model pickers, with prices."""
+    from crayonlark.providers import openrouter
+
+    if not get_settings().openrouter_api_key:
+        return {"text": [], "image": []}
+    return {"text": openrouter.text_models(), "image": openrouter.image_models()}

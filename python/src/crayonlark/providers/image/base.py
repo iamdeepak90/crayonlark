@@ -1,4 +1,4 @@
-"""One interface for image generation (OpenAI, Gemini) plus "manual" mode.
+"""One interface for image generation (OpenAI, Gemini, OpenRouter) plus "manual" mode.
 
 Manual mode costs nothing: I make the pictures in the ChatGPT/Gemini apps from the prompts shown
 in admin and upload them (or drop them in the `inbox` bucket); the pipeline continues from there.
@@ -46,9 +46,13 @@ def get_image_provider(name: str) -> Any:
             from crayonlark.providers.image.gemini_image import GeminiImageProvider
 
             return GeminiImageProvider()
+        case "openrouter":
+            from crayonlark.providers.image.openrouter_image import OpenRouterImageProvider
+
+            return OpenRouterImageProvider()
         case "manual":
             raise ManualMode("image provider is manual: upload images in admin")
-    raise ValueError(f"unknown image provider {name!r} (use openai, gemini or manual)")
+    raise ValueError(f"unknown image provider {name!r} (use openai, gemini, openrouter or manual)")
 
 
 def generate(prompt: str, agent: str = "art", book_id: int | None = None) -> ImageResult:

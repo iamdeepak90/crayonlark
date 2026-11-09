@@ -244,12 +244,12 @@ export type CostsResponse = {
   recent: CostCall[];
 };
 
-export type LlmProvider = "offline" | "anthropic" | "openai" | "gemini";
-export type ImageProvider = "manual" | "openai" | "gemini";
+export type LlmProvider = "offline" | "anthropic" | "openai" | "gemini" | "openrouter";
+export type ImageProvider = "manual" | "openai" | "gemini" | "openrouter";
 export type AgentModel = { provider: LlmProvider; model?: string; effort?: string };
 
 export type AIProviders = {
-  keys: { anthropic: boolean; openai: boolean; gemini: boolean; websearch: boolean };
+  keys: { anthropic: boolean; openai: boolean; gemini: boolean; openrouter: boolean; websearch: boolean };
   agents: string[];
   agent_models: Record<string, AgentModel>;
   image_provider: { provider: ImageProvider; model: string };
@@ -303,3 +303,6 @@ export type BudgetSettings = { month: string; spent_inr: number; cap_inr: number
 
 export type PaidApi = { id: string; name: string; used_for: string; env: string[]; url: string; key_set: boolean; used_by: string[]; month_usd: number; month_inr: number };
 export type PaidApis = { month: string; apis: PaidApi[] };
+
+export type OpenRouterTextModel = { id: string; name: string; input_per_m: number | null; output_per_m: number | null; vision: boolean; reasoning: boolean };
+export type OpenRouterModels = { text: OpenRouterTextModel[]; image: { id: string; name: string }[] };

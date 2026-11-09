@@ -205,3 +205,15 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     and I change it more often than I deploy. Until it's saved, the built-in start values apply
     (₹2,000 at 88 ₹/US$). Saving re-arms this month's 80 % and 100 % alerts, so a raised cap warns
     again. A cap of 0 blocks every paid call.
+63. **OpenRouter is a fifth provider, next to the official APIs, chosen per agent** (and for
+    images) in admin → Settings. Chat completions use `response_format` json_schema (strict),
+    plus `provider.require_parameters`, so only providers that honour the schema are used.
+    Images use the dedicated `POST /api/v1/images` (3:4, 1K, PNG). The cost we record is
+    OpenRouter's own `usage.cost` (credits = USD). Reservations are estimated from the live
+    model list (`/api/v1/models`, cached 6 h). Per-image prices vary by provider, so an image
+    reserves the safe $0.25 unless `model_prices` says otherwise. The model picker only lists
+    models that support structured outputs. Errors that arrive with HTTP 200 are treated as
+    errors. Checked against the docs on 2026-11-09.
+64. **Settings shows a "Paid APIs" overview** (key set or missing, which agents use it, spend
+    this month), but **keys stay in env vars**. I decided this on 2026-11-09, to keep the
+    "secrets only in env" rule and keep keys out of the database and its backups.

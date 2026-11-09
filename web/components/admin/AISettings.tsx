@@ -1,13 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { AgentModel, AIProviders, ImageProvider, LlmProvider } from "@/lib/types";
+import type { AgentModel, AIProviders, ImageProvider, LlmProvider, OpenRouterModels } from "@/lib/types";
 import { Button, Card } from "./ui";
 
-const LLM_PROVIDERS: LlmProvider[] = ["offline", "anthropic", "openai", "gemini"];
-const IMAGE_PROVIDERS: ImageProvider[] = ["manual", "openai", "gemini"];
+/** Grouped so the choice is clear: free, a company's own (official) API, or OpenRouter. */
+const LLM_GROUPS: [string, LlmProvider[]][] = [["Free", ["offline"]], ["Official API", ["anthropic", "openai", "gemini"]], ["OpenRouter", ["openrouter"]]];
+const IMAGE_GROUPS: [string, ImageProvider[]][] = [["Free", ["manual"]], ["Official API", ["openai", "gemini"]], ["OpenRouter", ["openrouter"]]];
+const LABEL: Record<string, string> = {
+  offline: "Offline (free templates)",
+  manual: "Manual upload (free)",
+  anthropic: "Anthropic (Claude)",
+  openai: "OpenAI",
+  gemini: "Google Gemini",
+  openrouter: "OpenRouter (any model)",
+};
 const EFFORTS = ["", "low", "medium", "high", "xhigh", "max"];
 const PREFIX: Record<string, string> = { anthropic: "claude-", openai: "gpt-", gemini: "gemini-" };
 
@@ -30,6 +39,28 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const hasKey = (p: string) => p === "offline" || p === "manual" || initial.keys[p as keyof AIProviders["keys"]];
+  const [orModels, setOrModels] = useState<OpenRouterModels | null>(null);
+
+  useEffect(() => {
+    if (!initial.keys.openrouter) return;
+    // Live list from OpenRouter (cached on the server); the inputs still accept any id if it fails.
+    api<OpenRouterModels>("/api/admin/ai/openrouter-models").then(setOrModels, () => setOrModels({ text: [], image: [] }));
+  }, [initial.keys.openrouter]);
+
+  /** Price line for an agent's chosen model. */
+  function priceText(m: AgentModel, agent: string): string {
+    const id = (m.model ?? "").trim();
+    if (m.provider === "offline") return "free";
+    if (!id) return m.provider === "openrouter" ? "pick a model (e.g. anthropic/claude-haiku-5.5)" : "pick a model";
+    if (m.provider === "openrouter") {
+      const or = orModels?.text.find((x) => x.id === id);
+      if (!or) return orModels ? "not in OpenRouter's list of models that can return JSON" : "";
+      const price = or.input_per_m !== null && or.output_per_m !== null ? `$${or.input_per_m} in / $${or.output_per_m} out per 1M tokens (via OpenRouter)` : "price unknown";
+      return agent === "vision_qa" && !or.vision ? `${price}. This model can't see images: pick one with image input for vision QA.` : price;
+    }
+    const price = initial.llm_prices[id];
+    return price ? `$${price.input} in / $${price.output} out per 1M tokens` : "unknown model: priced at the expensive fallback rate";
+  }
 
   function update(agent: string, patch: Partial<AgentModel>) {
     setAgents((all) => ({ ...all, [agent]: { ...all[agent], ...patch } }));
@@ -58,16 +89,18 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
       <p className="mb-3 text-sm text-slate-600">
         <strong>offline</strong> is free template output (no AI call); <strong>manual</strong> means you upload pictures you made yourself. Prices checked {initial.prices_checked}.
       </p>
-      {(["anthropic", "openai", "gemini"] as const).some((p) => !initial.keys[p]) && (
+      <p className="mb-3 text-xs text-slate-500">
+        <strong>Official API</strong> calls the company directly with its own key. <strong>OpenRouter</strong> uses one key for models from many companies (ids like <code>anthropic/claude-haiku-5.5</code>, <code>openai/…</code>, <code>google/…</code>); its price list is loaded live.
+      </p>
+      {(["anthropic", "openai", "gemini", "openrouter"] as const).some((p) => !initial.keys[p]) && (
         <p className="mb-3 text-xs text-slate-500">
-          Keys not set: {(["anthropic", "openai", "gemini"] as const).filter((p) => !initial.keys[p]).join(", ")}. Add them as environment variables to enable those providers.
+          Keys not set: {(["anthropic", "openai", "gemini", "openrouter"] as const).filter((p) => !initial.keys[p]).join(", ")}. Add them as environment variables in Coolify to enable those choices.
         </p>
       )}
       <div className="space-y-3">
         {initial.agents.map((a) => {
           const m = agents[a];
           const list = `models-${a}`;
-          const price = initial.llm_prices[(m.model ?? "").trim()];
           return (
             <fieldset key={a} className="rounded-xl border border-slate-200 p-3">
               <legend className="px-1 text-sm font-bold">{a.replaceAll("_", " ")}</legend>
@@ -75,10 +108,14 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
                 <label className="text-xs font-semibold">
                   Provider
                   <select className={`${field} mt-1 block`} value={m.provider} onChange={(e) => update(a, { provider: e.target.value as LlmProvider, model: "" })}>
-                    {LLM_PROVIDERS.map((p) => (
-                      <option key={p} value={p} disabled={!hasKey(p)}>
-                        {p}{hasKey(p) ? "" : " (key not set)"}
-                      </option>
+                    {LLM_GROUPS.map(([group, list]) => (
+                      <optgroup key={group} label={group}>
+                        {list.map((p) => (
+                          <option key={p} value={p} disabled={!hasKey(p)}>
+                            {LABEL[p]}{hasKey(p) ? "" : " (key not set)"}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </label>
@@ -86,7 +123,9 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
                   Model
                   <input className={`${field} mt-1 block w-full`} list={list} value={m.model ?? ""} disabled={m.provider === "offline"} placeholder={m.provider === "offline" ? "—" : "model id"} onChange={(e) => update(a, { model: e.target.value })} />
                   <datalist id={list}>
-                    {modelsFor(m.provider, initial.llm_prices).map((id) => <option key={id} value={id} />)}
+                    {m.provider === "openrouter"
+                      ? orModels?.text.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)
+                      : modelsFor(m.provider, initial.llm_prices).map((id) => <option key={id} value={id} />)}
                   </datalist>
                 </label>
                 <label className="text-xs font-semibold">
@@ -96,9 +135,7 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
                   </select>
                 </label>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {m.provider === "offline" ? "free" : price ? `$${price.input} in / $${price.output} out per 1M tokens` : m.model ? "unknown model: priced at the expensive fallback rate" : "pick a model"}
-              </p>
+              <p className="mt-1 text-xs text-slate-500">{priceText(m, a)}</p>
             </fieldset>
           );
         })}
@@ -108,10 +145,14 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
             <label className="text-xs font-semibold">
               Provider
               <select className={`${field} mt-1 block`} value={imgProvider} onChange={(e) => { setImgProvider(e.target.value as ImageProvider); setImgModel(""); }}>
-                {IMAGE_PROVIDERS.map((p) => (
-                  <option key={p} value={p} disabled={!hasKey(p)}>
-                    {p}{hasKey(p) ? "" : " (key not set)"}
-                  </option>
+                {IMAGE_GROUPS.map(([group, list]) => (
+                  <optgroup key={group} label={group}>
+                    {list.map((p) => (
+                      <option key={p} value={p} disabled={!hasKey(p)}>
+                        {LABEL[p]}{hasKey(p) ? "" : " (key not set)"}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </label>
@@ -119,12 +160,14 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
               Model
               <input className={`${field} mt-1 block w-full`} list="models-images" value={imgModel} disabled={imgProvider === "manual"} placeholder={imgProvider === "manual" ? "—" : "model id"} onChange={(e) => setImgModel(e.target.value)} />
               <datalist id="models-images">
-                {modelsFor(imgProvider, initial.image_prices).map((id) => <option key={id} value={id} />)}
+                {imgProvider === "openrouter"
+                  ? orModels?.image.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)
+                  : modelsFor(imgProvider, initial.image_prices).map((id) => <option key={id} value={id} />)}
               </datalist>
             </label>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {imgProvider === "manual" ? "free: you upload the pictures" : imgPrice !== undefined ? `~$${imgPrice} per image` : imgModel ? "unknown model: priced at the expensive fallback rate" : "pick a model"}
+            {imgProvider === "manual" ? "free: you upload the pictures" : imgProvider === "openrouter" ? (imgModel ? "real cost is recorded after each image; the budget reserves $0.25 per image until then (override in model_prices)" : "pick an image model (e.g. google/gemini-2.5-flash-image)") : imgPrice !== undefined ? `~$${imgPrice} per image` : imgModel ? "unknown model: priced at the expensive fallback rate" : "pick a model"}
           </p>
         </fieldset>
       </div>

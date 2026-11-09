@@ -19,7 +19,18 @@ billed separately, by usage.
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API keys | any text agent; vision QA |
 | `OPENAI_API_KEY` | platform.openai.com → API keys | text agents, vision QA, image generation |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key | text agents, vision QA, image generation |
+| `OPENROUTER_API_KEY` | openrouter.ai → Keys (buy credits first) | any of the above through one key: Claude, GPT, Gemini and many more |
 | `WEBSEARCH_PROVIDER` + `WEBSEARCH_API_KEY` | brave.com/search/api or tavily.com | optional search for the research agent |
+
+**Official API or OpenRouter?** In admin → Settings → AI providers, every agent (and the
+image generator) has its own choice: *Official API* (Anthropic, OpenAI or Gemini directly,
+with that company's key) or *OpenRouter* (one key and one bill, any model, ids like
+`anthropic/claude-haiku-5.5`). You can mix them, for example vision QA on OpenRouter and the
+rest official. OpenRouter's model list and prices load live in the model picker, and only
+models that can answer in a JSON schema are offered. The real cost of each call
+(`usage.cost`) goes into the budget. OpenRouter adds a small fee when you buy credits, and the
+official APIs are sometimes cheaper or get new models first. Set a credit limit on the
+OpenRouter key too.
 
 **Spend limits:** set a monthly limit in each provider's billing console as well. Crayonlark's
 own guard (admin → Settings → Monthly API budget, default ₹2,000) stops paid calls at 100 %, but a limit at the

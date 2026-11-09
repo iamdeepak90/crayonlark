@@ -116,3 +116,27 @@ def needs_storage():  # type: ignore[no-untyped-def]
         storage.ping()
     except Exception:
         pytest.skip("S3 storage not reachable")
+
+
+@pytest.fixture
+def keys(monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
+    """Fake API keys for every paid provider (HTTP is mocked in those tests)."""
+    from crayonlark.core.config import get_settings
+
+    for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY"):
+        monkeypatch.setenv(k, "test-key")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+def client(db):  # type: ignore[no-untyped-def]
+    """Admin API client with the test admin me@example.com / "correct horse battery"."""
+    from fastapi.testclient import TestClient
+
+    from crayonlark.api.main import create_app
+    from crayonlark.core.auth import upsert_admin
+
+    upsert_admin("me@example.com", "correct horse battery")
+    return TestClient(create_app())

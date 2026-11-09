@@ -9,14 +9,6 @@ from crayonlark.core.auth import upsert_admin
 H = {"X-Requested-With": "crayonlark"}
 
 
-@pytest.fixture
-def client(db) -> TestClient:  # type: ignore[no-untyped-def]
-    from crayonlark.api.main import create_app
-
-    upsert_admin("me@example.com", "correct horse battery")
-    return TestClient(create_app())
-
-
 def login(c: TestClient, **extra: str) -> object:
     return c.post(
         "/api/auth/login",
@@ -115,6 +107,6 @@ def test_paid_apis_overview_never_shows_keys(client: TestClient, monkeypatch) ->
     get_settings.cache_clear()
     assert "sk-secret-value" not in r.text
     apis = {a["id"]: a for a in r.json()["apis"]}
-    assert set(apis) == {"anthropic", "openai", "gemini", "websearch"}
+    assert set(apis) == {"anthropic", "openai", "gemini", "openrouter", "websearch"}
     assert apis["openai"]["key_set"] and not apis["anthropic"]["key_set"]
     assert apis["openai"]["used_by"] == []  # nothing uses it until chosen in AI settings

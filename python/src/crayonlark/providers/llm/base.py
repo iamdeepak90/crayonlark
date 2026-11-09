@@ -1,4 +1,4 @@
-"""One interface for every LLM (Anthropic, OpenAI, Gemini, offline).
+"""One interface for every LLM (Anthropic, OpenAI, Gemini, OpenRouter, offline).
 
 Agents describe *what* they need as an AgentTask (system + prompt + Pydantic schema + a free
 offline fallback). `run_task()` picks the provider/model configured for that agent in

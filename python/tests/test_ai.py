@@ -49,15 +49,6 @@ def _png() -> bytes:
     return buf.getvalue()
 
 
-@pytest.fixture
-def keys(monkeypatch: pytest.MonkeyPatch):  # type: ignore[no-untyped-def]
-    for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"):
-        monkeypatch.setenv(k, "test-key")
-    get_settings.cache_clear()
-    yield
-    get_settings.cache_clear()
-
-
 # --------------------------------------------------------------------------- schema + pricing
 
 

@@ -24,7 +24,7 @@ HOUSE_PROMPT_TEMPLATE = (
 )
 
 DEFAULT_AGENT_MODELS: dict[str, dict[str, str]] = {
-    # provider: anthropic | openai | gemini | offline
+    # provider: anthropic | openai | gemini (official APIs) | openrouter | offline
     "research": {"provider": "offline", "model": ""},
     "concept": {"provider": "offline", "model": ""},
     "listing": {"provider": "offline", "model": ""},
@@ -34,7 +34,7 @@ DEFAULT_AGENT_MODELS: dict[str, dict[str, str]] = {
 
 DEFAULTS: dict[str, Any] = {
     "agent_models": DEFAULT_AGENT_MODELS,
-    "image_provider": {"provider": "manual", "model": ""},  # manual | openai | gemini
+    "image_provider": {"provider": "manual", "model": ""},  # manual | openai | gemini | openrouter
     "house_prompt_template": HOUSE_PROMPT_TEMPLATE,
     "blocklist_extra": [],  # added on top of assets/blocklist.txt
     "images_per_book": {"min": 25, "max": 50},

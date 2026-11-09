@@ -19,4 +19,10 @@ def get_provider(name: str) -> Any:
             from crayonlark.providers.llm.gemini_provider import GeminiProvider
 
             return GeminiProvider()
-    raise ValueError(f"unknown LLM provider {name!r} (use anthropic, openai, gemini or offline)")
+        case "openrouter":
+            from crayonlark.providers.llm.openrouter_provider import OpenRouterProvider
+
+            return OpenRouterProvider()
+    raise ValueError(
+        f"unknown LLM provider {name!r} (use anthropic, openai, gemini, openrouter or offline)"
+    )

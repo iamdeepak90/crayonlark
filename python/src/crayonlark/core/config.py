@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     gemini_api_key: str = ""
+    openrouter_api_key: str = ""  # one key, many models (Claude, GPT, Gemini, …) via openrouter.ai
     websearch_provider: str = ""  # "tavily" | "brave" | ""
     websearch_api_key: str = ""
 
