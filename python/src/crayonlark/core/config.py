@@ -14,7 +14,7 @@ import threading
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,7 +24,9 @@ ASSETS_DIR = Path(__file__).resolve().parents[3] / "assets"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Coolify passes every variable it has stored into each container, including empty leftovers
+    # from older deploys: an empty value means "not set" and the default below applies.
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_ignore_empty=True)
 
     # --- general ---
     environment: str = "development"  # development | production | test
@@ -50,8 +52,9 @@ class Settings(BaseSettings):
     budget_warn_ratio: float = 0.8
 
     # --- KDP ---
-    kdp_weekly_paperbacks: int = 2
-    kdp_weekly_hardcovers: int = 2
+    # Hard rule (CLAUDE.md): not configurable, so a stray env var can never raise it.
+    kdp_weekly_paperbacks: ClassVar[int] = 2
+    kdp_weekly_hardcovers: ClassVar[int] = 2
     spine_text_min_pages: int = 100
     default_kdp_price_usd: float = 9.99
 

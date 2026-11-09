@@ -239,3 +239,7 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     - **Env vars:** a non-empty env var still wins, for local tests.
     - **Trade-off:** keys are now in the database and its backups, protected by `SECRET_KEY`. If
       `SECRET_KEY` changes, the saved keys show "enter again".
+67. **Empty env vars count as "not set"** (`env_ignore_empty=True`). Coolify passes every
+    variable it has stored into every container, including empty leftovers it won't let me
+    delete. An empty `MONTHLY_BUDGET_INR` used to crash startup (migrate exit 1, 2026-11-09).
+    The weekly KDP limit (2+2) is a `ClassVar` now, so no stray env var can raise it.

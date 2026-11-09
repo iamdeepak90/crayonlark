@@ -95,3 +95,24 @@ def test_admin_api_never_returns_secrets(client) -> None:  # type: ignore[no-unt
     )
     cfg = client.get("/api/public/site-config").json()
     assert cfg["umami_url"] == "https://stats.example.com" and "turnstile_secret" not in cfg
+
+
+def test_empty_leftover_env_vars_use_defaults(monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Coolify injects empty leftovers (MONTHLY_BUDGET_INR="" …); startup must not crash."""
+    from crayonlark.core.config import Settings
+
+    for name in (
+        "MONTHLY_BUDGET_INR",
+        "USD_INR_RATE",
+        "SMTP_PORT",
+        "ETSY_TAXONOMY_ID",
+        "UPSCALE_ENABLED",
+        "BACKUP_RETENTION_DAYS",
+        "SMTP_FROM",
+    ):
+        monkeypatch.setenv(name, "")
+    monkeypatch.setenv("KDP_WEEKLY_PAPERBACKS", "9")  # the hard rule can't be raised
+    s = Settings()
+    assert s.monthly_budget_inr == 2000 and s.smtp_port == 587 and s.etsy_taxonomy_id == 0
+    assert not s.upscale_enabled and s.backup_retention_days == 14
+    assert s.smtp_from.startswith("Crayonlark") and s.kdp_weekly_paperbacks == 2
