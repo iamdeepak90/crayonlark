@@ -306,3 +306,29 @@ export type PaidApis = { month: string; apis: PaidApi[] };
 
 export type OpenRouterTextModel = { id: string; name: string; input_per_m: number | null; output_per_m: number | null; vision: boolean; reasoning: boolean };
 export type OpenRouterModels = { text: OpenRouterTextModel[]; image: { id: string; name: string }[] };
+
+// ---------- Integrations (admin → Settings) ----------
+
+export type IntegrationField = {
+  name: string;
+  label: string;
+  secret: boolean;
+  placeholder: string;
+  kind: "text" | "int" | "select";
+  options: string[];
+  from_env: boolean;
+  set: boolean;
+  value?: string; // never sent for secrets
+  unreadable?: boolean; // saved with an older SECRET_KEY: enter it again
+};
+
+export type IntegrationGroup = {
+  id: string;
+  title: string;
+  help: string;
+  configured: boolean;
+  enabled: boolean;
+  fields: IntegrationField[];
+};
+
+export type Integrations = { groups: IntegrationGroup[] };

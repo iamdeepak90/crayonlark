@@ -11,9 +11,8 @@ const LINKS = [
   { href: "/license", label: "Printable license" },
 ];
 
-export function SiteFooter() {
-  // Server env, read when the page is (re)generated. Only show the disclosure when we actually use a tag.
-  const associates = Boolean(process.env.AMAZON_ASSOCIATES_TAG?.trim());
+/** `associates`: an Amazon Associates tag is set, so show the required disclosure. */
+export function SiteFooter({ associates }: { associates: boolean }) {
   return (
     <footer className="mt-16 border-t border-ink/10 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">

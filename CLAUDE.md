@@ -22,7 +22,9 @@ Crayonlark is a one-person business: AI-assisted kids' coloring/activity books s
   publish. Gate transitions only go through `core/approvals.py`, which requires a `HumanActor`.
 - **Budget guard**: every paid API call goes through `core/budget.py` (monthly cap set in admin → Settings, setting `budget`,
   default ₹2,000; warn at 80 %, hard stop at 100 %).
-- Secrets only in env vars. Commit `.env.example` only.
+- Infra secrets (the 7 in `.env.example`) only in env vars. Optional third-party keys are entered
+  in admin → Settings → Integrations, stored encrypted (Fernet key from `SECRET_KEY`), never sent
+  back to the browser or written to the audit log (`core/integrations.py`). Commit no secrets.
 
 ## Architecture (short)
 - `python/` one package `crayonlark`, one image → services `api` (FastAPI), `worker` (Celery queues

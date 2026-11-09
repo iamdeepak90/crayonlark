@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { TextPage } from "@/components/site/TextPage";
-import { pageMetadata } from "@/lib/public";
+import { getSiteConfig, pageMetadata } from "@/lib/public";
 
 export const metadata = pageMetadata({
   title: "Privacy policy",
@@ -8,10 +8,10 @@ export const metadata = pageMetadata({
   path: "/privacy",
 });
 
-const ANALYTICS = Boolean(process.env.NEXT_PUBLIC_UMAMI_URL && process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID);
-const TURNSTILE = Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
-
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const cfg = await getSiteConfig();
+  const ANALYTICS = Boolean(cfg.umami_url && cfg.umami_website_id);
+  const TURNSTILE = Boolean(cfg.turnstile_site_key);
   return (
     <TextPage title="Privacy policy" intro="Short version: we collect as little as possible and never sell it." template>
       <h2>Who we are</h2>

@@ -1,13 +1,20 @@
-"""All configuration comes from environment variables (set in Coolify).
+"""Configuration.
 
-Only `.env.example` is committed. Anything editable at runtime (models per agent,
-blocklist, prompt templates) lives in the `settings` table instead, see core/app_settings.py.
+Infra and the 7 required secrets come from environment variables (set in Coolify; only
+`.env.example` is committed). Optional integrations (AI keys, Telegram, email, Etsy, Pinterest,
+off-site backup, website extras) are entered in admin → Settings → Integrations and merged in
+by `get_settings()`, see core/integrations.py. Other runtime knobs (models per agent,
+blocklist, prompt templates, budget) live in the `settings` table, see core/app_settings.py.
 """
 
 from __future__ import annotations
 
+import logging
+import threading
+import time
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -83,7 +90,10 @@ class Settings(BaseSettings):
     revalidate_secret: str = "dev-revalidate"
     web_internal_url: str = "http://web:3000"  # API → web on-demand revalidation
     amazon_associates_tag: str = ""
+    turnstile_site_key: str = ""
     turnstile_secret: str = ""
+    umami_url: str = ""
+    umami_website_id: str = ""
 
     # --- worker ---
     upscale_enabled: bool = False
@@ -114,5 +124,70 @@ class Settings(BaseSettings):
 
 
 @lru_cache
-def get_settings() -> Settings:
+def env_settings() -> Settings:
+    """Settings from env vars only (infra; used to reach the database itself)."""
     return Settings()
+
+
+log = logging.getLogger("crayonlark.config")
+
+
+class _SettingsWithIntegrations:
+    """`get_settings()`: env settings + integrations saved in admin → Settings.
+
+    The stored integrations are re-read at most every TTL seconds per process, so a change in
+    the admin reaches workers, the bot and the scheduler within a minute. If the database is
+    not reachable (tests, first boot) the env settings are used as they are.
+    """
+
+    TTL = 30.0
+
+    def __init__(self) -> None:
+        self._lock = threading.RLock()
+        self._cached: Settings | None = None
+        self._at = 0.0
+        self._loading = False
+
+    def __call__(self) -> Settings:
+        base = env_settings()
+        now = time.monotonic()
+        with self._lock:
+            if self._cached is not None and now - self._at < self.TTL:
+                return self._cached
+            if self._loading:  # opening the DB session itself asked for settings
+                return self._cached or base
+            self._loading = True
+        try:
+            merged = self._merge(base)
+        finally:
+            with self._lock:
+                self._loading = False
+        with self._lock:
+            self._cached, self._at = merged, time.monotonic()
+        return merged
+
+    @staticmethod
+    def _merge(base: Settings) -> Settings:
+        try:
+            from crayonlark.core import integrations
+            from crayonlark.core.db import session_scope
+
+            with session_scope() as s:
+                stored = integrations.load_stored(s)
+        except Exception as exc:  # DB down / table missing: env only
+            log.debug("integrations not loaded: %s", exc)
+            return base
+        over: dict[str, Any] = {
+            k: v
+            for k, v in integrations.overrides(stored, base.secret_key).items()
+            if not getattr(base, k, None)  # a non-empty env var wins
+        }
+        return base.model_copy(update=over) if over else base
+
+    def cache_clear(self) -> None:
+        env_settings.cache_clear()
+        with self._lock:
+            self._cached, self._at = None, 0.0
+
+
+get_settings = _SettingsWithIntegrations()

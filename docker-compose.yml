@@ -4,9 +4,9 @@
 #   web -> https://crayonlark.com, https://www.crayonlark.com, https://admin.crayonlark.com  (port 3000)
 # Nothing else is exposed. The API is reached through web's /api/* rewrite.
 #
-# Only values you provide are variables, so Coolify lists exactly these:
-#   required: the 7 secrets (deploy stops if one is empty);
-#   optional: keys that switch a feature on (empty = feature off).
+# Coolify asks for exactly 7 variables: the required secrets (deploy stops if one is empty).
+# Optional features (AI keys, Telegram, email, Etsy, Pinterest, off-site backup, analytics) are
+# switched on in admin → Settings → Integrations, not here.
 # Fixed settings (domains, database name, KDP limits, …) are written here directly.
 # See .env.example and docs/DEPLOY_COOLIFY.md.
 
@@ -22,34 +22,8 @@ x-python-env: &python-env
   S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY}
   GARAGE_ADMIN_URL: http://garage:3903
   GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN}
-  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-  WEBSEARCH_PROVIDER: ${WEBSEARCH_PROVIDER:-}
-  WEBSEARCH_API_KEY: ${WEBSEARCH_API_KEY:-}
-  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-  TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID:-}
-  SMTP_HOST: ${SMTP_HOST:-}
-  SMTP_USER: ${SMTP_USER:-}
-  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
-  SMTP_FROM: ${SMTP_FROM:-Crayonlark <hello@crayonlark.com>}
-  OWNER_EMAIL: ${OWNER_EMAIL:-}
-  ETSY_API_KEY: ${ETSY_API_KEY:-}
-  ETSY_SHARED_SECRET: ${ETSY_SHARED_SECRET:-}
-  ETSY_SHOP_ID: ${ETSY_SHOP_ID:-}
-  ETSY_TAXONOMY_ID: ${ETSY_TAXONOMY_ID:-0}
-  PINTEREST_APP_ID: ${PINTEREST_APP_ID:-}
-  PINTEREST_APP_SECRET: ${PINTEREST_APP_SECRET:-}
   REVALIDATE_SECRET: ${REVALIDATE_SECRET:?set REVALIDATE_SECRET}
   WEB_INTERNAL_URL: http://web:3000
-  AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG:-}
-  TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
-  BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
-  BACKUP_S3_REGION: ${BACKUP_S3_REGION:-}
-  BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
-  BACKUP_S3_ACCESS_KEY: ${BACKUP_S3_ACCESS_KEY:-}
-  BACKUP_S3_SECRET_KEY: ${BACKUP_S3_SECRET_KEY:-}
 
 x-python-service: &python-service
   build:
@@ -216,9 +190,6 @@ services:
       context: ./web
       args:
         NEXT_PUBLIC_SITE_URL: https://crayonlark.com
-        NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
-        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID:-}
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     image: crayonlark-web:latest
     restart: unless-stopped
     depends_on:
@@ -227,7 +198,6 @@ services:
       API_INTERNAL_URL: http://api:8000
       PUBLIC_SITE_URL: https://crayonlark.com
       REVALIDATE_SECRET: ${REVALIDATE_SECRET:?set REVALIDATE_SECRET}
-      AMAZON_ASSOCIATES_TAG: ${AMAZON_ASSOCIATES_TAG:-}
     expose:
       - "3000"
     healthcheck:

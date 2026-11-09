@@ -148,7 +148,10 @@ def draft_form(
 def draft_problems(form: dict[str, str]) -> list[str]:
     errs = []
     if form["taxonomy_id"] in ("", "0"):
-        errs.append("set ETSY_TAXONOMY_ID (run `crayonlark etsy-taxonomy coloring`)")
+        errs.append(
+            "set the Etsy taxonomy id in Settings → Integrations "
+            "(find it with `crayonlark etsy-taxonomy --search coloring`)"
+        )
     if len(form["tags"].split(",")) != 13:
         errs.append("Etsy listing needs 13 tags")
     if float(form["price"]) < 0.2:

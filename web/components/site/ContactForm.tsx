@@ -6,13 +6,12 @@ import { Honeypot } from "./Honeypot";
 import { Turnstile } from "./Turnstile";
 import { useStartedAt } from "./useStartedAt";
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
-
 type Status = { kind: "idle" | "sending" | "done" | "error"; message?: string };
 
 const inputClass = "w-full min-w-0 rounded-2xl border-2 border-ink/20 bg-white px-4 py-3 text-lg focus:border-sky";
 
-export function ContactForm() {
+/** `turnstileSiteKey`: from admin → Settings → Integrations → Website extras ("" = off). */
+export function ContactForm({ turnstileSiteKey: TURNSTILE_SITE_KEY }: { turnstileSiteKey: string }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [website, setWebsite] = useState("");
   const [token, setToken] = useState("");

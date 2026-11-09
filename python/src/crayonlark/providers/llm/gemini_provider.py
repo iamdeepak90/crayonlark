@@ -31,7 +31,7 @@ class GeminiProvider:
     def __init__(self) -> None:
         self.key = get_settings().gemini_api_key
         if not self.key:
-            raise RuntimeError("GEMINI_API_KEY is not set (see docs/API_KEYS.md)")
+            raise RuntimeError("Gemini API key is not set (Settings → Integrations)")
 
     def estimate_usd(self, task: AgentTask[Any], model: str) -> float:
         return pricing.token_cost(

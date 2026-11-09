@@ -5,16 +5,17 @@ Everything is optional. With no keys at all, Crayonlark runs in **offline/manual
 - pictures you make yourself in the ChatGPT or Gemini apps and upload;
 - KDP packs you upload by hand.
 
-Keys go in environment variables only (Coolify → the app → Environment Variables, or `.env`
-locally). Never commit them. After adding a key, redeploy or restart, then choose providers and
-models in **admin → Settings → AI providers**. A key alone switches nothing on.
+Keys are entered in **admin → Settings → Integrations** (not in Coolify). They are stored
+encrypted, never shown again, and reach the workers within a minute, so there's no redeploy. Then choose
+providers and models in **admin → Settings → AI providers & models**. A key alone switches
+nothing on. (A non-empty env var with the same name still wins, which is handy for local testing.)
 
 ChatGPT Plus, Gemini Pro and Claude Pro subscriptions do **not** include API access. API keys are
 billed separately, by usage.
 
 ## AI providers (Phase 6)
 
-| Variable | Where to get it | Used for |
+| Key (Settings → Integrations) | Where to get it | Used for |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API keys | any text agent; vision QA |
 | `OPENAI_API_KEY` | platform.openai.com → API keys | text agents, vision QA, image generation |

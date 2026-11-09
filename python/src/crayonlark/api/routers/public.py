@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from crayonlark.api.deps import client_ip, db
-from crayonlark.core import site, storage
+from crayonlark.core import integrations, site, storage
 from crayonlark.core.enums import SubscriberStatus
 from crayonlark.core.models import BlogPost, Book, Subscriber
 from crayonlark.core.sessions import rate_limited
@@ -20,6 +20,12 @@ from crayonlark.core.sessions import rate_limited
 router = APIRouter(prefix="/api/public", tags=["public"])
 MEDIA_KEY = re.compile(r"^[a-z0-9][a-z0-9/_.-]{0,300}\.(jpg|png|webp)$")
 SUBSCRIBE_MESSAGE = "Thanks! Check your inbox for a confirmation email (and your spam folder)."
+
+
+@router.get("/site-config")
+def site_config() -> dict:
+    """Non-secret website settings from admin → Settings → Integrations (Umami, Turnstile, …)."""
+    return integrations.public_site_config()
 
 
 @router.get("/books")

@@ -94,7 +94,7 @@ export default function AISettings({ initial }: { initial: AIProviders }) {
       </p>
       {(["anthropic", "openai", "gemini", "openrouter"] as const).some((p) => !initial.keys[p]) && (
         <p className="mb-3 text-xs text-slate-500">
-          Keys not set: {(["anthropic", "openai", "gemini", "openrouter"] as const).filter((p) => !initial.keys[p]).join(", ")}. Add them as environment variables in Coolify to enable those choices.
+          Keys not set: {(["anthropic", "openai", "gemini", "openrouter"] as const).filter((p) => !initial.keys[p]).join(", ")}. Add them in Settings → Integrations → AI providers to enable those choices.
         </p>
       )}
       <div className="space-y-3">

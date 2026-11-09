@@ -9,13 +9,13 @@ from functools import lru_cache
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from crayonlark.core.config import get_settings
+from crayonlark.core.config import env_settings
 
 
 @lru_cache
 def get_engine() -> Engine:
     return create_engine(
-        get_settings().database_url, pool_pre_ping=True, pool_size=5, max_overflow=5
+        env_settings().database_url, pool_pre_ping=True, pool_size=5, max_overflow=5
     )
 
 

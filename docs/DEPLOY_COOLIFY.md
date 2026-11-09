@@ -25,20 +25,20 @@ certificates. After that you can turn it on, with SSL mode "Full (strict)".
    `https://crayonlark.com:3000,https://www.crayonlark.com:3000,https://admin.crayonlark.com:3000`.
    The `:3000` tells Coolify's proxy which container port to use. It does not appear in the
    public URL. Leave every other service without a domain.
-3. **Environment variables:** Coolify lists the 36 variables the compose file asks for. All
-   secrets and keys are env vars. Nothing secret is stored in the admin.
-   - **Required, 7 secrets:** `SECRET_KEY`, `POSTGRES_PASSWORD`, `GARAGE_RPC_SECRET`,
-     `GARAGE_ADMIN_TOKEN`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `REVALIDATE_SECRET`. Make them with
-     `sh scripts/gen-env.sh ~/crayonlark-prod.env` and paste them in. If one is empty, the
-     deploy stops and names it.
-   - **Optional:** each group switches one feature on, and empty means off. Start with
-     `TELEGRAM_*` (approvals and alerts), `SMTP_*` and `OWNER_EMAIL` (emails, weekly report).
-     Add the AI keys whenever you're ready (`docs/API_KEYS.md`).
-   - **Not variables:** the domains, the database name and user, and other fixed settings are
-     written in `docker-compose.yml`. The monthly budget is set in admin → Settings.
+3. **Environment variables:** Coolify lists exactly **7**, and all of them are required:
+   `SECRET_KEY`, `POSTGRES_PASSWORD`, `GARAGE_RPC_SECRET`, `GARAGE_ADMIN_TOKEN`, `S3_ACCESS_KEY`,
+   `S3_SECRET_KEY`, `REVALIDATE_SECRET`. Make them with
+   `sh scripts/gen-env.sh ~/crayonlark-prod.env` and paste the file into Coolify's
+   *Developer view*. Paste values only: no quotes, no comments. If one is empty, the deploy
+   stops and names it. Delete any other variable left over from older deploys.
+
+   Everything optional (AI keys, Telegram, email, Etsy, Pinterest, off-site backup, Amazon tag,
+   Turnstile, Umami) is **not** a variable. You switch it on after the first login in
+   admin → Settings → Integrations, with no redeploy needed. The monthly budget is there too.
 
    Keep the 7 secrets in your password manager and never change them after the first deploy.
-   The database and file storage are locked to them.
+   The database and file storage are locked to them. Keys saved in Integrations are encrypted
+   with `SECRET_KEY`.
 4. **Deploy.** The `migrate` service runs once (Garage layout and buckets, then database
    migrations) and the other services wait for it. The first build takes about 10 minutes, mostly
    Chromium and the print toolchain.
@@ -58,11 +58,12 @@ Open https://admin.crayonlark.com and log in. Check the dashboard: KDP slots, bu
 
 | Service | Steps |
 |---|---|
-| **Telegram** | @BotFather → `/newbot` → token. Send your bot a message, then open `https://api.telegram.org/bot<token>/getUpdates` to see your chat id. Set both env vars and redeploy. |
-| **Etsy** | etsy.com/developers → create an app with callback `https://admin.crayonlark.com/api/oauth/etsy/callback`. Set `ETSY_API_KEY`, `ETSY_SHARED_SECRET` and `ETSY_SHOP_ID`, redeploy, then admin → Etsy → Connect. Find the taxonomy id with `crayonlark etsy-taxonomy --search coloring` (api terminal) and set `ETSY_TAXONOMY_ID`. |
-| **Pinterest** | developers.pinterest.com → app with callback `https://admin.crayonlark.com/api/oauth/pinterest/callback`. Set the two env vars, redeploy, then admin → Pinterest → Connect. |
-| **AI providers** | Set keys, redeploy, then admin → Settings → AI providers. |
-| **Analytics (optional)** | Deploy Umami as its own Coolify one-click service (for example `stats.crayonlark.com`), then set `NEXT_PUBLIC_UMAMI_URL` and `NEXT_PUBLIC_UMAMI_WEBSITE_ID` and redeploy. These are build-time values. |
+| **Telegram** | @BotFather → `/newbot` → token. Paste it in Settings → Integrations → Telegram, switch on, save. Send your bot `/start`; it replies with your chat id. Add that, save. The bot picks it up within a minute. |
+| **Email** | Any SMTP provider on port 587 (Brevo, Resend, SES, Zoho…). Settings → Integrations → Email. |
+| **Etsy** | etsy.com/developers → create an app with callback `https://admin.crayonlark.com/api/oauth/etsy/callback`. Enter keystring, shared secret and shop id in Settings → Integrations → Etsy, then admin → Etsy → Connect. Find the taxonomy id with `crayonlark etsy-taxonomy --search coloring` (api terminal) and enter it in the same card. |
+| **Pinterest** | developers.pinterest.com → app with callback `https://admin.crayonlark.com/api/oauth/pinterest/callback`. Enter both values in Settings → Integrations → Pinterest, then admin → Pinterest → Connect. |
+| **AI providers** | Enter keys in Settings → Integrations → AI providers, then choose models per agent in Settings → AI providers & models. |
+| **Analytics (optional)** | Deploy Umami as its own Coolify one-click service (for example `stats.crayonlark.com`), then enter its URL and website id in Settings → Integrations → Website extras. The site picks it up within 5 minutes. |
 
 ## 5. Backups and restore
 

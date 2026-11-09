@@ -1,6 +1,6 @@
 import { ContactForm } from "@/components/site/ContactForm";
 import { PageHeader } from "@/components/site/PageHeader";
-import { pageMetadata } from "@/lib/public";
+import { getSiteConfig, pageMetadata } from "@/lib/public";
 
 export const metadata = pageMetadata({
   title: "Contact",
@@ -8,7 +8,8 @@ export const metadata = pageMetadata({
   path: "/contact",
 });
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { turnstile_site_key } = await getSiteConfig();
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <PageHeader
@@ -16,7 +17,7 @@ export default function ContactPage() {
         intro="Questions about a book or a printable, spotted a mistake, or have an idea? Send us a message."
       />
       <div className="mt-8">
-        <ContactForm />
+        <ContactForm turnstileSiteKey={turnstile_site_key} />
       </div>
       <p className="mt-8 text-sm text-ink-soft">
         For orders, returns and shipping of paperbacks, please contact Amazon. For printable downloads bought on Etsy, you

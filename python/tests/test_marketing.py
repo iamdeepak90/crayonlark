@@ -47,7 +47,7 @@ def test_etsy_draft_form_rules() -> None:
     assert etsy.draft_problems(form) == []
     bad = dict(form, taxonomy_id="0", description="Handmade pages")
     errs = " ".join(etsy.draft_problems(bad))
-    assert "TAXONOMY" in errs and "handmade" in errs and "Designed by" in errs
+    assert "taxonomy id" in errs and "handmade" in errs and "Designed by" in errs
 
 
 def test_pin_payload_marks_ai_art() -> None:

@@ -52,6 +52,13 @@ export type SitemapData = {
   books: { slug: string; updated_at: string }[];
   posts: { slug: string; updated_at: string }[];
 };
+/** Website extras from admin → Settings → Integrations (empty strings when switched off). */
+export type SiteConfig = {
+  amazon_associates_tag: string;
+  turnstile_site_key: string;
+  umami_url: string;
+  umami_website_id: string;
+};
 export type FreePrintable = { available: boolean; title: string; pages: number; preview_url: string | null };
 
 // ---------- Fetch helpers (server only; cached with ISR under the "public" tag) ----------
@@ -75,6 +82,9 @@ export async function getPosts(limit = 50) {
 }
 
 export const getPost = (slug: string) => publicApi<Post>(`/api/public/posts/${encodeURIComponent(slug)}`);
+
+const NO_SITE_CONFIG: SiteConfig = { amazon_associates_tag: "", turnstile_site_key: "", umami_url: "", umami_website_id: "" };
+export const getSiteConfig = async () => (await publicApi<SiteConfig>("/api/public/site-config")) ?? NO_SITE_CONFIG;
 
 export const getSitemapData = () => publicApi<SitemapData>("/api/public/sitemap");
 

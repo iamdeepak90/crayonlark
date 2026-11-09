@@ -97,6 +97,9 @@ def db(_schema):  # type: ignore[no-untyped-def]
     names = ", ".join(f'"{t.name}"' for t in Base.metadata.sorted_tables)
     with _schema.begin() as conn:
         conn.execute(text(f"TRUNCATE {names} RESTART IDENTITY CASCADE"))
+    from crayonlark.core.config import get_settings
+
+    get_settings.cache_clear()  # drop integrations cached from an earlier test
     try:
         from crayonlark.core.redis import get_redis
 

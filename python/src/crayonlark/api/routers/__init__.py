@@ -9,6 +9,7 @@ def register(app: FastAPI) -> None:
     from crayonlark.api.routers import (
         admin_ai,
         admin_books,
+        admin_integrations,
         admin_marketing,
         admin_ops,
         admin_publish,
@@ -27,5 +28,6 @@ def register(app: FastAPI) -> None:
     app.include_router(oauth.router)
     app.include_router(admin_site.router)
     app.include_router(admin_ai.router)
+    app.include_router(admin_integrations.router)
     app.include_router(admin_sales.router)
     app.include_router(public.router)

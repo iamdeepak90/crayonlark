@@ -7,8 +7,9 @@ Layout under BACKUP_DIR (/backups):
     objects-deleted/YYYY-MM-DD/<bucket>/…  files removed from Garage that night (kept 14 days)
     last.json                              result of the last run (shown in admin)
 
-Optional off-site copy: set BACKUP_S3_BUCKET (+ endpoint/keys) for any S3-compatible storage
-(Backblaze B2, Cloudflare R2, Wasabi, …). The same dumps and changed files are uploaded there.
+Optional off-site copy: switch on "Off-site backup copy" in Settings → Integrations, for any
+S3-compatible storage (Backblaze B2, Cloudflare R2, Wasabi, …). The same dumps and changed
+files are uploaded there.
 
 Restore (`crayonlark restore --day YYYY-MM-DD --yes`, or scripts/restore.sh) replaces the database
 with that night's dump and puts every mirrored file back into Garage.

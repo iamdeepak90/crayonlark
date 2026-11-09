@@ -23,7 +23,7 @@ class GeminiImageProvider:
     def __init__(self) -> None:
         self.key = get_settings().gemini_api_key
         if not self.key:
-            raise RuntimeError("GEMINI_API_KEY is not set (see docs/API_KEYS.md)")
+            raise RuntimeError("Gemini API key is not set (Settings → Integrations)")
 
     def estimate_usd(self, model: str) -> float:
         return pricing.image_price(model or DEFAULT_MODEL)

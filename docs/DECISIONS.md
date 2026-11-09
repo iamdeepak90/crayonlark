@@ -215,11 +215,27 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     models that support structured outputs. Errors that arrive with HTTP 200 are treated as
     errors. Checked against the docs on 2026-11-09.
 64. **Settings shows a "Paid APIs" overview** (key set or missing, which agents use it, spend
-    this month), but **keys stay in env vars**. I decided this on 2026-11-09, to keep the
-    "secrets only in env" rule and keep keys out of the database and its backups.
-65. **The compose file asks only for values I provide:** the 7 required secrets, plus
-    optional keys that switch features on. That's 36 variables, the same list as
-    `.env.example`. The domains, database name and user, `ENVIRONMENT`, the KDP limit (2+2, a
+    this month). Keys were env vars at first; see 66 for where they live now.
+65. **The compose file asks only for values I provide.** Since 66, that means just the 7
+    required secrets, the same list as `.env.example`. The domains, database name and user, `ENVIRONMENT`, the KDP limit (2+2, a
     hard rule, so not configurable), SMTP port 587, Etsy "when made", backup retention (14 days)
     and upscaling (off) are written into `docker-compose.yml` or are code defaults. Fewer knobs
     in Coolify means fewer ways to break a deploy. To change one, edit the compose file and push.
+66. **Coolify holds only the 7 infra secrets; every optional integration is set in admin →
+    Settings → Integrations** (2026-11-09, owner's choice: deploys must be easy). This covers AI
+    keys, web search, Telegram, SMTP, Etsy, Pinterest, the off-site backup target, the Amazon
+    tag, Turnstile and Umami.
+    - **Storage:** one `settings` row, `integrations`, with an on/off switch per group.
+    - **Encryption:** secret fields use Fernet, with a key derived from `SECRET_KEY` (sha256). They
+      are write-only in the API (only "set" is returned) and the audit log records only which
+      fields changed.
+    - **How the code reads them:** `config.get_settings()` merges them over the env settings,
+      re-read every 30 s per process, so workers, the bot and beat pick up changes without a
+      redeploy. The database connection itself uses `env_settings()`.
+    - **Telegram bot:** it waits for a token and exits when the token changes, and Docker
+      restarts it.
+    - **Website:** it reads Umami, the Turnstile site key and the Amazon tag from
+      `GET /api/public/site-config` (ISR, 5 min) instead of build-time `NEXT_PUBLIC_*`.
+    - **Env vars:** a non-empty env var still wins, for local tests.
+    - **Trade-off:** keys are now in the database and its backups, protected by `SECRET_KEY`. If
+      `SECRET_KEY` changes, the saved keys show "enter again".

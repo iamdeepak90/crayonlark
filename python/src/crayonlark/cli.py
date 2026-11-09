@@ -55,7 +55,7 @@ def demo(out: str = "/demo-output") -> None:
 
 @app.command("etsy-taxonomy")
 def etsy_taxonomy(search: str = "coloring") -> None:
-    """Find the Etsy seller taxonomy id for ETSY_TAXONOMY_ID (needs Etsy connected)."""
+    """Find the Etsy taxonomy id for Settings → Integrations → Etsy (needs Etsy connected)."""
     from crayonlark.core.db import session_scope
     from crayonlark.integrations.etsy import Etsy
 

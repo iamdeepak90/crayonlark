@@ -6,7 +6,7 @@ import type { Connection } from "@/lib/types";
 export default function ConnectCard({ name, label, configured, connection, children }: { name: string; label: string; configured: boolean; connection: Connection; children?: React.ReactNode }) {
   return (
     <Card title={`${label} connection`} actions={<Badge value={connection.connected ? "connected" : "not connected"} />} className="mb-4">
-      {!configured && <p className="text-sm text-rose-700">App keys are missing. Set them in Coolify (see docs/API_KEYS.md), then redeploy.</p>}
+      {!configured && <p className="text-sm text-rose-700">App keys are missing. Enter them in Settings → Integrations (see docs/API_KEYS.md).</p>}
       {configured && !connection.connected && (
         <a href={`/api/oauth/${name}/start`} className="inline-block rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white">
           Connect {label}

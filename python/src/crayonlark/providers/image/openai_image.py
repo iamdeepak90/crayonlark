@@ -24,7 +24,7 @@ class OpenAIImageProvider:
     def __init__(self) -> None:
         self.key = get_settings().openai_api_key
         if not self.key:
-            raise RuntimeError("OPENAI_API_KEY is not set (see docs/API_KEYS.md)")
+            raise RuntimeError("OpenAI API key is not set (Settings → Integrations)")
 
     def estimate_usd(self, model: str) -> float:
         return pricing.image_price(model or DEFAULT_MODEL)
