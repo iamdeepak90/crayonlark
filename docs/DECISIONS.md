@@ -217,3 +217,9 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
 64. **Settings shows a "Paid APIs" overview** (key set or missing, which agents use it, spend
     this month), but **keys stay in env vars**. I decided this on 2026-11-09, to keep the
     "secrets only in env" rule and keep keys out of the database and its backups.
+65. **The compose file asks only for values I provide:** the 7 required secrets, plus
+    optional keys that switch features on. That's 36 variables, the same list as
+    `.env.example`. The domains, database name and user, `ENVIRONMENT`, the KDP limit (2+2, a
+    hard rule, so not configurable), SMTP port 587, Etsy "when made", backup retention (14 days)
+    and upscaling (off) are written into `docker-compose.yml` or are code defaults. Fewer knobs
+    in Coolify means fewer ways to break a deploy. To change one, edit the compose file and push.

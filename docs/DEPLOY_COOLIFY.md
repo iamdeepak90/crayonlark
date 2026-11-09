@@ -25,16 +25,20 @@ certificates. After that you can turn it on, with SSL mode "Full (strict)".
    `https://crayonlark.com:3000,https://www.crayonlark.com:3000,https://admin.crayonlark.com:3000`.
    The `:3000` tells Coolify's proxy which container port to use. It does not appear in the
    public URL. Leave every other service without a domain.
-3. **Environment variables:** Coolify lists every `${VAR}` it finds in the compose file. Fill in
-   at least the REQUIRED block from `.env.example`. Generate each secret on your own machine with
-   the command shown next to it (`openssl rand -hex 32` and so on). Then set:
-   - `PUBLIC_SITE_URL=https://crayonlark.com`, `ADMIN_SITE_URL=https://admin.crayonlark.com`
-   - `TELEGRAM_BOT_TOKEN` and `TELEGRAM_ADMIN_CHAT_ID` (strongly recommended: approvals, alerts, weekly report)
-   - `SMTP_*` and `OWNER_EMAIL` (free-printable emails, contact form, weekly report)
-   - API keys whenever you're ready (`docs/API_KEYS.md`)
+3. **Environment variables:** Coolify lists the 36 variables the compose file asks for. All
+   secrets and keys are env vars. Nothing secret is stored in the admin.
+   - **Required, 7 secrets:** `SECRET_KEY`, `POSTGRES_PASSWORD`, `GARAGE_RPC_SECRET`,
+     `GARAGE_ADMIN_TOKEN`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `REVALIDATE_SECRET`. Make them with
+     `sh scripts/gen-env.sh ~/crayonlark-prod.env` and paste them in. If one is empty, the
+     deploy stops and names it.
+   - **Optional:** each group switches one feature on, and empty means off. Start with
+     `TELEGRAM_*` (approvals and alerts), `SMTP_*` and `OWNER_EMAIL` (emails, weekly report).
+     Add the AI keys whenever you're ready (`docs/API_KEYS.md`).
+   - **Not variables:** the domains, the database name and user, and other fixed settings are
+     written in `docker-compose.yml`. The monthly budget is set in admin → Settings.
 
-   Keep `GARAGE_RPC_SECRET`, `S3_*` and `POSTGRES_PASSWORD` safe. Changing them later breaks
-   access to existing data.
+   Keep the 7 secrets in your password manager and never change them after the first deploy.
+   The database and file storage are locked to them.
 4. **Deploy.** The `migrate` service runs once (Garage layout and buckets, then database
    migrations) and the other services wait for it. The first build takes about 10 minutes, mostly
    Chromium and the print toolchain.
@@ -63,7 +67,7 @@ Open https://admin.crayonlark.com and log in. Check the dashboard: KDP slots, bu
 ## 5. Backups and restore
 
 - Every night at 03:00 IST, `worker-heavy` writes a database dump and mirrors every Garage bucket
-  into the `backups` volume. Dumps and deleted files are kept for `BACKUP_RETENTION_DAYS` (14).
+  into the `backups` volume. Dumps and deleted files are kept for 14 days.
   The status is in admin → Settings → Backups. A failed backup sends a Telegram alert.
 - **Off-site copy (recommended):** create a bucket at Backblaze B2, Cloudflare R2 or Wasabi and
   set `BACKUP_S3_ENDPOINT`, `BACKUP_S3_BUCKET`, `BACKUP_S3_ACCESS_KEY` and `BACKUP_S3_SECRET_KEY`
