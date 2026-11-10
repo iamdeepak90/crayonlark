@@ -13,13 +13,19 @@ type Filter = "all" | "pending" | "approved" | "rejected";
 /**
  * Keyboard: ←/→/↑/↓ move · A or Y keep · R or N reject · Z zoom 100% · Esc close zoom
  */
+function shownVariant(img: ImageItem, v: "original" | "cleaned" | "color"): string {
+  if (v === "cleaned" && img.has_cleaned) return "cleaned";
+  if (v === "color" && img.has_color) return "color";
+  return "original";
+}
+
 export default function ImageGrid({ bookId, status, initial, limits }: { bookId: number; status: string; initial: ImageItem[]; limits: { min: number; max: number } }) {
   const router = useRouter();
   const [images, setImages] = useState(initial);
   const [filter, setFilter] = useState<Filter>("all");
   const [focus, setFocus] = useState(0);
   const [zoom, setZoom] = useState(false);
-  const [variant, setVariant] = useState<"original" | "cleaned">("original");
+  const [variant, setVariant] = useState<"original" | "cleaned" | "color">("original");
   const [msg, setMsg] = useState("");
   const gridRef = useRef<HTMLUListElement>(null);
 
@@ -132,13 +138,15 @@ export default function ImageGrid({ bookId, status, initial, limits }: { bookId:
           <div className="mb-2 flex items-center gap-3 text-white" onClick={(e) => e.stopPropagation()}>
             <strong>{current.scene_title}</strong>
             <Badge value={current.approval} />
-            <button className="underline" onClick={() => setVariant((v) => (v === "original" ? "cleaned" : "original"))} disabled={!current.has_cleaned}>
-              showing {variant}
-            </button>
+            {(["original", "cleaned", "color"] as const).map((v) => (
+              <button key={v} className={variant === v ? "font-semibold underline" : "opacity-70 hover:opacity-100"} onClick={() => setVariant(v)} disabled={v === "cleaned" ? !current.has_cleaned : v === "color" ? !current.has_color : false}>
+                {v === "color" ? `color example${current.color_source ? ` (${current.color_source})` : ""}` : v}
+              </button>
+            ))}
             <span className="text-sm opacity-80">QA {JSON.stringify({ grey: current.qa.grey_ratio, fill: current.qa.black_fill, line: current.qa.line_px_at_print })}</span>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`/api/admin/images/${current.id}/file?variant=${current.has_cleaned ? variant : "original"}`} alt={current.scene_title} className="max-w-none bg-white" />
+          <img src={`/api/admin/images/${current.id}/file?variant=${shownVariant(current, variant)}`} alt={current.scene_title} className="max-w-none bg-white" />
         </div>
       )}
     </div>

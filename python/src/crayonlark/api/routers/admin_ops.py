@@ -73,6 +73,7 @@ class NicheIn(BaseModel):
     risks: str = ""
     seasonality: str = ""
     notes: str = ""
+    color_reference: bool = False
 
 
 def niche_out(n: Niche) -> dict[str, Any]:
@@ -93,6 +94,7 @@ def niche_out(n: Niche) -> dict[str, Any]:
             "status",
             "approved_by",
             "created_at",
+            "color_reference",
         )
     }
 
@@ -122,6 +124,44 @@ def add_niche(
 
 class Decision(BaseModel):
     approve: bool
+
+
+class Toggle(BaseModel):
+    enabled: bool
+
+
+@router.post("/niches/{niche_id}/color-reference")
+def set_niche_color_reference(
+    niche_id: int, body: Toggle, admin: Admin = Depends(require_admin), s: Session = Depends(db)
+) -> dict:
+    """Colour example in the page corner (Etsy PDFs only) for this niche and its books.
+
+    Books already drafted on Etsy keep their setting (their files are built); change those on
+    the book page if needed."""
+    from crayonlark.core.audit import record
+    from crayonlark.core.enums import EtsyStatus
+
+    n = s.get(Niche, niche_id)
+    if n is None:
+        raise HTTPException(404)
+    n.color_reference = body.enabled
+    books = [b for b in n.books if b.etsy_status == EtsyStatus.NONE]
+    for b in books:
+        b.color_reference = body.enabled
+    record(
+        s,
+        admin.actor.name,
+        "niche.color_reference",
+        "niche",
+        n.id,
+        {"enabled": body.enabled, "books": [b.id for b in books]},
+    )
+    todo = {b.id: pipeline.needs_color_refs(b) for b in books}
+    s.commit()
+    for book_id, ids in todo.items():
+        if ids:
+            flows.queue_color_refs(book_id, ids)
+    return {**niche_out(n), "books_updated": len(books)}
 
 
 @router.post("/niches/{niche_id}/decision")

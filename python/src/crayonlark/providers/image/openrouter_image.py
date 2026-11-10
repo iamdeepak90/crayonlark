@@ -11,7 +11,7 @@ from typing import Any
 
 from crayonlark.providers import openrouter, pricing
 from crayonlark.providers.http import post_json
-from crayonlark.providers.image.base import ImageResult
+from crayonlark.providers.image.base import ImageResult, data_url
 
 URL = f"{openrouter.BASE}/images"
 
@@ -55,4 +55,15 @@ class OpenRouterImageProvider:
         if not model:
             raise RuntimeError("pick an OpenRouter image model in admin → Settings → AI providers")
         data = post_json(URL, openrouter.headers(), self.request(prompt, model))
+        return self.parse(data, model, self.estimate_usd(model))
+
+    @classmethod
+    def edit_request(cls, prompt: str, image_png: bytes, model: str) -> dict[str, Any]:
+        ref = {"type": "image_url", "image_url": {"url": data_url(image_png)}}
+        return {**cls.request(prompt, model), "input_references": [ref]}
+
+    def edit(self, prompt: str, image_png: bytes, model: str) -> ImageResult:
+        if not model:
+            raise RuntimeError("pick an OpenRouter image model in admin → Settings → AI providers")
+        data = post_json(URL, openrouter.headers(), self.edit_request(prompt, image_png, model))
         return self.parse(data, model, self.estimate_usd(model))

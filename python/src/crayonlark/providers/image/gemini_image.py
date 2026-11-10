@@ -29,9 +29,19 @@ class GeminiImageProvider:
         return pricing.image_price(model or DEFAULT_MODEL)
 
     @staticmethod
-    def request(prompt: str) -> dict[str, Any]:
+    def request(prompt: str, image_png: bytes | None = None) -> dict[str, Any]:
+        parts: list[dict[str, Any]] = [{"text": prompt}]
+        if image_png is not None:
+            parts.append(
+                {
+                    "inline_data": {
+                        "mime_type": "image/png",
+                        "data": base64.b64encode(image_png).decode(),
+                    }
+                }
+            )
         return {
-            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "contents": [{"role": "user", "parts": parts}],
             "generationConfig": {
                 "responseModalities": ["TEXT", "IMAGE"],
                 "imageConfig": {"aspectRatio": "3:4", "imageSize": "1K"},
@@ -59,4 +69,10 @@ class GeminiImageProvider:
         data = post_json(
             f"{BASE}/{model}:generateContent", {"x-goog-api-key": self.key}, self.request(prompt)
         )
+        return self.parse(data, model)
+
+    def edit(self, prompt: str, image_png: bytes, model: str) -> ImageResult:
+        model = model or DEFAULT_MODEL
+        body = self.request(prompt, image_png)
+        data = post_json(f"{BASE}/{model}:generateContent", {"x-goog-api-key": self.key}, body)
         return self.parse(data, model)

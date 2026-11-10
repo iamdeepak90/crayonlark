@@ -289,3 +289,19 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     URL), and each forked child disposes the inherited pool on `worker_process_init`. Sharing
     the parent's connections across processes caused "server closed the connection
     unexpectedly".
+
+73. **Color examples in the page corner, Etsy only (2026-11-10).** A niche (and each book, which
+    copies its niche's setting when it is created) can switch on a small coloured example in the
+    bottom-right corner of every coloring page. Off by default.
+    - **Etsy printables only.** KDP books stay black & white: one colour image makes KDP print
+      the whole interior in colour, which costs several times more per copy.
+    - **How it is made:** after cleaning, the configured image AI colours the line art
+      (`images/edits` on OpenAI, an input image on Gemini, `input_references` on OpenRouter),
+      inside the budget guard. The original lines are then put back on top, so the example
+      always matches the page. If the AI is in manual mode, over budget, fails or returns no
+      colour, the free auto-fill (`print/colorize.py`) is used instead. The Etsy build also
+      auto-fills any page still missing one, so it never waits.
+    - **Layout:** the drawing shrinks to leave a 1.85 in band; the example is 1.6 in tall with
+      the label "Color idea". Embedded as a 600 px JPEG so PDFs stay far below Etsy's 20 MB.
+    - **Niche switch** also updates that niche's books not yet on Etsy; books already drafted or
+      published on Etsy keep theirs. Etsy descriptions mention the examples; KDP text never does.

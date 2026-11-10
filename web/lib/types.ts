@@ -44,6 +44,8 @@ export type ImageItem = {
   width: number | null;
   height: number | null;
   has_cleaned: boolean;
+  has_color?: boolean;
+  color_source?: string;
   error: string | null;
 };
 

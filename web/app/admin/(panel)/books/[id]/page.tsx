@@ -1,6 +1,7 @@
 import { Bot, Hand } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
+import ColorRefToggle from "@/components/admin/ColorRefToggle";
 import ConceptsPanel from "@/components/admin/ConceptsPanel";
 import ManualKdpSteps from "@/components/admin/ManualKdpSteps";
 import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui";
@@ -27,6 +28,9 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
   const pending = pictures.filter((i) => i.approval === "pending").length;
   const canUpload = ART_STATUSES.includes(b.status);
   const showConcepts = canUpload || pictures.length < b.images.length;
+  const cleaned = b.images.filter((i) => i.approval === "approved" && i.has_cleaned).length;
+  const colorDone = b.images.filter((i) => i.has_color).length;
+  const colorAi = b.images.filter((i) => i.color_source === "ai").length;
   return (
     <>
       <PageTitle
@@ -71,6 +75,16 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
             <dt className="text-slate-500">ASIN</dt>
             <dd>{String(f.kdp_asin ?? "—")}</dd>
           </dl>
+          <h3 className="mt-4 text-sm font-bold">Etsy pages</h3>
+          <div className="mt-1">
+            <ColorRefToggle kind="book" id={b.id} enabled={Boolean(f.color_reference)} />
+            {Boolean(f.color_reference) && cleaned > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {colorDone} of {cleaned} cleaned pages have their color example
+                {colorAi ? ` (${colorAi} by AI, ${colorDone - colorAi} auto-filled)` : colorDone ? " (auto-filled)" : ""}.
+              </p>
+            )}
+          </div>
           <h3 className="mt-4 text-sm font-bold">AI disclosure</h3>
           <ul className="text-sm">
             {AI_FIELDS.map(([k, label]) => (

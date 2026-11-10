@@ -1,5 +1,8 @@
 """Etsy printable PDFs: US Letter and A4 versions of each product, single-sided, with a
-cover page and a license page ("personal and single classroom use only"). Max 20 MB each."""
+cover page and a license page ("personal and single classroom use only"). Max 20 MB each.
+
+Books with "colour reference" on get a small coloured example in the bottom-right corner of
+each coloring page (the drawing shrinks a little to make room; they never overlap)."""
 
 from __future__ import annotations
 
@@ -8,6 +11,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from PIL import Image
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
@@ -29,6 +33,29 @@ class EtsyProduct:
     designs: Sequence[Path] = ()
     activities: Sequence[Activity] = ()
     ai_artwork: bool = True
+    color_refs: Sequence[Path | None] = ()  # same order as designs; None = no example
+
+
+REF_BAND = 1.85 * inch  # space kept free under the drawing
+REF_H = 1.6 * inch
+
+
+def draw_design_with_ref(c: Canvas, box: Box, design: Path, ref: Path) -> None:
+    draw_design(c, Box(box.x, box.y + REF_BAND, box.w, box.h - REF_BAND), design)
+    with Image.open(ref) as im:
+        aspect = im.height / im.width
+    h = REF_H
+    w = h / aspect
+    x, y = box.x + box.w - w, box.y + 0.05 * inch
+    c.drawImage(str(ref), x, y, w, h)
+    c.setStrokeColor(brand.COLORS["ink"])
+    c.setLineWidth(0.75)
+    c.roundRect(x, y, w, h, 4, stroke=1, fill=0)
+    c.setFillColor(brand.COLORS["ink"])
+    c.setFont(fonts.DISPLAY_SEMI, 13)
+    c.drawRightString(x - 0.15 * inch, y + h / 2 + 4, "Color idea")
+    c.setFont(fonts.BODY, 10)
+    c.drawRightString(x - 0.15 * inch, y + h / 2 - 11, "or choose your own colors!")
 
 
 def _cover(c: Canvas, box: Box, product: EtsyProduct) -> None:
@@ -98,8 +125,12 @@ def render(product: EtsyProduct, paper: str, out: Path) -> ValidationReport:
     _license(c, box(), product.ai_artwork)
     c.showPage()
     pages += 2
-    for d in product.designs:
-        draw_design(c, box(), Path(d))
+    refs = list(product.color_refs) + [None] * (len(product.designs) - len(product.color_refs))
+    for d, ref in zip(product.designs, refs, strict=True):
+        if ref is not None:
+            draw_design_with_ref(c, box(), Path(d), Path(ref))
+        else:
+            draw_design(c, box(), Path(d))
         c.showPage()
         pages += 1
     for a in product.activities:

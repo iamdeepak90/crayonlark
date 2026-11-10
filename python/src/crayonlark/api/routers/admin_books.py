@@ -34,6 +34,7 @@ class BookIn(BaseModel):
     themes: list[str] = []
     activity_plan: dict[str, Any] | None = None
     include_color_test: bool = True
+    color_reference: bool = False
     ai_interior_images: bool = True
     ai_cover_image: bool = False
     ai_text: bool = True
@@ -52,6 +53,7 @@ class BookPatch(BaseModel):
     themes: list[str] | None = None
     activity_plan: dict[str, Any] | None = None
     include_color_test: bool | None = None
+    color_reference: bool | None = None
     ai_interior_images: bool | None = None
     ai_cover_image: bool | None = None
     ai_text: bool | None = None
@@ -100,6 +102,8 @@ def image_out(i: Image) -> dict[str, Any]:
         "width": i.width,
         "height": i.height,
         "has_cleaned": bool(i.cleaned_key),
+        "has_color": bool(i.color_key),
+        "color_source": i.color_source,
         "error": i.error,
     }
 
@@ -213,6 +217,10 @@ def update_book(
         b.id,
         {"fields": sorted(body.model_dump(exclude_unset=True))},
     )
+    missing = pipeline.needs_color_refs(b)  # switched on after cleaning: make them now
+    if missing:
+        s.commit()
+        flows.queue_color_refs(b.id, missing)
     return book_summary(b)
 
 
@@ -303,6 +311,7 @@ def image_file(
         "thumb": ("processed", img.thumb_key, "image/webp"),
         "original": ("originals", img.original_key, "image/png"),
         "cleaned": ("processed", img.cleaned_key, "image/png"),
+        "color": ("processed", img.color_key, "image/png"),
     }.get(variant, ("processed", None, ""))
     if not key:
         raise HTTPException(404, "no such file")

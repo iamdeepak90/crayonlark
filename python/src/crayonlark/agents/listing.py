@@ -125,6 +125,14 @@ def _tags(theme: str, extra: list[str]) -> list[str]:
     return out[:13]
 
 
+COLOR_REF_LINE = "- A small color example in the corner of every coloring page"
+
+
+def _shows_color_refs(book: Book, kind: str) -> bool:
+    """Etsy pages with drawings carry a colour example when the book has it on (never KDP)."""
+    return bool(book.color_reference) and kind != "activity_pack"
+
+
 def offline_listing(book: Book, n_designs: int, n_activities: int) -> ListingAgentOut:
     theme = _theme(book)
     ages = f"{book.age_min}-{book.age_max}"
@@ -179,7 +187,9 @@ def offline_listing(book: Book, n_designs: int, n_activities: int) -> ListingAge
                 tags=_tags(theme, [theme, f"{theme} for kids", f"{theme} pdf"]),
                 description=(
                     f"{names[kind]}.\n\nWhat you get:\n- PDF in US Letter and A4 sizes\n"
-                    "- Thick, simple lines that are easy to color\n- Instant download, "
+                    "- Thick, simple lines that are easy to color\n"
+                    + (COLOR_REF_LINE + "\n" if _shows_color_refs(book, kind) else "")
+                    + "- Instant download, "
                     "print at home as often as you like\n\nLicense: personal and single "
                     "classroom use only. This is a digital item, nothing is shipped."
                 ),
@@ -253,6 +263,13 @@ def run(session: Session, book: Book) -> list[Listing]:
         + "; ".join(i.scene_title for i in designs[:40])
         + f"\nEtsy products to write (in this order): "
         f"{', '.join(plan_etsy_products(len(designs), n_acts > 0))}."
+        + (
+            "\nThe Etsy printable coloring pages have a small color example in the corner of "
+            "each page: mention it in the Etsy descriptions (not for the activity pack). The KDP "
+            "paperback is black and white: do not mention color examples in the KDP listing."
+            if book.color_reference
+            else ""
+        )
     )
     task = AgentTask(
         agent="listing",

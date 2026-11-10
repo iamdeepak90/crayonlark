@@ -12,9 +12,10 @@ from typing import Any
 from crayonlark.core.config import get_settings
 from crayonlark.providers import pricing
 from crayonlark.providers.http import post_json
-from crayonlark.providers.image.base import ImageResult
+from crayonlark.providers.image.base import ImageResult, data_url
 
 URL = "https://api.openai.com/v1/images/generations"
+EDIT_URL = "https://api.openai.com/v1/images/edits"  # JSON body: images[].image_url (data URL)
 DEFAULT_MODEL = "gpt-image-2.5-flare"
 
 
@@ -60,4 +61,13 @@ class OpenAIImageProvider:
     def generate(self, prompt: str, model: str) -> ImageResult:
         body = self.request(prompt, model)
         data = post_json(URL, {"Authorization": f"Bearer {self.key}"}, body, timeout=300)
+        return self.parse(data, body["model"])
+
+    @classmethod
+    def edit_request(cls, prompt: str, image_png: bytes, model: str) -> dict[str, Any]:
+        return {**cls.request(prompt, model), "images": [{"image_url": data_url(image_png)}]}
+
+    def edit(self, prompt: str, image_png: bytes, model: str) -> ImageResult:
+        body = self.edit_request(prompt, image_png, model)
+        data = post_json(EDIT_URL, {"Authorization": f"Bearer {self.key}"}, body, timeout=300)
         return self.parse(data, body["model"])

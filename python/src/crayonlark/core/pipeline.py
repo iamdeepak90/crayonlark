@@ -24,7 +24,7 @@ from crayonlark.core.audit import record
 from crayonlark.core.enums import ApprovalState, BookStatus, ImageStatus
 from crayonlark.core.models import Book, Image, Niche, Page
 from crayonlark.core.state_machine import transition
-from crayonlark.print import cleanup, etsy_files, interior, qa_checks
+from crayonlark.print import cleanup, colorize, etsy_files, interior, qa_checks
 from crayonlark.print.activities import build_activities
 from crayonlark.print.validate import ValidationReport, validate_pdf
 
@@ -89,6 +89,7 @@ def book_from_niche(session: Session, niche: Niche, actor: Actor) -> Book:
         age_min=lo,
         age_max=hi,
         themes=[niche.theme.strip().lower()][:1],
+        color_reference=niche.color_reference,
     )
     from crayonlark.core import approvals  # avoid an import cycle
 
@@ -298,6 +299,7 @@ def build_etsy_pdfs(
     with tempfile.TemporaryDirectory(prefix="etsy-") as t:
         tmp = Path(t)
         all_paths = dict(zip([i.id for i in approved], _download_cleaned(book, tmp), strict=True))
+        refs = _download_color_refs(session, book, approved, tmp)
         acts = build_activities(book.activity_plan or {}, seed=book.id)
         for prod in products:
             ids = prod["image_ids"] if prod.get("image_ids") is not None else list(all_paths)
@@ -305,6 +307,7 @@ def build_etsy_pdfs(
                 slug=prod["slug"],
                 title=prod["title"],
                 designs=[all_paths[i] for i in ids if i in all_paths],
+                color_refs=[refs.get(i) for i in ids if i in all_paths],
                 activities=acts if prod.get("activities") else [],
                 ai_artwork=book.ai_interior_images,
             )
@@ -318,6 +321,33 @@ def build_etsy_pdfs(
                 keys[paper] = key
             out[prod["slug"]] = keys
     return out
+
+
+def _download_color_refs(
+    session: Session, book: Book, approved: list[Image], tmp: Path
+) -> dict[int, Path]:
+    """Colour references for the Etsy pages (only when the book has them switched on). Any
+    image still without one gets the free auto-fill now, so the Etsy build never waits."""
+    from crayonlark.core import color_refs
+
+    if not book.color_reference:
+        return {}
+    out = {}
+    for img in approved:
+        if not img.color_key:
+            color_refs.make(session, img, use_ai=False)
+        assert img.color_key
+        path = tmp / f"{img.id:06d}-color.jpg"
+        path.write_bytes(colorize.print_jpeg(storage.get_bytes("processed", img.color_key)))
+        out[img.id] = path
+    return out
+
+
+def needs_color_refs(book: Book) -> list[int]:
+    """Cleaned, approved images of a colour-reference book that have no reference yet."""
+    if not book.color_reference:
+        return []
+    return [i.id for i in approved_images(book) if i.cleaned_key and not i.color_key]
 
 
 def archive_book(session: Session, book: Book, actor: Actor) -> None:

@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import ColorRefToggle from "@/components/admin/ColorRefToggle";
 import NicheDecision from "@/components/admin/NicheDecision";
 import NicheForm from "@/components/admin/NicheForm";
 import { Badge, Card, PageTitle, fmtDate } from "@/components/admin/ui";
@@ -7,7 +8,7 @@ import { serverApi } from "@/lib/api";
 import type { AIProviders } from "@/lib/types";
 import { buttonVariants } from "@/components/ui/button";
 
-type Niche = { id: number; book_id: number | null; theme: string; name: string; age_range: string; angle: string; risks: string; seasonality: string; notes: string; source: string; status: string; approved_by: string | null; created_at: string };
+type Niche = { id: number; book_id: number | null; theme: string; name: string; age_range: string; angle: string; risks: string; seasonality: string; notes: string; source: string; status: string; approved_by: string | null; created_at: string; color_reference: boolean };
 
 export default async function NichesPage() {
   const [niches, ai] = await Promise.all([serverApi<Niche[]>("/api/admin/niches"), serverApi<AIProviders>("/api/admin/ai/providers")]);
@@ -23,6 +24,11 @@ export default async function NichesPage() {
               {n.seasonality && <p className="text-sm"><strong>Season:</strong> {n.seasonality}</p>}
               {n.notes && <p className="text-sm text-slate-600">{n.notes}</p>}
               <p className="mt-1 text-xs text-slate-500">{n.source} · {fmtDate(n.created_at)}{n.approved_by ? ` · decided by ${n.approved_by}` : ""}</p>
+              {n.status !== "rejected" && (
+                <div className="mt-3">
+                  <ColorRefToggle kind="niche" id={n.id} enabled={n.color_reference} />
+                </div>
+              )}
               <div className="mt-3 flex gap-2">
                 {n.status === "proposed" && <NicheDecision id={n.id} name={n.name} />}
                 {n.status === "approved" && n.book_id && (

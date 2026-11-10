@@ -48,6 +48,9 @@ def image_clean(image_id: int) -> dict[str, Any]:
         s.flush()
         moved = pipeline.finish_cleaning_if_ready(s, img.book)
         book_id = img.book_id
+        wants_color = img.book.color_reference
+    if wants_color:
+        flows.queue_color_refs(book_id, [image_id])
     if moved:
         flows.after_cleaning(book_id)
     return result

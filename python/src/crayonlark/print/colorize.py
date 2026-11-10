@@ -37,3 +37,51 @@ def colorize(png: bytes, seed: int = 0, min_region_frac: float = 0.0004) -> byte
     buf = io.BytesIO()
     Image.fromarray(out, "RGB").save(buf, format="PNG", optimize=True)
     return buf.getvalue()
+
+
+# --------------------------------------------------------------------------- colour references
+
+
+def _gray(png: bytes) -> Image.Image:
+    return Image.open(io.BytesIO(png)).convert("L")
+
+
+def scaled_png(png: bytes, max_h: int) -> bytes:
+    """Smaller copy (keeps the aspect ratio); AI inputs and corner thumbnails need no more."""
+    img: Image.Image = Image.open(io.BytesIO(png))
+    img = img.convert("RGB") if img.mode not in ("L", "RGB") else img
+    if img.height > max_h:
+        img = img.resize((round(img.width * max_h / img.height), max_h), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
+def keep_lines(line_png: bytes, colored: bytes, max_h: int = 1200) -> bytes:
+    """Put the original black lines on top of an AI-coloured version, so the colour example
+    always matches the page exactly (an AI may move or add lines). Multiply blend."""
+    line = _gray(scaled_png(line_png, max_h))
+    color = Image.open(io.BytesIO(colored)).convert("RGB")
+    color = color.resize(line.size, Image.Resampling.LANCZOS)
+    lines = np.asarray(line, dtype=np.float32)[..., None] / 255.0
+    out = (np.asarray(color, dtype=np.float32) * lines).clip(0, 255).astype(np.uint8)
+    buf = io.BytesIO()
+    Image.fromarray(out, "RGB").save(buf, format="PNG", optimize=True)
+    return buf.getvalue()
+
+
+def print_jpeg(png: bytes, max_h: int = 600) -> bytes:
+    """Compact copy for the PDF corner (1.6 in tall: 600 px is ~375 DPI). Keeps PDFs small."""
+    img = Image.open(io.BytesIO(png)).convert("RGB")
+    if img.height > max_h:
+        img = img.resize((round(img.width * max_h / img.height), max_h), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=88, optimize=True)
+    return buf.getvalue()
+
+
+def colourfulness(png: bytes) -> float:
+    """Share of pixels with clearly visible colour (0..1). An "AI colouring" that came back
+    black & white scores ~0 and is replaced by the auto-fill."""
+    hsv = np.asarray(Image.open(io.BytesIO(png)).convert("RGB").convert("HSV"))
+    return float(((hsv[..., 1] > 60) & (hsv[..., 2] > 60)).mean())

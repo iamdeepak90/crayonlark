@@ -151,6 +151,13 @@ export default function NicheForm({ webSearch = true }: { webSearch?: boolean })
               <Input id={`n-${k}`} name={k} required={k === "theme" || k === "name"} defaultValue={k === "age_range" ? "4-8" : ""} />
             </div>
           ))}
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="color_reference" value="true" className="mt-0.5" />
+            <span>
+              Color example in the corner of each page
+              <span className="block text-xs text-muted-foreground">Etsy printables only. KDP stays black & white. Its books follow this setting.</span>
+            </span>
+          </label>
           <div>
             <Button disabled={busy}>Add niche</Button>
           </div>

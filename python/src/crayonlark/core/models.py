@@ -89,6 +89,9 @@ class Niche(TimestampMixin, Base):
     seasonality: Mapped[str] = mapped_column(String(200), default="")
     notes: Mapped[str] = mapped_column(Text, default="")
     source: Mapped[str] = mapped_column(String(30), default="manual")  # manual | research_agent
+    # small coloured example in the corner of each page (Etsy PDFs only; KDP stays black & white).
+    # Books created from this niche copy it.
+    color_reference: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     status: Mapped[str] = mapped_column(String(30), default=NicheStatus.PROPOSED)
     approved_by: Mapped[str | None] = mapped_column(String(120))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -113,6 +116,8 @@ class Book(TimestampMixin, Base):
     age_max: Mapped[int] = mapped_column(Integer, default=8)
     themes: Mapped[list[Any]] = mapped_column(default=list)
     include_color_test: Mapped[bool] = mapped_column(Boolean, default=True)
+    # coloured example in the corner of each page, Etsy PDFs only (KDP interior stays B&W)
+    color_reference: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     activity_plan: Mapped[dict[str, Any]] = mapped_column(default=dict)
 
     status: Mapped[str] = mapped_column(String(40), default=BookStatus.IDEA, index=True)
@@ -166,6 +171,9 @@ class Image(TimestampMixin, Base):
     original_key: Mapped[str | None] = mapped_column(String(500))
     cleaned_key: Mapped[str | None] = mapped_column(String(500))
     thumb_key: Mapped[str | None] = mapped_column(String(500))
+    color_key: Mapped[str | None] = mapped_column(String(500))  # coloured reference (Etsy)
+    # how the colour reference was made: "ai" | "autofill" ("" = none yet)
+    color_source: Mapped[str] = mapped_column(String(20), default="", server_default="")
     width: Mapped[int | None] = mapped_column(Integer)
     height: Mapped[int | None] = mapped_column(Integer)
     qa_scores: Mapped[dict[str, Any]] = mapped_column(default=dict)

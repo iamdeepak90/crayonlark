@@ -108,3 +108,18 @@ def vision_qa(image_id: int) -> dict[str, Any]:
     if ready:
         flows.notify_images_ready(book_id)
     return scores
+
+
+@celery.task(
+    name="crayonlark.image.color_ref", autoretry_for=RETRYABLE, retry_backoff=True, max_retries=4
+)
+@tracked
+def color_ref(image_id: int) -> dict[str, Any]:
+    """Colour example for one cleaned image (AI, else free auto-fill). Etsy pages only."""
+    from crayonlark.core import color_refs
+
+    with session_scope() as s:
+        img = s.get(Image, image_id)
+        if img is None or not img.cleaned_key:
+            return {"skipped": "missing or not cleaned"}
+        return color_refs.make(s, img)

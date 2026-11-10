@@ -40,6 +40,20 @@ def after_image_set_approved(book_id: int, image_ids: list[int]) -> None:
         )
 
 
+def queue_color_refs(book_id: int, image_ids: list[int]) -> list[str]:
+    """Colour examples for the Etsy pages (books with "colour reference" on)."""
+    return [
+        enqueue(
+            "crayonlark.image.color_ref",
+            {"image_id": image_id},
+            "images",
+            idempotency_key=f"color:{image_id}",
+            book_id=book_id,
+        )
+        for image_id in image_ids
+    ]
+
+
 def after_cleaning(book_id: int) -> None:
     enqueue("crayonlark.book.build_interior", {"book_id": book_id}, "cpu-heavy", book_id=book_id)
 
