@@ -164,7 +164,7 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     never waits on a model. The book waits for every vision verdict before asking for approval.
     A failed vision check (budget reached, refusal, outage) marks the image "not checked" and
     never blocks the book; I still review every image. Images go to the model as 1024 px greyscale JPEGs.
-51. **Research web search** is optional (Brave or Tavily, official APIs). Amazon and Etsy are
+51. **Research web search** is optional (Brave or Tavily, official APIs; replaced by LangSearch / TinyFish, see 70). Amazon and Etsy are
     excluded both in the query (Tavily `exclude_domains`) and in the results (filtered by host),
     so we never read their pages. Each search request goes through the budget guard (`kind="search"`).
 52. **QA minimum image side lowered from 1500 to 840 px.** API images are 1024x1536 (OpenAI) or
@@ -263,3 +263,29 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     pages (`ai_artwork=False`). `crayonlark demo-data` adds two "(Demo)" books that stop at
     "awaiting image approval" and are removed with `--remove`. Its idea approvals are the owner
     acting from the terminal (`cli:demo-data`).
+70. **Web search: LangSearch and TinyFish instead of Brave/Tavily (2026-11-10).** Both are free
+    search-results APIs (title, link, snippet) that do not browse pages for us.
+    - **Both at once:** there is one key field per provider (Settings → Integrations → Web
+      search). With both keys, every search asks both, merges the results alternately and drops
+      duplicate links. If one fails, the other's results are still used.
+    - **Amazon and Etsy:** excluded in the request (`excludeDomains` / `exclude_domains`) and
+      again by host on the results.
+    - **Budget:** calls still go through the budget guard at $0, so they show in Costs.
+    - **Failures:** a search error (bad key, allowance used up, rate limit) no longer fails the
+      research job. The agent carries on with your notes and the job result records
+      `web_error`.
+    - **Old settings:** stored Brave/Tavily values are ignored (the fields no longer exist).
+    - **Niche form:** it now follows the job (`GET /api/admin/jobs/{id}`), shows a live status
+      next to the button and a toast when it finishes. Before, it showed a one-off message and
+      never refreshed.
+
+71. **Approving a niche creates its book (2026-11-10).** "Approve & create book" approves the
+    niche gate (human), creates the book from it (title, ages, theme), approves the book idea
+    with the same human actor and queues the scene prompts. It runs once per niche: approving
+    again does not make a second book. "Create book" by hand stays for books without a niche.
+
+72. **Celery workers get their own database connections (2026-11-10).** The worker module no
+    longer reads DB-backed settings at import (it uses env-only `env_settings()` for the Redis
+    URL), and each forked child disposes the inherited pool on `worker_process_init`. Sharing
+    the parent's connections across processes caused "server closed the connection
+    unexpectedly".

@@ -28,6 +28,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Monogram } from "./ui";
@@ -111,10 +112,7 @@ function Nav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => vo
   );
 }
 
-function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- read the class set by the inline script
-  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
+function ThemeToggle({ dark, setDark }: { dark: boolean; setDark: (v: boolean) => void }) {
   function toggle() {
     const next = !dark;
     setDark(next);
@@ -137,6 +135,9 @@ export default function AdminShell({ email, needsYou, children }: { email: strin
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [dark, setDark] = useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- read the class set by the inline script
+  useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
   const current = ALL.find((it) => isActive(pathname, it.href));
 
   async function logout() {
@@ -220,12 +221,13 @@ export default function AdminShell({ email, needsYou, children }: { email: strin
                 {needsYou}
               </span>
             </Link>
-            <ThemeToggle />
+            <ThemeToggle dark={dark} setDark={setDark} />
           </div>
         </header>
         <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">
           <div className="mx-auto max-w-6xl">{children}</div>
         </main>
+        <Toaster theme={dark ? "dark" : "light"} />
       </div>
     </div>
   );

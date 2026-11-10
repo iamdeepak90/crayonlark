@@ -21,7 +21,8 @@ billed separately, by usage.
 | `OPENAI_API_KEY` | platform.openai.com → API keys | text agents, vision QA, image generation |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key | text agents, vision QA, image generation |
 | `OPENROUTER_API_KEY` | openrouter.ai → Keys (buy credits first) | any of the above through one key: Claude, GPT, Gemini and many more |
-| `WEBSEARCH_PROVIDER` + `WEBSEARCH_API_KEY` | brave.com/search/api or tavily.com | optional search for the research agent |
+| `LANGSEARCH_API_KEY` | langsearch.com/api-keys (free) | optional web search for the research agent |
+| `TINYFISH_API_KEY` | agent.tinyfish.ai/api-keys (free) | optional web search for the research agent; with both keys, results are merged |
 
 **Official API or OpenRouter?** In admin → Settings → AI providers, every agent (and the
 image generator) has its own choice: *Official API* (Anthropic, OpenAI or Gemini directly,
@@ -44,7 +45,8 @@ provider is a second safety net.
   less than a cent on Haiku 5.5.
 - **Images:** about $0.03–0.07 per portrait image (`gemini-nano-banana-2.1` is the cheapest),
   so ₹150–300 for a 50-image book.
-- **Web search:** $0.005 (Brave) or $0.008 (Tavily) per search, with 2 searches per research run.
+- **Web search:** free. LangSearch has a free plan with a daily allowance. TinyFish search is
+  free up to 30/min, 500/hour and 12,000/day. Each research run makes 2 searches.
 
 Suggested start: research, concept and listing on `claude-opus-5-5`, vision QA on
 `claude-haiku-5-5`, images in manual mode until the prompts look right.

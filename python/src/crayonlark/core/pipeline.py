@@ -22,7 +22,7 @@ from crayonlark.core import app_settings, storage
 from crayonlark.core.actors import SYSTEM, Actor
 from crayonlark.core.audit import record
 from crayonlark.core.enums import ApprovalState, BookStatus, ImageStatus
-from crayonlark.core.models import Book, Image, Page
+from crayonlark.core.models import Book, Image, Niche, Page
 from crayonlark.core.state_machine import transition
 from crayonlark.print import cleanup, etsy_files, interior, qa_checks
 from crayonlark.print.activities import build_activities
@@ -57,6 +57,42 @@ def create_book(session: Session, title: str, actor: Actor, **fields: Any) -> Bo
     session.add(book)
     session.flush()
     record(session, actor.name, "book.create", "book", book.id, {"title": title})
+    return book
+
+
+def _ages(age_range: str) -> tuple[int, int]:
+    nums = [int(x) for x in re.findall(r"\d+", age_range or "")][:2]
+    if len(nums) == 2 and 1 <= nums[0] <= nums[1] <= 16:
+        return nums[0], nums[1]
+    return 4, 8
+
+
+def book_from_niche(session: Session, niche: Niche, actor: Actor) -> Book:
+    """The book for an approved niche, created automatically (once per niche).
+
+    Called right after I approve the niche, with my HumanActor, so the book idea counts as
+    approved by me; the scene-prompt job is queued by the caller after commit.
+    """
+    existing = session.scalar(select(Book).where(Book.niche_id == niche.id))
+    if existing is not None:
+        return existing
+    lo, hi = _ages(niche.age_range)
+    title = niche.name.strip()
+    if "coloring" not in title.lower() and "colouring" not in title.lower():
+        title = f"{title} Coloring Book"
+    book = create_book(
+        session,
+        title[:300],
+        actor,
+        subtitle=f"For Kids Ages {lo}-{hi}",
+        niche_id=niche.id,
+        age_min=lo,
+        age_max=hi,
+        themes=[niche.theme.strip().lower()][:1],
+    )
+    from crayonlark.core import approvals  # avoid an import cycle
+
+    approvals.approve_book_idea(session, book, actor)
     return book
 
 

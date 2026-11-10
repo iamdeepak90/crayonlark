@@ -261,10 +261,10 @@ PAID_APIS: list[dict[str, Any]] = [
     },
     {
         "id": "websearch",
-        "name": "Web search (Brave or Tavily)",
+        "name": "Web search (LangSearch + TinyFish, free)",
         "used_for": "Optional web search for the research agent (Amazon and Etsy are excluded)",
-        "env": ["WEBSEARCH_PROVIDER", "WEBSEARCH_API_KEY"],
-        "url": "https://brave.com/search/api/ · https://tavily.com",
+        "env": ["LANGSEARCH_API_KEY", "TINYFISH_API_KEY"],
+        "url": "https://langsearch.com/api-keys · https://agent.tinyfish.ai/api-keys",
     },
 ]
 
@@ -298,7 +298,7 @@ def paid_apis(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
             .group_by(ApiCost.provider)
         ).all()
     )
-    spend["websearch"] = sum(float(spend.pop(p, 0) or 0) for p in ("brave", "tavily"))
+    spend["websearch"] = sum(float(spend.pop(p, 0) or 0) for p in websearch.PROVIDERS)
     rate = budget.limits(s).usd_inr_rate
     return {
         "month": month,

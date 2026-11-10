@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from crayonlark.agents import concept, research, vision_qa
-from crayonlark.core import app_settings, blocklist, pipeline, storage
+from crayonlark.core import app_settings, blocklist, budget, pipeline, storage
 from crayonlark.core.enums import ImageStatus
 from crayonlark.core.models import Book, Image
 from crayonlark.integrations import websearch
@@ -30,13 +30,22 @@ def run_research(
     hits = blocklist.find(theme, blocklist.extra_terms(session))
     if hits:
         raise blocklist.BlockedContent({"theme": hits})
-    results = websearch.niche_search(theme) if use_web and websearch.configured() else []
+    results: list[dict[str, str]] = []
+    web_error = None
+    if use_web and websearch.configured():
+        try:
+            results = websearch.niche_search(theme)
+        except budget.BudgetExceeded:
+            raise
+        except Exception as exc:  # search is a nice-to-have: carry on with the notes only
+            web_error = f"{type(exc).__name__}: {exc}"[:300]
     out = research.run(theme, notes, results)
     saved, dropped = research.save_ideas(session, theme, out)
     return {
         "niche_ids": [n.id for n in saved],
         "dropped": dropped,
         "web_results": len(results),
+        "web_error": web_error,
     }
 
 

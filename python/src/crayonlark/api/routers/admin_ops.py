@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from crayonlark.api.deps import Admin, db, require_admin
-from crayonlark.core import app_settings, approvals, budget, jobs_admin, kdp_slots
+from crayonlark.core import app_settings, approvals, budget, flows, jobs_admin, kdp_slots, pipeline
 from crayonlark.core.enums import BookStatus, JobStatus, NicheStatus, PostStatus, SubscriberStatus
 from crayonlark.core.models import AuditLog, BlogPost, Book, ContactMessage, Job, Niche, Subscriber
 
@@ -77,6 +77,8 @@ class NicheIn(BaseModel):
 
 def niche_out(n: Niche) -> dict[str, Any]:
     return {
+        "book_id": n.books[0].id if n.books else None,
+    } | {
         k: getattr(n, k)
         for k in (
             "id",
@@ -130,7 +132,15 @@ def decide_niche(
     if n is None:
         raise HTTPException(404)
     approvals.decide_niche(s, n, body.approve, admin.actor)
-    return niche_out(n)
+    if not body.approve:
+        return niche_out(n)
+    # Approving a niche makes its book straight away and starts the scene prompts (once).
+    is_new = not n.books
+    book = pipeline.book_from_niche(s, n, admin.actor)
+    s.commit()
+    if is_new and book.status == BookStatus.NICHE_APPROVED:
+        flows.queue_concepts(book.id)
+    return {**niche_out(n), "book_id": book.id, "book": {"id": book.id, "title": book.title}}
 
 
 # --------------------------------------------------------------------------- jobs
@@ -162,6 +172,23 @@ def list_jobs(
         }
         for j in s.scalars(q)
     ]
+
+
+@router.get("/jobs/{job_id}")
+def get_job(job_id: str, admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
+    """One job's state, for pages that wait on a background task (e.g. niche research)."""
+    j = s.get(Job, job_id)
+    if j is None:
+        raise HTTPException(404, "job not found")
+    return {
+        "id": j.id,
+        "name": j.name,
+        "status": j.status,
+        "attempts": j.attempts,
+        "error": (j.error or "")[:2000],
+        "result": j.result,
+        "finished_at": j.finished_at,
+    }
 
 
 @router.post("/jobs/{job_id}/retry")

@@ -256,32 +256,119 @@ def test_image_providers(keys) -> None:  # type: ignore[no-untyped-def]
 
 
 @respx.mock
-def test_websearch_excludes_amazon_and_etsy(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_langsearch_excludes_amazon_and_etsy(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    import json
+
     from crayonlark.integrations import websearch
 
-    monkeypatch.setenv("WEBSEARCH_PROVIDER", "brave")
-    monkeypatch.setenv("WEBSEARCH_API_KEY", "k")
+    monkeypatch.setenv("LANGSEARCH_API_KEY", "k")
     get_settings.cache_clear()
-    route = respx.get("https://api.search.brave.com/res/v1/web/search").respond(
+    route = respx.post("https://api.langsearch.com/v1/web-search").respond(
         200,
         json={
-            "web": {
-                "results": [
-                    {"title": "A", "url": "https://www.amazon.com/x", "description": "no"},
-                    {"title": "B", "url": "https://www.etsy.com/listing/1", "description": "no"},
-                    {"title": "C", "url": "https://blog.example.org/ocean", "description": "yes"},
-                ]
-            }
+            "code": 200,
+            "data": {
+                "webPages": {
+                    "value": [
+                        {"name": "A", "url": "https://www.amazon.com/x", "snippet": "no"},
+                        {"name": "B", "url": "https://www.etsy.com/listing/1", "snippet": "no"},
+                        {"name": "C", "url": "https://blog.example.org/ocean", "snippet": "yes"},
+                    ]
+                }
+            },
+        },
+    )
+    rows = websearch.search("ocean coloring")
+    get_settings.cache_clear()
+    assert rows == [{"title": "C", "url": "https://blog.example.org/ocean", "snippet": "yes"}]
+    req = route.calls[0].request
+    assert req.headers["authorization"] == "Bearer k"
+    assert "etsy.com" in json.loads(req.content)["excludeDomains"]
+    from crayonlark.core import budget
+
+    with db() as s:  # free, but still recorded through the budget guard
+        assert budget.spent_usd(s, budget.month_key()) == pytest.approx(0.0)
+
+
+@respx.mock
+def test_tinyfish_excludes_amazon_and_etsy(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.integrations import websearch
+
+    monkeypatch.setenv("TINYFISH_API_KEY", "k")
+    get_settings.cache_clear()
+    route = respx.get("https://api.search.tinyfish.ai").respond(
+        200,
+        json={
+            "query": "ocean coloring",
+            "results": [
+                {"position": 1, "title": "A", "url": "https://amazon.co.uk/y", "snippet": "no"},
+                {
+                    "position": 2,
+                    "title": "C",
+                    "url": "https://kids.example.com/sea",
+                    "snippet": "ok",
+                },
+            ],
+            "page": 0,
         },
     )
     rows = websearch.search("ocean coloring")
     get_settings.cache_clear()
     assert [r["title"] for r in rows] == ["C"]
-    assert route.calls[0].request.headers["x-subscription-token"] == "k"
-    from crayonlark.core import budget
+    req = route.calls[0].request
+    assert req.headers["x-api-key"] == "k"
+    assert "etsy.com" in req.url.params["exclude_domains"]
 
-    with db() as s:
-        assert budget.spent_usd(s, budget.month_key()) == pytest.approx(0.005)
+
+@respx.mock
+def test_both_search_providers_are_merged_and_one_may_fail(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.integrations import websearch
+
+    monkeypatch.setenv("LANGSEARCH_API_KEY", "a")
+    monkeypatch.setenv("TINYFISH_API_KEY", "b")
+    get_settings.cache_clear()
+    hit = {"name": "L1", "url": "https://one.example/a", "snippet": "x"}
+    same = {"name": "dup", "url": "https://both.example/s", "snippet": "x"}
+    respx.post("https://api.langsearch.com/v1/web-search").respond(
+        200, json={"data": {"webPages": {"value": [hit, same]}}}
+    )
+    tiny = respx.get("https://api.search.tinyfish.ai")
+    tiny.respond(
+        200,
+        json={
+            "results": [
+                {"title": "T1", "url": "https://two.example/b", "snippet": "y"},
+                {"title": "dup", "url": "https://both.example/s", "snippet": "y"},
+            ]
+        },
+    )
+    try:
+        both = websearch.search("ocean")
+        assert [r["title"] for r in both] == ["L1", "T1", "dup"]  # alternating, no duplicate link
+        tiny.respond(401, json={"error": "bad key"})
+        only_lang = websearch.search("ocean")
+        assert [r["title"] for r in only_lang] == [
+            "L1",
+            "dup",
+        ]  # TinyFish down: LangSearch still used
+    finally:
+        get_settings.cache_clear()
+
+
+@respx.mock
+def test_research_keeps_going_when_search_fails(db, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.core import generation
+
+    monkeypatch.setenv("TINYFISH_API_KEY", "bad")
+    get_settings.cache_clear()
+    respx.get("https://api.search.tinyfish.ai").respond(401, json={"error": "invalid key"})
+    try:
+        with db() as s:
+            out = generation.run_research(s, "ocean animals", "", use_web=True)
+    finally:
+        get_settings.cache_clear()
+    assert out["niche_ids"] and out["web_results"] == 0
+    assert "401" in out["web_error"]
 
 
 # --------------------------------------------------------------------------- run_task + budget

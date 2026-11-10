@@ -63,10 +63,12 @@ GROUPS: tuple[Group, ...] = (
     Group(
         "websearch",
         "Web search (research agent)",
-        "Optional search API for the research agent. Off = it uses your notes only.",
+        "Free search APIs for the research agent. Add one key or both: with both, every search "
+        "asks both and merges the results (if one fails, the other still works). Off = it uses "
+        "your notes only. Keys: langsearch.com/api-keys and agent.tinyfish.ai/api-keys.",
         (
-            Field("websearch_provider", "Provider", kind="select", options=("tavily", "brave")),
-            Field("websearch_api_key", "API key", True),
+            Field("langsearch_api_key", "LangSearch API key", True),
+            Field("tinyfish_api_key", "TinyFish API key", True),
         ),
     ),
     Group(
