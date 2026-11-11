@@ -24,8 +24,26 @@ class Actor:
     def is_human(self) -> bool:
         return False
 
+    @property
+    def is_autopilot(self) -> bool:
+        return False
+
 
 SYSTEM = Actor("system")
+
+
+@dataclass(frozen=True)
+class AutopilotActor(Actor):
+    """The owner-enabled Autopilot (core/autopilot.py). It may pass only the niche and image-set
+    gates (state_machine.AUTOPILOT_GATES), and only while Autopilot is switched on in Settings
+    (checked in approvals.py). Approval 1 (Etsy) and approval 2 (KDP) always need a HumanActor."""
+
+    @property
+    def is_autopilot(self) -> bool:
+        return True
+
+
+AUTOPILOT = AutopilotActor("autopilot")
 
 
 def agent(name: str) -> Actor:

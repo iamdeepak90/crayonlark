@@ -54,6 +54,8 @@ IMAGE_PRICES: dict[str, float] = {
     "gemini-3.1-flash-image": 0.07,
     "gemini-3.1-flash-lite-image": 0.04,
     "gemini-3-pro-image": 0.15,
+    # DeepInfra, 1024x1536 at 4 steps (providers/image/deepinfra_image.py), checked 2026-11-12
+    "black-forest-labs/FLUX-1-schnell": 0.003,
 }
 
 UNKNOWN_TOKEN_PRICE = (10.0, 50.0)

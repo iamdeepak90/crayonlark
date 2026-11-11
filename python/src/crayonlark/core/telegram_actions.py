@@ -43,7 +43,14 @@ def handle_callback(data: str, chat_id: int | str) -> str:
                     if niche is None:
                         return "Niche not found"
                     approvals.decide_niche(s, niche, yes, actor)
-                return "✅ Niche approved" if yes else "❌ Niche rejected"
+                    if not yes:
+                        return "❌ Niche rejected"
+                    is_new = not niche.books
+                    book = pipeline.book_from_niche(s, niche, actor)  # same as in admin
+                    book_id, title = book.id, book.title
+                if is_new:
+                    flows.queue_concepts(book_id)
+                return f"✅ Niche approved. Book created: {title}"
             case _:
                 from crayonlark.core import telegram_actions_ext
 

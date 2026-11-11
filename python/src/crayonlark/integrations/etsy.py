@@ -222,6 +222,12 @@ class Etsy:
         )
         return out
 
+    def listing(self, listing_id: int) -> dict[str, Any]:
+        """getListing: includes `views` (tabulated once a day, active listings only) and
+        `num_favorers`."""
+        out: dict[str, Any] = self.request("GET", f"/listings/{listing_id}")
+        return out
+
     def activate(self, listing_id: int) -> dict[str, Any]:
         out: dict[str, Any] = self.request(
             "PATCH", f"/shops/{self.shop_id}/listings/{listing_id}", data={"state": "active"}

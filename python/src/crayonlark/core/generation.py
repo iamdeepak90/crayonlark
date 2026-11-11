@@ -53,7 +53,7 @@ def run_research(
 
 
 def concept_count(session: Session) -> int:
-    return int(app_settings.get("concepts_per_niche", session) or 60)
+    return int(app_settings.get("concepts_per_niche", session) or 40)
 
 
 def make_concepts(session: Session, book: Book) -> dict[str, Any]:

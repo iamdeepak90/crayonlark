@@ -19,8 +19,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin-ops"])
 
 NEEDS_YOU_STATUSES = (
     BookStatus.AWAITING_IMAGE_APPROVAL,
-    BookStatus.AWAITING_COVER_APPROVAL,
-    BookStatus.AWAITING_LISTING_APPROVAL,
+    BookStatus.AWAITING_ETSY_APPROVAL,
     BookStatus.KDP_PACK_READY,
 )
 

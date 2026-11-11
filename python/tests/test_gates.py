@@ -65,8 +65,9 @@ def test_agents_cannot_pass_gates(gate: tuple[S, S]) -> None:
 def test_required_gates_exist() -> None:
     assert (S.IDEA, S.NICHE_APPROVED) in GATES
     assert (S.AWAITING_IMAGE_APPROVAL, S.CLEANING) in GATES
-    assert (S.AWAITING_COVER_APPROVAL, S.LISTING_DRAFT) in GATES
-    assert (S.AWAITING_LISTING_APPROVAL, S.KDP_PACK_READY) in GATES
+    assert (S.AWAITING_ETSY_APPROVAL, S.ETSY_QUEUED) in GATES  # approval 1: Etsy
+    assert (S.ON_ETSY, S.KDP_PACK_READY) in GATES  # approval 2: KDP
+    assert (S.ETSY_QUEUED, S.ON_ETSY) not in GATES  # the daily publisher, after approval 1
 
 
 def test_illegal_transitions_rejected() -> None:

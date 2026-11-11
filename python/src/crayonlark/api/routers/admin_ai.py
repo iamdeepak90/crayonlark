@@ -119,6 +119,13 @@ def generate_images(
             f"{len(targets)} images ≈ ${estimate:.2f} but only ${max(left, 0):.2f} is left "
             "in this month's budget",
         )
+    room = budget.book_room_usd(s, b.id)
+    if room is not None and estimate > room:
+        raise HTTPException(
+            400,
+            f"{len(targets)} images ≈ ${estimate:.2f} but this book has only "
+            f"${max(room, 0):.2f} left of its per-book cap (Settings → Monthly API budget)",
+        )
     for img in targets:
         img.status, img.error = ImageStatus.GENERATING, None
     record(s, admin.actor.name, "book.images.generate", "book", b.id, {"count": len(targets)})
@@ -160,12 +167,14 @@ async def upload_for_concept(
 class BudgetIn(BaseModel):
     monthly_inr: float = Field(ge=0, le=budget.MAX_CAP_INR)
     usd_inr_rate: float = Field(ge=1, le=1000)
+    book_cap_inr: float | None = Field(default=None, ge=0, le=budget.MAX_CAP_INR)
 
 
 @router.get("/budget")
 def get_budget(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
     sm = budget.summary(s)
-    return {k: sm[k] for k in ("month", "spent_inr", "cap_inr", "usd_inr_rate", "ratio", "state")}
+    keys = ("month", "spent_inr", "cap_inr", "usd_inr_rate", "ratio", "state")
+    return {k: sm[k] for k in keys} | {"book_cap_inr": budget.limits(s).book_cap_inr}
 
 
 @router.put("/budget")
@@ -173,7 +182,9 @@ def put_budget(
     body: BudgetIn, admin: Admin = Depends(require_admin), s: Session = Depends(db)
 ) -> dict:
     try:
-        budget.set_limits(s, body.monthly_inr, body.usd_inr_rate, admin.actor.name)
+        budget.set_limits(
+            s, body.monthly_inr, body.usd_inr_rate, admin.actor.name, body.book_cap_inr
+        )
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     s.commit()
@@ -260,6 +271,13 @@ PAID_APIS: list[dict[str, Any]] = [
         "url": "https://openrouter.ai/keys",
     },
     {
+        "id": "deepinfra",
+        "name": "DeepInfra (FLUX.1 schnell)",
+        "used_for": "Cheapest picture generation, about $0.003 (₹0.26) a picture",
+        "env": ["DEEPINFRA_API_KEY"],
+        "url": "https://deepinfra.com/dash/api_keys",
+    },
+    {
         "id": "websearch",
         "name": "Web search (LangSearch + TinyFish, free)",
         "used_for": "Optional web search for the research agent (Amazon and Etsy are excluded)",
@@ -278,6 +296,7 @@ def paid_apis(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
         "openai": bool(st.openai_api_key),
         "gemini": bool(st.gemini_api_key),
         "openrouter": bool(st.openrouter_api_key),
+        "deepinfra": bool(st.deepinfra_api_key),
         "websearch": websearch.configured(),
     }
     users: dict[str, list[str]] = {k: [] for k in keys}
@@ -330,6 +349,7 @@ def providers(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
             "openai": bool(st.openai_api_key),
             "gemini": bool(st.gemini_api_key),
             "openrouter": bool(st.openrouter_api_key),
+            "deepinfra": bool(st.deepinfra_api_key),
             "websearch": websearch.configured(),
         },
         "agents": AGENTS,
@@ -349,7 +369,7 @@ class AgentModel(BaseModel):
 
 class AISettingsIn(BaseModel):
     agent_models: dict[str, AgentModel]
-    image_provider: str = Field(pattern="^(manual|openai|gemini|openrouter)$")
+    image_provider: str = Field(pattern="^(manual|openai|gemini|openrouter|deepinfra)$")
     image_model: str = Field(default="", max_length=100)
 
 
@@ -363,6 +383,7 @@ def save_providers(
         "openai": st.openai_api_key,
         "gemini": st.gemini_api_key,
         "openrouter": st.openrouter_api_key,
+        "deepinfra": st.deepinfra_api_key,
     }
     unknown = set(body.agent_models) - set(AGENTS)
     if unknown:

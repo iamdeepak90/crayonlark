@@ -16,10 +16,12 @@ from sqlalchemy.orm import Session
 
 from crayonlark.agents import concept
 from crayonlark.core import approvals, marketing, pipeline, publishing, storage
-from crayonlark.core.actors import HumanActor
+from crayonlark.core.actors import SYSTEM, HumanActor
 from crayonlark.core.config import ASSETS_DIR
 from crayonlark.core.db import session_scope
-from crayonlark.core.models import ApiCost, Book
+from crayonlark.core.enums import BookStatus
+from crayonlark.core.models import ApiCost, Book, Cover
+from crayonlark.core.state_machine import transition
 from crayonlark.print.validate import validate_cover_pdf, validate_pdf
 
 DEMO_PLAN: dict[str, Any] = {
@@ -114,16 +116,17 @@ def run(out: Path) -> dict[str, Any]:
             f"interior: {rep.pages} pages, {rep.width_in}x{rep.height_in} in, "
             f"min image DPI {rep.min_image_dpi}, fonts {', '.join(rep.fonts)}"
         )
+        transition(s, book, BookStatus.LISTING_DRAFT, SYSTEM)
         interior_key, slug = book.interior_key, book.slug
 
     with session_scope() as s:
         book = _book(s, book_id)
         cover = publishing.build_cover(s, book)
         _say(
-            f"cover v{cover.version}: {cover.width_in:.3f}x{cover.height_in:.3f} in, "
-            f"spine {cover.spine_in:.3f} in → {book.status}"
+            f"KDP cover v{cover.version}: {cover.width_in:.3f}x{cover.height_in:.3f} in, "
+            f"spine {cover.spine_in:.3f} in (approved later, with the book, for KDP)"
         )
-        approvals.decide_cover(s, cover, True, me)
+        cover_id = cover.id
         cover_files = publishing.cover_files(cover)
         cover_size = (cover.width_in, cover.height_in)
 
@@ -131,12 +134,24 @@ def run(out: Path) -> dict[str, Any]:
         book = _book(s, book_id)
         rows = publishing.draft_listings(s, book)
         _say(f"listings drafted (offline agent): {[r.product_kind for r in rows]}")
-        approvals.approve_all_listings(s, book, me)
-        pack_key = publishing.build_pack(s, book)
         etsy = publishing.build_etsy_files(s, book)
         mocks = marketing.build_mockups(s, book)
-        _say(f"Etsy mockups + pins: {sum(len(v) for v in mocks.values())} images")
-        _say(f"KDP pack built for slot week {book.kdp_week_start} → {book.status}")
+        _say(f"Etsy PDF + mockups/pins: {sum(len(v) for v in mocks.values())} images")
+        transition(s, book, BookStatus.AWAITING_ETSY_APPROVAL, SYSTEM)
+
+    with session_scope() as s:
+        book = _book(s, book_id)
+        approvals.approve_for_etsy(s, book, me)
+        _say(f"approval 1 (Etsy) by {me.name} → {book.status}")
+        # No Etsy connection in the demo: pretend the daily publisher put it live.
+        transition(s, book, BookStatus.ON_ETSY, SYSTEM, note="demo: simulated Etsy publish")
+        _say("simulated: the daily Etsy publisher put the book live → on_etsy")
+
+    with session_scope() as s:
+        book = _book(s, book_id)
+        approvals.approve_for_kdp(s, book, me, s.get(Cover, cover_id))
+        pack_key = publishing.build_pack(s, book)
+        _say(f"approval 2 (KDP) → pack built for slot week {book.kdp_week_start} → {book.status}")
 
     results: dict[str, Any] = {"book_id": book_id, "files": []}
     book_dir = out / slug

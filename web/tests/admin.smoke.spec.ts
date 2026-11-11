@@ -68,4 +68,24 @@ test.describe("logged-in admin", () => {
     await expect(page.getByText("Upload KDP CSV")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Weekly report" })).toBeVisible();
   });
+
+  test("today shows the two approvals and the Autopilot", async () => {
+    const res = await page.goto("/");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Today");
+    await expect(page.getByText("Autopilot", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "1. Approve for Etsy" }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: "2. Pick for KDP" }).first()).toBeVisible();
+  });
+
+  test("approval screens render", async () => {
+    let res = await page.goto("/etsy");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Approve for Etsy");
+    await expect(page.getByRole("heading", { name: "Etsy queue" })).toBeVisible();
+    res = await page.goto("/kdp");
+    expect(res?.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pick for KDP");
+    await expect(page.getByText(/Score = sales/)).toBeVisible();
+  });
 });

@@ -1,56 +1,56 @@
-import { Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ListingEditor from "@/components/admin/ListingEditor";
-import { Badge, Card, PageTitle } from "@/components/admin/ui";
+import { Badge, ButtonLink, Card, PageTitle } from "@/components/admin/ui";
 import { serverApi } from "@/lib/api";
 import type { ListingsResponse } from "@/lib/types";
+
+const CAN_REDRAFT = ["listing_draft", "awaiting_etsy_approval"];
 
 export default async function ListingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await serverApi<ListingsResponse>(`/api/admin/books/${id}/listings`);
-  const awaiting = data.book.status === "awaiting_listing_approval";
-  const blocked = data.listings.filter((l) => Object.keys(l.problems).length > 0).length;
+  const status = data.book.status;
   const kdp = data.listings.filter((l) => l.platform === "kdp");
-  const etsy = data.listings.filter((l) => l.platform === "etsy");
+  const etsy = data.listings.filter((l) => l.platform === "etsy" && l.status !== "rejected");
   return (
     <>
       <PageTitle
+        description="Edit the text here. Approving happens on the two approval screens: the Etsy listing on Approve for Etsy, the KDP listing on Pick for KDP."
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Badge value={data.book.status} />
-            {awaiting && (
-              <>
-                <ActionButton path={`/api/admin/books/${id}/listings/redraft`} label="Redraft all" variant="outline" confirm="Throw away these drafts and ask the listing agent again?" />
-                <ActionButton path={`/api/admin/books/${id}/listings/approve`} label={blocked ? `Fix ${blocked} first` : "Approve all listings"} icon={<Check aria-hidden="true" />} variant="success" />
-              </>
+            <Badge value={status} />
+            {CAN_REDRAFT.includes(status) && (
+              <ActionButton path={`/api/admin/books/${id}/listings/redraft`} label="Write new text" variant="outline" confirm="Throw away this text and ask the listing agent again?" success="The listing agent is writing new text" />
+            )}
+            {status === "awaiting_etsy_approval" && (
+              <ButtonLink href="/etsy">
+                Approve for Etsy <ArrowRight aria-hidden="true" />
+              </ButtonLink>
+            )}
+            {status === "on_etsy" && (
+              <ButtonLink href="/kdp">
+                Pick for KDP <ArrowRight aria-hidden="true" />
+              </ButtonLink>
             )}
           </div>
         }
       >
-        <Link href={`/books/${id}`} className="text-slate-500 hover:underline">
+        <Link href={`/books/${id}`} className="text-muted-foreground hover:underline">
           {data.book.title}
         </Link>{" "}
         · Listings
       </PageTitle>
-      {data.book.status === "listing_draft" && <Card className="mb-4">The listing agent is writing drafts. Refresh in a moment.</Card>}
-      {!data.listings.length && data.book.status !== "listing_draft" && <Card>No listings yet.</Card>}
+      {!data.listings.length && <Card>The listing agent is writing the text. Refresh in a moment.</Card>}
       <div className="grid gap-4 xl:grid-cols-2">
-        {kdp.map((l) => (
-          <Card key={l.id} title="Amazon KDP" className="xl:col-span-2">
+        {etsy.map((l) => (
+          <Card key={l.id} title="Etsy (printable PDF)">
             <ListingEditor item={l} />
           </Card>
         ))}
-        {etsy.map((l) => (
-          <Card
-            key={l.id}
-            title={`Etsy · ${l.product_kind.replaceAll("_", " ")}`}
-            actions={
-              awaiting && l.status !== "rejected" ? (
-                <ActionButton path={`/api/admin/listings/${l.id}/decision`} body={{ approve: false }} label="Skip this product" variant="outline" />
-              ) : undefined
-            }
-          >
+        {kdp.map((l) => (
+          <Card key={l.id} title="Amazon KDP (paperback, only if picked)">
             <ListingEditor item={l} />
           </Card>
         ))}

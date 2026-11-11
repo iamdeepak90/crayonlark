@@ -14,9 +14,10 @@ class BookStatus(StrEnum):
     AWAITING_IMAGE_APPROVAL = "awaiting_image_approval"
     CLEANING = "cleaning"
     BUILDING = "building"
-    AWAITING_COVER_APPROVAL = "awaiting_cover_approval"
-    LISTING_DRAFT = "listing_draft"
-    AWAITING_LISTING_APPROVAL = "awaiting_listing_approval"
+    LISTING_DRAFT = "listing_draft"  # listing text, Etsy PDF and mockups are being made
+    AWAITING_ETSY_APPROVAL = "awaiting_etsy_approval"  # approval 1
+    ETSY_QUEUED = "etsy_queued"  # approved; one book goes live on Etsy per day
+    ON_ETSY = "on_etsy"  # live on Etsy; a KDP candidate (approval 2)
     KDP_PACK_READY = "kdp_pack_ready"
     KDP_UPLOADED = "kdp_uploaded"
     PROOF_ORDERED = "proof_ordered"

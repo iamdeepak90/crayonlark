@@ -305,3 +305,48 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
       the label "Color idea". Embedded as a 600 px JPEG so PDFs stay far below Etsy's 20 MB.
     - **Niche switch** also updates that niche's books not yet on Etsy; books already drafted or
       published on Etsy keep theirs. Etsy descriptions mention the examples; KDP text never does.
+
+74. **Etsy first, KDP second: two approvals per book (2026-11-11).** Every finished book goes to
+    Etsy; only the best go to KDP.
+    - **Approval 1, "Approve for Etsy"** (admin → 1. Approve for Etsy, or Telegram): approves the
+      Etsy listing text and the Etsy publish in one step. The book joins a queue and the
+      scheduler puts `etsy_daily.per_day` books (default 1) live per day after `hour_utc`
+      (default 14), first approved first. One Etsy listing per book (the full PDF, Letter + A4).
+    - **Approval 2, "Pick for KDP"**: books live on Etsy, ranked by score = (sales × 20 +
+      favourites × 3 + views × 0.2) per week live (a minimum of one week, so new books are not
+      over-rated). Views and favourites come from Etsy `getListing` once a day; sales from the
+      synced Sale rows. Approving approves the cover and the KDP text and takes the next free
+      weekly paperback slot (2 a week ≈ 8–9 a month). Books with no data yet can be approved.
+      "Not for KDP" hides a book. Hardcover is not built yet.
+    - Cover and listing text are no longer separate gates: they are made automatically after
+      the interior and approved inside approvals 1 and 2. The old statuses
+      `awaiting_cover_approval` / `awaiting_listing_approval` are migrated to `listing_draft`.
+    - "Continue" on the book page restarts the automatic step for a book that stopped.
+
+75. **Autopilot (2026-11-11).** The owner asked to do only the two approvals. The Autopilot (off
+    by default, switched on in admin → Today, which is recorded in the audit log) runs every 10
+    minutes and when a step ends. It keeps `keep_books` books (default 7) in progress by
+    approving the oldest proposed niche (max 2 new books a day), researches the least-used theme
+    once a day when ideas run out, generates the minimum + 30 % pictures (budget-checked) and
+    keeps only the pictures that passed both pixel QA and the AI vision check.
+    - It is an `AutopilotActor`, not a `HumanActor`. It can pass only `AUTOPILOT_GATES` (niche,
+      image set), and only while switched on. Etsy and KDP approvals stay human-only (tested).
+    - Without a vision model it does not decide images. The owner still sees every page on the
+      Etsy approval screen before anything goes public.
+    - Cost note: images are the big cost (~$0.04 each, ~33 per book). At one book a day that is
+      far above the default ₹2,000 budget. The budget guard stops the Autopilot at 100 %.
+
+76. **Cheap pictures and a per-book cap (2026-11-12).** Pictures were ~90 % of a book's cost.
+    - **DeepInfra FLUX.1 [schnell]** (Apache 2.0, commercial use allowed) is a new image
+      provider: 1024×1536, 4 steps, $0.003 a picture (DeepInfra lists 0.05 cents per 1024×1024
+      step; the response's own cost is recorded). It can't edit pictures, so colour examples use
+      the free auto-fill. OpenRouter has no FLUX, hence the extra key.
+    - Self-hosting was researched and rejected: on a 4-vCPU, no-GPU server a 4B text model or a
+      vision model saves under ₹1 a book, and FLUX doesn't fit in memory; small SDXL models are
+      slower and weaker at line art.
+    - **Per-book cap** (`budget.book_cap_inr`, default ₹50, 0 = off): `budget.reserve` refuses a
+      paid call when a book's committed + reserved spend would pass it; the Autopilot and the
+      "Generate images" button check it first.
+    - Scene prompts per book: 60 → 40 (about 25 pictures are kept).
+    - Expected cost: ~33 pictures × $0.003 + ~₹1 of Haiku text and vision ≈ ₹10 a book.
+

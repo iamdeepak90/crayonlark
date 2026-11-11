@@ -1,4 +1,4 @@
-"""Concept agent: for a book with an approved niche, write N scene ideas (default 60). Each
+"""Concept agent: for a book with an approved niche, write N scene ideas (default 40). Each
 becomes an image prompt through the house prompt template (admin → Settings →
 house_prompt_template). Scenes that hit the blocklist are dropped.
 

@@ -63,7 +63,7 @@ class EtsyListingOut(BaseModel):
 
 class ListingAgentOut(BaseModel):
     kdp: KdpListingOut
-    etsy: list[EtsyListingOut] = Field(min_length=3, max_length=5)
+    etsy: list[EtsyListingOut] = Field(min_length=1, max_length=5)  # only the first is used
 
 
 SYSTEM = """You write product listings for Crayonlark, a small publisher of kids' coloring and
@@ -79,16 +79,9 @@ Return ONLY JSON matching the schema."""
 
 
 def plan_etsy_products(n_designs: int, has_activities: bool) -> list[str]:
-    kinds = ["full_pdf", "bundle"] if has_activities else ["full_pdf"]
-    if has_activities:
-        kinds.append("activity_pack")
-    if n_designs >= 20:
-        kinds += ["mini_pack", "mini_pack"]
-    elif n_designs >= 10:
-        kinds.append("mini_pack")
-    while len(kinds) < 3:
-        kinds.append("mini_pack")
-    return kinds[:5]
+    """One Etsy listing per book: the whole book as one printable PDF (coloring pages plus
+    the activity pages). One book goes live on Etsy per day."""
+    return ["full_pdf"]
 
 
 # --------------------------------------------------------------------------- offline (free)
@@ -216,6 +209,8 @@ def safe_html(text: str) -> str:
 
 
 def enforce(out: ListingAgentOut, book: Book) -> ListingAgentOut:
+    out.etsy = out.etsy[:1]
+    out.etsy[0].product_kind = "full_pdf"
     k = out.kdp
     k.price_usd = max(MIN_KDP_PRICE, round(k.price_usd, 2))
     k.description_html = safe_html(k.description_html)[:4000]

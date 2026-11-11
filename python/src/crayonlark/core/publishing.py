@@ -10,11 +10,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from crayonlark.core import app_settings, blocklist, disclosure, kdp_slots, pipeline, storage
-from crayonlark.core.actors import SYSTEM
 from crayonlark.core.config import get_settings
-from crayonlark.core.enums import BookStatus, ListingStatus
+from crayonlark.core.enums import ListingStatus
 from crayonlark.core.models import Book, Cover, Image, Listing
-from crayonlark.core.state_machine import transition
 from crayonlark.print import colorize, kdp_pack
 from crayonlark.print.activities import build_activities
 from crayonlark.print.cover.render import THEMES, CoverSpec, render
@@ -94,9 +92,7 @@ def build_cover(session: Session, book: Book, options: dict[str, Any] | None = N
     )
     session.add(cover)
     session.flush()
-    if book.status == BookStatus.BUILDING:
-        transition(session, book, BookStatus.AWAITING_COVER_APPROVAL, SYSTEM)
-    return cover
+    return cover  # approved later, together with the book, in "Approve for KDP"
 
 
 def latest_cover(book: Book) -> Cover | None:
@@ -109,10 +105,7 @@ def latest_cover(book: Book) -> Cover | None:
 def draft_listings(session: Session, book: Book) -> list[Listing]:
     from crayonlark.agents import listing as listing_agent
 
-    rows = listing_agent.run(session, book)
-    if book.status == BookStatus.LISTING_DRAFT:
-        transition(session, book, BookStatus.AWAITING_LISTING_APPROVAL, SYSTEM)
-    return rows
+    return listing_agent.run(session, book)  # the Etsy PDF + mockups follow, then approval 1
 
 
 def listing_problems(session: Session, book: Book) -> dict[int, dict[str, list[str]]]:
@@ -141,16 +134,37 @@ def etsy_product(lst: Listing, book: Book) -> dict[str, Any]:
         "slug": f"{book.slug}-{kind.replace('_', '-')}-{lst.id}",
         "title": lst.title.split(",")[0][:80],
         "image_ids": [] if kind == "activity_pack" else (lst.page_selection or None),
-        "activities": kind in ("bundle", "activity_pack"),
+        "activities": kind in ("full_pdf", "bundle", "activity_pack"),
     }
 
 
-def build_etsy_files(session: Session, book: Book) -> dict[int, dict[str, str]]:
-    listings = [
+def etsy_listing(book: Book) -> Listing | None:
+    """The book's Etsy listing (one per book; older books may have more, the first counts)."""
+    return next(
+        (
+            lst
+            for lst in book.listings
+            if lst.platform == "etsy" and lst.status != ListingStatus.REJECTED
+        ),
+        None,
+    )
+
+
+def kdp_listing(book: Book) -> Listing | None:
+    return next((lst for lst in book.listings if lst.platform == "kdp"), None)
+
+
+def etsy_listings(book: Book) -> list[Listing]:
+    """Etsy listings that get files and mockups (one per book; not the rejected ones)."""
+    return [
         lst
         for lst in book.listings
-        if lst.platform == "etsy" and lst.status == ListingStatus.APPROVED
+        if lst.platform == "etsy" and lst.status != ListingStatus.REJECTED
     ]
+
+
+def build_etsy_files(session: Session, book: Book) -> dict[int, dict[str, str]]:
+    listings = etsy_listings(book)
     products = [etsy_product(lst, book) for lst in listings]
     keys = pipeline.build_etsy_pdfs(session, book, products) if products else {}
     out = {}

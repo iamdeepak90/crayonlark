@@ -18,6 +18,21 @@ BEAT_SCHEDULE: dict[str, dict[str, Any]] = {
         "schedule": 900.0,  # every 15 min, at most one pin per run
         "options": {"queue": "publish"},
     },
+    "autopilot": {
+        "task": "crayonlark.autopilot.tick",
+        "schedule": 600.0,  # does nothing while the Autopilot is off
+        "options": {"queue": "default"},
+    },
+    "etsy-publish-daily": {
+        "task": "crayonlark.etsy.publish_daily",
+        "schedule": crontab(minute="5,35"),  # puts at most `per_day` queued books live a day
+        "options": {"queue": "publish"},
+    },
+    "etsy-stats-sync": {
+        "task": "crayonlark.etsy.sync_stats",
+        "schedule": crontab(minute=40, hour=6),  # Etsy tabulates views once a day
+        "options": {"queue": "publish"},
+    },
     "etsy-sales-sync": {
         "task": "crayonlark.sales.etsy_sync",
         "schedule": crontab(minute=10, hour="*/6"),  # skipped quietly until Etsy is connected

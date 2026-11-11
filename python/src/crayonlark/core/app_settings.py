@@ -38,7 +38,8 @@ DEFAULTS: dict[str, Any] = {
     "house_prompt_template": HOUSE_PROMPT_TEMPLATE,
     "blocklist_extra": [],  # added on top of assets/blocklist.txt
     "images_per_book": {"min": 25, "max": 50},
-    "concepts_per_niche": 60,
+    "concepts_per_niche": 40,  # ~25 pictures are kept per book; unused prompts are wasted text
+    "autopilot": {"enabled": False},  # core/autopilot.py fills in the other defaults
     "pinterest": {"pins_per_day": 4, "start_hour_utc": 13, "end_hour_utc": 23},
     "free_printable_key": None,  # outputs/free/sample-pack.pdf once built
     "qa_thresholds": {

@@ -14,6 +14,7 @@ export default function BudgetCard({ initial }: { initial: BudgetSettings }) {
   const router = useRouter();
   const [cap, setCap] = useState(String(initial.cap_inr));
   const [rate, setRate] = useState(String(initial.usd_inr_rate));
+  const [bookCap, setBookCap] = useState(String(initial.book_cap_inr));
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
   const pct = Math.round(initial.ratio * 100);
@@ -22,7 +23,7 @@ export default function BudgetCard({ initial }: { initial: BudgetSettings }) {
     setBusy(true);
     setMsg("");
     try {
-      await api("/api/admin/budget", { method: "PUT", body: { monthly_inr: Number(cap), usd_inr_rate: Number(rate) } });
+      await api("/api/admin/budget", { method: "PUT", body: { monthly_inr: Number(cap), usd_inr_rate: Number(rate), book_cap_inr: Number(bookCap) } });
       setMsg("Saved");
       router.refresh();
     } catch (e) {
@@ -46,14 +47,18 @@ export default function BudgetCard({ initial }: { initial: BudgetSettings }) {
           <input type="number" min={0} step={100} value={cap} onChange={(e) => setCap(e.target.value)} className={field} />
         </label>
         <label className="text-sm">
+          <span className="block font-semibold">Most per book (₹)</span>
+          <input type="number" min={0} step={10} value={bookCap} onChange={(e) => setBookCap(e.target.value)} className={field} />
+        </label>
+        <label className="text-sm">
           <span className="block font-semibold">₹ per US$</span>
           <input type="number" min={1} step={0.5} value={rate} onChange={(e) => setRate(e.target.value)} className={field} />
         </label>
-        <Button onClick={save} disabled={busy || cap === "" || rate === ""}>
+        <Button onClick={save} disabled={busy || cap === "" || rate === "" || bookCap === ""}>
           {busy ? "…" : "Save"}
         </Button>
       </div>
-      <p className="mt-2 text-xs text-slate-500">Providers bill in US$; this rate turns their prices into rupees for the cap.</p>
+      <p className="mt-2 text-xs text-slate-500">Providers bill in US$; this rate turns their prices into rupees for the caps. &quot;Most per book&quot; stops paid calls for one book once it has cost that much (0 = no limit).</p>
       {msg && <p role="status" className="mt-2 text-sm">{msg}</p>}
     </Card>
   );

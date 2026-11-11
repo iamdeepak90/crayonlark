@@ -80,6 +80,8 @@ def book_summary(b: Book, counts: dict[str, int] | None = None) -> dict[str, Any
         "trim": b.trim,
         "page_count": b.page_count,
         "kdp_week_start": b.kdp_week_start,
+        "kdp_skipped": b.kdp_skipped,
+        "etsy_url": b.etsy_url,
         "updated_at": b.updated_at,
         "counts": counts or {},
     }

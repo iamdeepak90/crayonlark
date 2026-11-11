@@ -1,10 +1,10 @@
-import { Bot, Hand } from "lucide-react";
+import { ArrowRight, Bot, Check, Hand, Play } from "lucide-react";
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ColorRefToggle from "@/components/admin/ColorRefToggle";
 import ConceptsPanel from "@/components/admin/ConceptsPanel";
 import ManualKdpSteps from "@/components/admin/ManualKdpSteps";
-import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui";
+import { Badge, Card, PageTitle, fileUrl, fmtDate, fmtDay } from "@/components/admin/ui";
 import Uploader from "@/components/admin/Uploader";
 import { serverApi } from "@/lib/api";
 import type { BookDetail } from "@/lib/types";
@@ -18,6 +18,47 @@ const AI_FIELDS: [string, string][] = [
 
 // Images in these states are only a scene prompt so far: there is no file to show.
 const NO_FILE = new Set(["pending", "generating", "failed"]);
+const STAGES: { label: string; statuses: string[] }[] = [
+  { label: "Images", statuses: ["idea", "niche_approved", "concepts_ready", "images_generating", "images_qa", "awaiting_image_approval"] },
+  { label: "Build", statuses: ["cleaning", "building", "listing_draft"] },
+  { label: "Approve for Etsy", statuses: ["awaiting_etsy_approval"] },
+  { label: "Etsy queue", statuses: ["etsy_queued"] },
+  { label: "On Etsy", statuses: ["on_etsy"] },
+  { label: "KDP upload", statuses: ["kdp_pack_ready", "kdp_uploaded", "proof_ordered"] },
+  { label: "Live on Amazon", statuses: ["live"] },
+];
+
+/** Automatic steps that "Continue" can restart if a book seems stuck. */
+const CONTINUE: Record<string, string> = {
+  cleaning: "Continue: clean images",
+  building: "Continue: build the PDF",
+  listing_draft: "Continue: listing, Etsy PDF, photos",
+  awaiting_etsy_approval: "Rebuild Etsy PDF and photos",
+};
+
+function Stepper({ status }: { status: string }) {
+  const at = STAGES.findIndex((s) => s.statuses.includes(status));
+  return (
+    <ol className="mb-6 flex flex-wrap gap-x-1 gap-y-2 text-xs" aria-label="Where this book is">
+      {STAGES.map((s, i) => {
+        const done = at > i;
+        const current = at === i;
+        return (
+          <li key={s.label} className="flex items-center gap-1" aria-current={current ? "step" : undefined}>
+            <span
+              className={`flex h-7 items-center gap-1 rounded-md border px-2 ${current ? "border-primary bg-primary text-primary-foreground" : done ? "bg-secondary text-foreground" : "text-muted-foreground"}`}
+            >
+              {done && <Check className="size-3.5" aria-hidden="true" />}
+              {s.label}
+            </span>
+            {i < STAGES.length - 1 && <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
 const ART_STATUSES = ["niche_approved", "concepts_ready", "images_generating", "images_qa", "awaiting_image_approval"];
 
 export default async function BookPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,6 +84,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
       >
         {b.title}
       </PageTitle>
+      <Stepper status={b.status} />
       <div className="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-3">
         <Card title="Images" className="lg:col-span-2" actions={<Link href={`/books/${b.id}/images`} className="text-sm font-medium text-foreground underline-offset-4 underline">Open approval grid →</Link>}>
           <p className="mb-3 text-sm text-slate-600">
@@ -71,7 +113,7 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
               {b.series || "—"} #{b.volume}
             </dd>
             <dt className="text-slate-500">KDP week</dt>
-            <dd>{b.kdp_week_start ?? "—"}</dd>
+            <dd>{b.kdp_week_start ? fmtDay(b.kdp_week_start) : b.kdp_skipped ? "not for KDP" : "—"}</dd>
             <dt className="text-slate-500">ASIN</dt>
             <dd>{String(f.kdp_asin ?? "—")}</dd>
           </dl>
@@ -118,8 +160,19 @@ export default async function BookPage({ params }: { params: Promise<{ id: strin
         <Card title="Next steps" className="lg:col-span-2">
           <div className="flex flex-wrap gap-2">
             {b.status === "awaiting_image_approval" && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/images`}>Review images</Link>}
-            {b.status === "awaiting_cover_approval" && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/cover`}>Review cover</Link>}
-            {["listing_draft", "awaiting_listing_approval"].includes(b.status) && <Link className={buttonVariants({ size: "sm" })} href={`/books/${b.id}/listings`}>Edit & approve listings</Link>}
+            {b.status === "awaiting_etsy_approval" && <Link className={buttonVariants({ size: "sm" })} href="/etsy">Approve for Etsy</Link>}
+            {b.status === "on_etsy" && !b.kdp_skipped && <Link className={buttonVariants({ size: "sm" })} href="/kdp">Pick for KDP</Link>}
+            {b.status === "kdp_pack_ready" && <Link className={buttonVariants({ size: "sm" })} href="/packs">Get the KDP upload pack</Link>}
+            {CONTINUE[b.status] && (
+              <ActionButton path={`/api/admin/books/${b.id}/continue`} label={CONTINUE[b.status]} icon={<Play aria-hidden="true" />} variant="outline" success="Started: check back in a few minutes" />
+            )}
+            {b.listings.length > 0 && <Link className={buttonVariants({ size: "sm", variant: "outline" })} href={`/books/${b.id}/listings`}>Listing text</Link>}
+            {b.covers.length > 0 && <Link className={buttonVariants({ size: "sm", variant: "outline" })} href={`/books/${b.id}/cover`}>KDP cover</Link>}
+            {b.etsy_url && (
+              <a className={buttonVariants({ size: "sm", variant: "outline" })} href={b.etsy_url} target="_blank" rel="noreferrer">
+                View on Etsy
+              </a>
+            )}
             <ManualKdpSteps bookId={b.id} status={b.status} />
             {b.status === "live" && (
               <ActionButton

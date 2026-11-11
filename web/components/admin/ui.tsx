@@ -39,12 +39,13 @@ export type Tone = "neutral" | "warn" | "info" | "ok" | "bad";
 
 const STATUS_TONE: Record<string, Tone> = {
   awaiting_image_approval: "warn",
-  awaiting_cover_approval: "warn",
-  awaiting_listing_approval: "warn",
+  awaiting_etsy_approval: "warn",
   pending: "warn",
   proposed: "warn",
   draft: "warn",
-  kdp_pack_ready: "info",
+  kdp_pack_ready: "warn",
+  etsy_queued: "info",
+  on_etsy: "ok",
   running: "info",
   generating: "info",
   images_generating: "info",
@@ -58,10 +59,40 @@ const STATUS_TONE: Record<string, Tone> = {
   failed: "bad",
 };
 
+/** Plain-English names for book statuses (anything else shows its raw value). */
+export const STATUS_LABEL: Record<string, string> = {
+  idea: "idea",
+  niche_approved: "niche approved",
+  concepts_ready: "scenes ready",
+  images_generating: "making images",
+  images_qa: "checking images",
+  awaiting_image_approval: "approve images",
+  cleaning: "cleaning images",
+  building: "building PDF",
+  listing_draft: "writing listing",
+  awaiting_etsy_approval: "approve for Etsy",
+  etsy_queued: "Etsy queue",
+  on_etsy: "on Etsy",
+  kdp_pack_ready: "upload to KDP",
+  kdp_uploaded: "uploaded to KDP",
+  proof_ordered: "proof ordered",
+  live: "live on Amazon",
+  archived: "archived",
+};
+
 /** Status pill: soft colour for states that matter, plain outline for everything else. */
 export function Badge({ value, tone }: { value: string; tone?: Tone }) {
   const t = tone ?? STATUS_TONE[value] ?? "neutral";
-  return <UiBadge variant={t === "neutral" ? "outline" : t}>{value.replaceAll("_", " ")}</UiBadge>;
+  return <UiBadge variant={t === "neutral" ? "outline" : t}>{STATUS_LABEL[value] ?? value.replaceAll("_", " ")}</UiBadge>;
+}
+
+export function money(cents: number): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+export function fmtDay(v: string | null | undefined): string {
+  if (!v) return "—";
+  return new Date(`${v.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 }
 
 export function ButtonLink({ href, children, variant = "default", size = "sm" }: { href: string; children: ReactNode } & VariantProps<typeof buttonVariants>) {

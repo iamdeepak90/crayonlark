@@ -32,11 +32,23 @@ class BudgetExceeded(RuntimeError):
     pass
 
 
+class BookBudgetExceeded(BudgetExceeded):
+    """One book reached its own cap (setting budget.book_cap_inr, default ₹50)."""
+
+
+DEFAULT_BOOK_CAP_INR = 50.0
+
+
 @dataclass(frozen=True)
 class Limits:
     cap_inr: float
     usd_inr_rate: float
     warn_ratio: float
+    book_cap_inr: float = DEFAULT_BOOK_CAP_INR  # all paid calls for one book, ever; 0 = no cap
+
+    @property
+    def book_cap_usd(self) -> float:
+        return self.book_cap_inr / self.usd_inr_rate if self.usd_inr_rate > 0 else 0.0
 
     @property
     def cap_usd(self) -> float:
@@ -54,17 +66,32 @@ def limits(session: Session | None = None) -> Limits:
         cap_inr=float(stored.get("monthly_inr", s_.monthly_budget_inr)),
         usd_inr_rate=float(stored.get("usd_inr_rate", s_.usd_inr_rate)),
         warn_ratio=s_.budget_warn_ratio,
+        book_cap_inr=float(stored.get("book_cap_inr", DEFAULT_BOOK_CAP_INR)),
     )
 
 
-def set_limits(session: Session, monthly_inr: float, usd_inr_rate: float, actor: str) -> Limits:
+def set_limits(
+    session: Session,
+    monthly_inr: float,
+    usd_inr_rate: float,
+    actor: str,
+    book_cap_inr: float | None = None,
+) -> Limits:
     """Save a new cap/rate (audited). This month's 80 %/100 % alerts are re-armed, so a raised
     cap warns again when the new 80 % is reached."""
     if not 0 <= monthly_inr <= MAX_CAP_INR:
         raise ValueError(f"monthly budget must be between ₹0 and ₹{MAX_CAP_INR:,.0f}")
     if not 1 <= usd_inr_rate <= 1000:
         raise ValueError("INR per USD must be between 1 and 1000")
-    value = {"monthly_inr": round(monthly_inr, 2), "usd_inr_rate": round(usd_inr_rate, 4)}
+    if book_cap_inr is None:
+        book_cap_inr = limits(session).book_cap_inr
+    if not 0 <= book_cap_inr <= MAX_CAP_INR:
+        raise ValueError("the per-book cap must be ₹0 (no cap) or more")
+    value = {
+        "monthly_inr": round(monthly_inr, 2),
+        "usd_inr_rate": round(usd_inr_rate, 4),
+        "book_cap_inr": round(book_cap_inr, 2),
+    }
     app_settings.set_value("budget", value, actor, session)
     row = session.get(BudgetMonth, month_key())
     if row is not None:
@@ -85,6 +112,26 @@ def evaluate(spent_usd: float, add_usd: float, cap_usd: float, warn_ratio: float
     if total >= cap_usd * warn_ratio:
         return "warn"
     return "ok"
+
+
+def book_spent_usd(session: Session, book_id: int) -> float:
+    """Everything one book has cost so far (committed + still reserved), all months."""
+    return float(
+        session.scalar(
+            select(func.coalesce(func.sum(ApiCost.cost_usd), 0.0)).where(
+                ApiCost.book_id == book_id, ApiCost.status.in_(("committed", "reserved"))
+            )
+        )
+        or 0.0
+    )
+
+
+def book_room_usd(session: Session, book_id: int) -> float | None:
+    """What a book may still spend (None = no per-book cap)."""
+    lim = limits(session)
+    if lim.book_cap_inr <= 0:
+        return None
+    return lim.book_cap_usd - book_spent_usd(session, book_id)
 
 
 def spent_usd(session: Session, month: str) -> float:
@@ -141,6 +188,11 @@ def reserve(
         cap = lim.cap_usd
         spent = spent_usd(s, month)
         state = evaluate(spent, estimate_usd, cap, lim.warn_ratio)
+        room = book_room_usd(s, book_id) if book_id is not None else None
+        if room is not None and estimate_usd > room:
+            raise BookBudgetExceeded(
+                f"book #{book_id} reached its ₹{lim.book_cap_inr:.0f} cap; {agent} call blocked"
+            )
         if state == "stop":
             # flags are committed when the scope exits
             _alerts(row, "stop", spent, cap, lim.usd_inr_rate)

@@ -6,6 +6,7 @@ import {
   Clock,
   ExternalLink,
   FileText,
+  House,
   Lightbulb,
   LogOut,
   type LucideIcon,
@@ -17,9 +18,9 @@ import {
   Plus,
   ScrollText,
   Settings,
-  SquareKanban,
   Store,
   Sun,
+  Trophy,
   Users,
   Wallet,
   X,
@@ -37,26 +38,27 @@ type Item = { href: string; label: string; icon: LucideIcon };
 
 const GROUPS: { title: string; items: Item[] }[] = [
   {
+    title: "Daily",
+    items: [
+      { href: "/", label: "Today", icon: House },
+      { href: "/etsy", label: "1. Approve for Etsy", icon: Store },
+      { href: "/kdp", label: "2. Pick for KDP", icon: Trophy },
+      { href: "/packs", label: "KDP uploads", icon: Package },
+    ],
+  },
+  {
     title: "Make",
     items: [
-      { href: "/", label: "Pipeline", icon: SquareKanban },
       { href: "/niches", label: "Niche ideas", icon: Lightbulb },
       { href: "/books/new", label: "New book", icon: Plus },
-      { href: "/packs", label: "KDP packs", icon: Package },
     ],
   },
   {
-    title: "Sell & market",
+    title: "Grow",
     items: [
-      { href: "/etsy", label: "Etsy drafts", icon: Store },
+      { href: "/sales", label: "Sales", icon: ChartColumn },
       { href: "/pinterest", label: "Pinterest", icon: Pin },
       { href: "/blog", label: "Blog posts", icon: FileText },
-      { href: "/sales", label: "Sales", icon: ChartColumn },
-    ],
-  },
-  {
-    title: "Audience",
-    items: [
       { href: "/subscribers", label: "Subscribers", icon: Users },
       { href: "/messages", label: "Messages", icon: Mail },
     ],

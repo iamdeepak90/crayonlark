@@ -39,42 +39,58 @@ def _built_book(s, me) -> Book:  # type: ignore[no-untyped-def]
 
 
 @needs_tools
-def test_cover_listings_pack(db, needs_storage, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+def test_etsy_first_then_kdp(db, needs_storage, monkeypatch) -> None:  # type: ignore[no-untyped-def]
+    """Build → listing text, Etsy PDF, mockups → approval 1 (Etsy) → queue → live on Etsy →
+    approval 2 (KDP) → pack with a weekly slot. No cover/listing gates in between."""
+    from crayonlark.core import marketing
+    from crayonlark.core.state_machine import transition
+
     get_settings.cache_clear()
     monkeypatch.setenv("TELEGRAM_ADMIN_CHAT_ID", "777")
     me = HumanActor.from_cli("test")
     with db() as s:
         book = _built_book(s, me)
+        transition(s, book, BookStatus.LISTING_DRAFT, SYSTEM)  # what the interior job does
         cover = publishing.build_cover(s, book)
-        assert book.status == BookStatus.AWAITING_COVER_APPROVAL
+        assert book.status == BookStatus.LISTING_DRAFT and cover.approval == "pending"
         assert cover.ai_generated  # hero comes from AI interior art
+        rows = publishing.draft_listings(s, book)
+        etsy = [r for r in rows if r.platform == "etsy"]
+        assert len(etsy) == 1 and etsy[0].product_kind == "full_pdf"
+        assert "AI tools" in etsy[0].description
+        files = publishing.build_etsy_files(s, book)
+        marketing.build_mockups(s, book)
+        assert len(files) == 1 and etsy[0].mockup_keys
+        transition(s, book, BookStatus.AWAITING_ETSY_APPROVAL, SYSTEM)  # the mockup job
         with pytest.raises(GateError):
-            approvals.decide_cover(s, cover, True, SYSTEM)
+            approvals.approve_for_etsy(s, book, SYSTEM)
+        etsy[0].title = "Pokemon style coloring pages"  # a blocked word stops approval
+        s.flush()
+        with pytest.raises(ValueError, match="fix the etsy listing"):
+            approvals.approve_for_etsy(s, book, me)
+        etsy[0].title = "Shapes coloring pages"
         book_id, cover_id = book.id, cover.id
 
-    # Approve the cover from Telegram (same gate functions as the admin).
-    assert "approved" in telegram_actions.handle_callback(f"cover:{cover_id}:1", 777)
+    # Approval 1 from Telegram (same gate function as the admin).
+    assert "Approved for Etsy" in telegram_actions.handle_callback(f"etsyok:{book_id}:1", 777)
 
     with db() as s:
         book = s.get(Book, book_id)
-        assert book.status == BookStatus.LISTING_DRAFT
-        rows = publishing.draft_listings(s, book)
-        assert book.status == BookStatus.AWAITING_LISTING_APPROVAL
-        etsy = [r for r in rows if r.platform == "etsy"]
-        assert all("AI tools" in r.description for r in etsy)
-        # A blocked word stops approval until it is fixed.
-        etsy[0].title = "Pokemon style coloring pages"
-        s.flush()
-        with pytest.raises(ValueError, match="fix 1 listing"):
-            approvals.approve_all_listings(s, book, me)
-        etsy[0].title = "Shapes coloring pages"
-        s.flush()
-        approvals.approve_all_listings(s, book, me)
+        assert book.status == BookStatus.ETSY_QUEUED and book.etsy_approved_at
+        lst = approvals.etsy_listing(book)
+        assert lst.etsy.publish_approved_by == "telegram:777"
+        assert book.kdp_week_start is None  # Etsy only so far: no KDP slot used
+        with pytest.raises(ValueError, match="only books live on Etsy"):
+            approvals.approve_for_kdp(s, book, me)
+        transition(s, book, BookStatus.ON_ETSY, SYSTEM)  # the daily publisher (mocked here)
+        with pytest.raises(GateError):
+            approvals.approve_for_kdp(s, book, SYSTEM)
+        approvals.approve_for_kdp(s, book, me)
         assert book.status == BookStatus.KDP_PACK_READY
+        assert s.get(type(cover), cover_id).approval == "approved"
+        assert approvals.kdp_listing(book).status == "approved"
         key = publishing.build_pack(s, book)
-        files = publishing.build_etsy_files(s, book)
         assert book.kdp_week_start is not None
-        assert len(files) == len(etsy)
 
     with zipfile.ZipFile(BytesIO(storage.get_bytes("outputs", key))) as z:
         assert "Yes" in z.read("ai-disclosure.md").decode()

@@ -8,7 +8,7 @@ import { Button, Card } from "./ui";
 
 /** Grouped so the choice is clear: free, a company's own (official) API, or OpenRouter. */
 const LLM_GROUPS: [string, LlmProvider[]][] = [["Free", ["offline"]], ["Official API", ["anthropic", "openai", "gemini"]], ["OpenRouter", ["openrouter"]]];
-const IMAGE_GROUPS: [string, ImageProvider[]][] = [["Free", ["manual"]], ["Official API", ["openai", "gemini"]], ["OpenRouter", ["openrouter"]]];
+const IMAGE_GROUPS: [string, ImageProvider[]][] = [["Free", ["manual"]], ["Cheapest", ["deepinfra"]], ["Official API", ["openai", "gemini"]], ["OpenRouter", ["openrouter"]]];
 const LABEL: Record<string, string> = {
   offline: "Offline (free templates)",
   manual: "Manual upload (free)",
@@ -16,9 +16,10 @@ const LABEL: Record<string, string> = {
   openai: "OpenAI",
   gemini: "Google Gemini",
   openrouter: "OpenRouter (any model)",
+  deepinfra: "DeepInfra FLUX.1 schnell (~$0.003)",
 };
 const EFFORTS = ["", "low", "medium", "high", "xhigh", "max"];
-const PREFIX: Record<string, string> = { anthropic: "claude-", openai: "gpt-", gemini: "gemini-" };
+const PREFIX: Record<string, string> = { anthropic: "claude-", openai: "gpt-", gemini: "gemini-", deepinfra: "black-forest-labs/" };
 
 const field = "rounded-lg border border-slate-300 px-2 py-1.5 text-sm";
 

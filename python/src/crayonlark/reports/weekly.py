@@ -16,8 +16,7 @@ from crayonlark.core.models import ApiCost, BlogPost, Book, Image, Niche, Pin, S
 
 WAITING = {
     BookStatus.AWAITING_IMAGE_APPROVAL: "image sets to approve",
-    BookStatus.AWAITING_COVER_APPROVAL: "covers to approve",
-    BookStatus.AWAITING_LISTING_APPROVAL: "listings to approve",
+    BookStatus.AWAITING_ETSY_APPROVAL: "books to approve for Etsy",
     BookStatus.KDP_PACK_READY: "KDP packs to upload by hand",
 }
 

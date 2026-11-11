@@ -11,6 +11,8 @@ export type BookSummary = {
   trim: string;
   page_count: number;
   kdp_week_start: string | null;
+  kdp_skipped: boolean;
+  etsy_url: string | null;
   updated_at: string;
   counts: Record<string, number>;
 };
@@ -175,26 +177,68 @@ export type PackRow = {
 
 export type Connection = { connected: boolean; expires_at?: string | null; scopes?: string; updated_at?: string; extra?: Record<string, unknown> };
 
-export type EtsyOverview = {
+/** One book on the "Approve for Etsy" screen (waiting, queued or recently live). */
+export type EtsyBookCard = {
+  id: number;
+  title: string;
+  status: string;
+  pages: number;
+  page_ids: number[];
+  color_reference: boolean;
+  etsy_approved_at: string | null;
+  etsy_live_at: string | null;
+  listing: ListingItem | null;
+  mockups: string[];
+  etsy: null | { url: string | null; state: string; error: string | null };
+  planned_for?: string | null;
+};
+
+export type EtsyReview = {
   configured: boolean;
+  connected: boolean;
   connection: Connection;
   remaining_today: number | null;
-  books: {
-    id: number;
-    title: string;
-    etsy_status: string;
-    problems: Record<string, string[]>;
-    listings: {
-      id: number;
-      product_kind: string;
-      title: string;
-      price_cents: number;
-      file_keys: Record<string, string>;
-      mockups: string[];
-      pins: string[];
-      etsy: null | { etsy_listing_id: number | null; state: string; url: string | null; uploaded: string[]; publish_approved_by: string | null; error: string | null };
-    }[];
-  }[];
+  daily: { per_day: number; hour_utc: number };
+  live_today: number;
+  days_of_stock: number;
+  low_stock: boolean;
+  in_production: number;
+  waiting: EtsyBookCard[];
+  queue: EtsyBookCard[];
+  recent: EtsyBookCard[];
+};
+
+export type EtsyStats = {
+  days_on_etsy: number;
+  views: number;
+  favorites: number;
+  sales: number;
+  revenue_cents: number;
+  conversion: number | null;
+  score: number;
+  stats_at: string | null;
+};
+
+export type KdpCandidate = {
+  id: number;
+  title: string;
+  pages: number | null;
+  designs: number;
+  kdp_skipped: boolean;
+  etsy_url: string | null;
+  stats: EtsyStats;
+  cover: CoverItem | null;
+  kdp_listing: ListingItem | null;
+  ready: boolean;
+};
+
+export type KdpCandidates = {
+  candidates: KdpCandidate[];
+  score_help: string;
+  slots: KdpSlots;
+  next_free_week: string;
+  next_free_week_end: string;
+  per_month: number;
 };
 
 export type PinItem = {
@@ -251,11 +295,11 @@ export type CostsResponse = {
 };
 
 export type LlmProvider = "offline" | "anthropic" | "openai" | "gemini" | "openrouter";
-export type ImageProvider = "manual" | "openai" | "gemini" | "openrouter";
+export type ImageProvider = "manual" | "openai" | "gemini" | "openrouter" | "deepinfra";
 export type AgentModel = { provider: LlmProvider; model?: string; effort?: string };
 
 export type AIProviders = {
-  keys: { anthropic: boolean; openai: boolean; gemini: boolean; openrouter: boolean; websearch: boolean };
+  keys: { anthropic: boolean; openai: boolean; gemini: boolean; openrouter: boolean; deepinfra: boolean; websearch: boolean };
   agents: string[];
   agent_models: Record<string, AgentModel>;
   image_provider: { provider: ImageProvider; model: string };
@@ -305,7 +349,7 @@ export type BackupsResponse = { last: BackupRun | null; dumps: string[]; retenti
 
 export type WeeklyReport = { text: string; data: Record<string, unknown> };
 
-export type BudgetSettings = { month: string; spent_inr: number; cap_inr: number; usd_inr_rate: number; ratio: number; state: BudgetState };
+export type BudgetSettings = { month: string; spent_inr: number; cap_inr: number; usd_inr_rate: number; ratio: number; state: BudgetState; book_cap_inr: number };
 
 export type PaidApi = { id: string; name: string; used_for: string; env: string[]; url: string; key_set: boolean; used_by: string[]; month_usd: number; month_inr: number };
 export type PaidApis = { month: string; apis: PaidApi[] };
@@ -338,3 +382,16 @@ export type IntegrationGroup = {
 };
 
 export type Integrations = { groups: IntegrationGroup[] };
+
+export type AutopilotStatus = {
+  enabled: boolean;
+  keep_books: number;
+  new_books_per_day: number;
+  extra_images: number;
+  themes: string[];
+  stock: number;
+  proposed_niches: number;
+  image_provider: string;
+  vision: boolean;
+  problems: string[];
+};

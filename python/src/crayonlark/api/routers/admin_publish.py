@@ -94,8 +94,10 @@ def regenerate_cover(
     s: Session = Depends(db),
 ) -> dict:
     b = get_book(s, book_id)
-    if b.status not in (BookStatus.BUILDING, BookStatus.AWAITING_COVER_APPROVAL):
-        raise HTTPException(400, f"covers can only be rebuilt before approval (status {b.status})")
+    if not b.page_count:
+        raise HTTPException(400, "the interior is not built yet")
+    if b.status in (BookStatus.KDP_UPLOADED, BookStatus.PROOF_ORDERED, BookStatus.LIVE):
+        raise HTTPException(400, "the book is already on KDP")
     if body.theme and body.theme not in THEMES:
         raise HTTPException(400, "unknown theme")
     opts = body.model_dump(exclude_none=True)
@@ -117,12 +119,10 @@ def decide_cover(
     if cover.approval != ApprovalState.PENDING:
         raise HTTPException(400, f"cover is already {cover.approval}")
     approve = bool(body.get("approve"))
-    try:
-        approvals.decide_cover(s, cover, approve, admin.actor)
-    except TransitionError as exc:
-        raise HTTPException(400, str(exc)) from exc
+    approvals.decide_cover(s, cover, approve, admin.actor)
     s.commit()
-    flows.after_cover_decision(cover.book_id, approve)
+    if not approve:  # rejected: build another version straight away
+        flows.queue_cover(cover.book_id)
     return cover_out(cover)
 
 
@@ -170,62 +170,35 @@ def update_listing(
         changes["description"] = safe_html(changes["description"])
     if "tags" in changes:
         changes["tags"] = [t.lower().strip()[:20] for t in changes["tags"] if t.strip()]
+    old_title = lst.title
     for k, v in changes.items():
         setattr(lst, k, v)
     record(s, admin.actor.name, "listing.edit", "listing", lst.id, {"fields": sorted(changes)})
     s.flush()
     problems = publishing.listing_problems(s, lst.book).get(lst.id)
+    rebuild = lst.platform == "etsy" and lst.title != old_title and bool(lst.file_keys)
     s.commit()
+    if rebuild:  # the title is printed on the PDF cover page and the mockups
+        flows.queue_etsy_files(lst.book_id)
     return listing_out(lst, problems)
-
-
-@router.post("/books/{book_id}/listings/approve")
-def approve_listings(
-    book_id: int, admin: Admin = Depends(require_admin), s: Session = Depends(db)
-) -> dict:
-    b = get_book(s, book_id)
-    try:
-        approvals.approve_all_listings(s, b, admin.actor)
-    except (ValueError, TransitionError) as exc:
-        raise HTTPException(400, str(exc)) from exc
-    s.commit()
-    flows.after_listings_approved(b.id)
-    return {"status": b.status}
 
 
 @router.post("/books/{book_id}/listings/redraft")
 def redraft_listings(
     book_id: int, admin: Admin = Depends(require_admin), s: Session = Depends(db)
 ) -> dict:
+    """New listing text from the listing agent (sends a book waiting for Etsy back a step)."""
     b = get_book(s, book_id)
     try:
-        if b.status == BookStatus.AWAITING_LISTING_APPROVAL:
-            approvals.reject_listings(s, b, admin.actor)
+        if b.status == BookStatus.AWAITING_ETSY_APPROVAL:
+            approvals.send_back_for_etsy(s, b, admin.actor, "new listing text")
         elif b.status != BookStatus.LISTING_DRAFT:
             raise HTTPException(400, f"cannot redraft in status {b.status}")
     except TransitionError as exc:
         raise HTTPException(400, str(exc)) from exc
     s.commit()
-    flows.after_listings_rejected(b.id)
+    flows.queue_listings(b.id)
     return {"status": b.status}
-
-
-@router.post("/listings/{listing_id}/decision")
-def decide_listing(
-    listing_id: int,
-    body: dict[str, bool],
-    admin: Admin = Depends(require_admin),
-    s: Session = Depends(db),
-) -> dict:
-    """Reject a single Etsy product (it is then skipped when all listings are approved)."""
-    lst = s.get(Listing, listing_id)
-    if lst is None:
-        raise HTTPException(404, "listing not found")
-    if lst.platform == "kdp" and not body.get("approve"):
-        raise HTTPException(400, "reject the KDP listing with 'Redraft' instead")
-    approvals.decide_listing(s, lst, bool(body.get("approve")), admin.actor)
-    s.commit()
-    return listing_out(lst)
 
 
 # --------------------------------------------------------------------------- packs
@@ -281,5 +254,5 @@ def rebuild_pack(
     b = get_book(s, book_id)
     if b.status != BookStatus.KDP_PACK_READY:
         raise HTTPException(400, "pack can only be rebuilt while it is waiting for upload")
-    flows.after_listings_approved(b.id)
+    flows.after_kdp_approved(b.id)
     return {"queued": True}

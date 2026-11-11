@@ -21,6 +21,7 @@ billed separately, by usage.
 | `OPENAI_API_KEY` | platform.openai.com → API keys | text agents, vision QA, image generation |
 | `GEMINI_API_KEY` | aistudio.google.com → Get API key | text agents, vision QA, image generation |
 | `OPENROUTER_API_KEY` | openrouter.ai → Keys (buy credits first) | any of the above through one key: Claude, GPT, Gemini and many more |
+| `DEEPINFRA_API_KEY` | deepinfra.com → Dashboard → API keys (add credit) | the cheapest pictures: FLUX.1 schnell (Apache 2.0), about $0.003 (₹0.26) each |
 | `LANGSEARCH_API_KEY` | langsearch.com/api-keys (free) | optional web search for the research agent |
 | `TINYFISH_API_KEY` | agent.tinyfish.ai/api-keys (free) | optional web search for the research agent; with both keys, results are merged |
 
@@ -39,12 +40,14 @@ own guard (admin → Settings → Monthly API budget, default ₹2,000) stops pa
 provider is a second safety net.
 
 **Rough costs** (prices checked 2026-11-08; see `python/src/crayonlark/providers/pricing.py`):
-- **Concepts (60 scene prompts):** about 15k output tokens. That's about $0.30 with
+- **Concepts (40 scene prompts):** about 10k output tokens. That's about $0.20 with
   `claude-opus-5-5`, or under $0.01 with `claude-haiku-5-5` or `gpt-6-luna`.
 - **Vision QA:** about 2–3k tokens per image, so roughly $0.05 for 50 images on Opus 5.5, and
   less than a cent on Haiku 5.5.
-- **Images:** about $0.03–0.07 per portrait image (`gemini-nano-banana-2.1` is the cheapest),
-  so ₹150–300 for a 50-image book.
+- **Images:** DeepInfra FLUX.1 schnell is about $0.003 per 1024×1536 picture (4 steps), so
+  ₹8–10 for a book (~33 pictures). The others cost $0.03–0.07 per picture (₹100–175 a book).
+- **Per-book cap:** admin → Settings → Monthly API budget, "Most per book" (default ₹50).
+  Paid calls for a book stop once it has cost that much.
 - **Web search:** free. LangSearch has a free plan with a daily allowance. TinyFish search is
   free up to 30/min, 500/hour and 12,000/day. Each research run makes 2 searches.
 

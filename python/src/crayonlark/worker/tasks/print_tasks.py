@@ -6,9 +6,12 @@ from typing import Any
 
 from crayonlark.agents import vision_qa
 from crayonlark.core import flows, pipeline
+from crayonlark.core.actors import SYSTEM
 from crayonlark.core.db import session_scope
+from crayonlark.core.enums import BookStatus
 from crayonlark.core.jobs import tracked
 from crayonlark.core.models import Book, Image
+from crayonlark.core.state_machine import transition
 from crayonlark.worker.celery_app import celery
 
 RETRYABLE = (ConnectionError, TimeoutError)
@@ -68,6 +71,8 @@ def build_interior(book_id: int) -> dict[str, Any]:
         book = s.get(Book, book_id)
         assert book is not None
         rep = pipeline.build_interior(s, book)
+        if book.status == BookStatus.BUILDING:  # next: listing text, Etsy PDF, mockups
+            transition(s, book, BookStatus.LISTING_DRAFT, SYSTEM)
     flows.after_interior(book_id)
     return {"pages": rep.pages, "min_dpi": rep.min_image_dpi, "fonts": rep.fonts}
 

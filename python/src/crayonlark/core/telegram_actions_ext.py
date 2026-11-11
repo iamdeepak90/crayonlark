@@ -1,49 +1,26 @@
-"""Telegram callback kinds for Phase 3+: cover and listing approvals."""
+"""Telegram callback kinds for approval 1 (Etsy). Approval 2 (KDP) is done in admin, where
+the Etsy stats, cover and KDP listing are shown side by side."""
 
 from __future__ import annotations
 
 from crayonlark.core import approvals, flows
 from crayonlark.core.actors import HumanActor
 from crayonlark.core.db import session_scope
-from crayonlark.core.enums import ApprovalState
-from crayonlark.core.models import Book, Cover
+from crayonlark.core.models import Book
 
 
 def handle(kind: str, ident: int, yes: bool, actor: HumanActor) -> str:
-    match kind:
-        case "cover":
-            with session_scope() as s:
-                cover = s.get(Cover, ident)
-                if cover is None:
-                    return "Cover not found"
-                if cover.approval != ApprovalState.PENDING:
-                    return f"Cover v{cover.version} was already {cover.approval}"
-                approvals.decide_cover(s, cover, yes, actor)
-                book_id = cover.book_id
-            flows.after_cover_decision(book_id, yes)
-            return "✅ Cover approved. Writing listings…" if yes else "🔁 Building a new cover…"
-        case "listings":
-            with session_scope() as s:
-                book = s.get(Book, ident)
-                if book is None:
-                    return "Book not found"
-                if yes:
-                    approvals.approve_all_listings(s, book, actor)
-                else:
-                    approvals.reject_listings(s, book, actor)
-            if yes:
-                flows.after_listings_approved(ident)
-                return "✅ Listings approved. Building the KDP pack and Etsy files…"
-            flows.after_listings_rejected(ident)
-            return "🔁 Redrafting listings…"
-        case "etsypub":
-            if not yes:
-                return "Nothing changed"
-            with session_scope() as s:
-                book = s.get(Book, ident)
-                if book is None:
-                    return "Book not found"
-                approvals.approve_etsy_publish(s, book, actor)
-            flows.after_etsy_publish_approved(ident)
-            return "✅ Approved. Publishing on Etsy…"
-    return f"Unknown action {kind}"
+    if kind != "etsyok":
+        return f"Unknown action {kind}"
+    with session_scope() as s:
+        book = s.get(Book, ident)
+        if book is None:
+            return "Book not found"
+        if yes:
+            approvals.approve_for_etsy(s, book, actor)
+        else:
+            approvals.send_back_for_etsy(s, book, actor, "sent back from Telegram")
+    if yes:
+        return "✅ Approved for Etsy. It joins the daily queue (one book goes live per day)."
+    flows.queue_listings(ident)
+    return "🔁 Sent back: writing new listing text…"

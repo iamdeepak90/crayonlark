@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from crayonlark.core import flows, generation, pipeline
+from crayonlark.core import autopilot, flows, generation, pipeline
 from crayonlark.core.db import session_scope
 from crayonlark.core.enums import ImageStatus
 from crayonlark.core.jobs import tracked
@@ -123,3 +123,12 @@ def color_ref(image_id: int) -> dict[str, Any]:
         if img is None or not img.cleaned_key:
             return {"skipped": "missing or not cleaned"}
         return color_refs.make(s, img)
+
+
+@celery.task(name="crayonlark.autopilot.tick")
+def autopilot_tick() -> dict[str, Any]:
+    """Everything between my two approvals (core/autopilot.py): every 10 min + when a step ends."""
+    with session_scope() as s:
+        plan = autopilot.tick(s)
+    flows.run_autopilot_plan(plan)
+    return plan.summary()

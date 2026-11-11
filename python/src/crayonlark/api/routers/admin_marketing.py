@@ -11,67 +11,13 @@ from sqlalchemy.orm import Session
 
 from crayonlark.api.deps import Admin, db, require_admin
 from crayonlark.api.routers.admin_books import get_book
-from crayonlark.core import approvals, flows, marketing
+from crayonlark.core import flows, marketing
 from crayonlark.core.audit import record
-from crayonlark.core.enums import BookStatus, EtsyStatus, ListingStatus, PinStatus
-from crayonlark.core.models import Book, Listing, Pin, PinterestBoard
-from crayonlark.integrations import etsy, oauth, pinterest
+from crayonlark.core.enums import PinStatus
+from crayonlark.core.models import Pin, PinterestBoard
+from crayonlark.integrations import oauth, pinterest
 
 router = APIRouter(prefix="/api/admin", tags=["admin-marketing"])
-
-
-@router.get("/etsy")
-def etsy_overview(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
-    books = s.scalars(
-        select(Book)
-        .join(Listing)
-        .where(
-            Listing.platform == "etsy",
-            Listing.status == ListingStatus.APPROVED,
-            Book.status != BookStatus.ARCHIVED,
-        )
-        .distinct()
-        .order_by(Book.updated_at.desc())
-    )
-    rows = []
-    for b in books:
-        problems = marketing.etsy_problems(b)
-        rows.append(
-            {
-                "id": b.id,
-                "title": b.title,
-                "etsy_status": b.etsy_status,
-                "problems": {str(k): v for k, v in problems.items()},
-                "listings": [
-                    {
-                        "id": lst.id,
-                        "product_kind": lst.product_kind,
-                        "title": lst.title,
-                        "price_cents": lst.price_cents,
-                        "file_keys": lst.file_keys or {},
-                        "mockups": marketing.etsy_images(lst),
-                        "pins": marketing.pin_images(lst),
-                        "etsy": None
-                        if lst.etsy is None
-                        else {
-                            "etsy_listing_id": lst.etsy.etsy_listing_id,
-                            "state": lst.etsy.state,
-                            "url": lst.etsy.url,
-                            "uploaded": sorted(lst.etsy.uploaded or {}),
-                            "publish_approved_by": lst.etsy.publish_approved_by,
-                            "error": lst.etsy.error,
-                        },
-                    }
-                    for lst in marketing.approved_etsy(b)
-                ],
-            }
-        )
-    return {
-        "configured": etsy.configured(),
-        "connection": oauth.status(s, etsy.PROVIDER),
-        "remaining_today": etsy.remaining_today(),
-        "books": rows,
-    }
 
 
 @router.post("/books/{book_id}/mockups")
@@ -79,37 +25,7 @@ def rebuild_mockups(
     book_id: int, admin: Admin = Depends(require_admin), s: Session = Depends(db)
 ) -> dict:
     get_book(s, book_id)
-    flows.after_etsy_files(book_id)
-    return {"queued": True}
-
-
-@router.post("/books/{book_id}/etsy/drafts")
-def create_drafts(
-    book_id: int, admin: Admin = Depends(require_admin), s: Session = Depends(db)
-) -> dict:
-    b = get_book(s, book_id)
-    if not etsy.configured() or not oauth.status(s, etsy.PROVIDER)["connected"]:
-        raise HTTPException(400, "connect Etsy first")
-    problems = marketing.etsy_problems(b)
-    if problems:
-        raise HTTPException(400, f"fix first: {problems}")
-    return {"job_id": flows.queue_etsy_drafts(b.id)}
-
-
-@router.post("/books/{book_id}/etsy/approve-publish")
-def approve_publish(
-    book_id: int, admin: Admin = Depends(require_admin), s: Session = Depends(db)
-) -> dict:
-    b = get_book(s, book_id)
-    if b.etsy_status != EtsyStatus.ETSY_DRAFTS_CREATED:
-        raise HTTPException(400, "Etsy drafts are not ready")
-    try:
-        approvals.approve_etsy_publish(s, b, admin.actor)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-    s.commit()
-    flows.after_etsy_publish_approved(b.id)
-    return {"queued": True}
+    return {"job_id": flows.queue_mockups(book_id)}
 
 
 # --------------------------------------------------------------------------- Pinterest

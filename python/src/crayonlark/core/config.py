@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     gemini_api_key: str = ""
     openrouter_api_key: str = ""  # one key, many models (Claude, GPT, Gemini, …) via openrouter.ai
+    deepinfra_api_key: str = ""  # FLUX.1 schnell pictures, ~$0.003 each (deepinfra.com)
     langsearch_api_key: str = ""  # web search for the research agent (free)
     tinyfish_api_key: str = ""  # web search for the research agent (free)
 

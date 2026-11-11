@@ -13,7 +13,7 @@ import respx
 from crayonlark.core import approvals, marketing, storage
 from crayonlark.core.actors import HumanActor
 from crayonlark.core.config import get_settings
-from crayonlark.core.enums import EtsyStatus, ListingStatus, PinStatus
+from crayonlark.core.enums import BookStatus, EtsyStatus, ListingStatus, PinStatus
 from crayonlark.core.models import Book, Listing, Pin
 from crayonlark.core.state_machine import GateError
 from crayonlark.integrations import etsy, oauth, pinterest
@@ -169,9 +169,22 @@ def test_etsy_draft_publish_and_pins(db, needs_storage, shop) -> None:  # type: 
         with pytest.raises(GateError):
             marketing.publish_etsy(s, book)
         assert activate.call_count == 0
-        approvals.approve_etsy_publish(s, book, HumanActor.from_cli("test"))
-        marketing.publish_etsy(s, book)
+        book.status = BookStatus.AWAITING_ETSY_APPROVAL
+        approvals.approve_for_etsy(s, book, HumanActor.from_cli("test"))
+        assert book.status == BookStatus.ETSY_QUEUED
+        assert marketing.due_for_etsy(s, datetime(2026, 11, 11, 15, tzinfo=UTC)) is book
+        marketing.publish_book(s, book)  # what the daily publisher runs
         assert activate.call_count == 1 and book.etsy_status == EtsyStatus.ETSY_PUBLISHED
+        assert book.status == BookStatus.ON_ETSY and book.etsy_live_at is not None
+        assert book.etsy_url == "https://www.etsy.com/listing/555/ocean"
+        stats = respx.get("https://api.etsy.com/v3/application/listings/555").mock(
+            return_value=httpx.Response(
+                200, json={"views": 140, "num_favorers": 6, "state": "active"}
+            )
+        )
+        assert marketing.sync_stats(s) == 1 and stats.call_count == 1
+        got = marketing.book_stats(s, book)
+        assert (got["views"], got["favorites"], got["sales"]) == (140, 6, 0)
         pins = marketing.plan_pins(s, book, now=datetime.now(UTC) - timedelta(days=2), seed=1)
         assert len(pins) == 1 and pins[0].link.endswith("/555/ocean")
         assert marketing.plan_pins(s, book) == []  # idempotent

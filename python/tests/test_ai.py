@@ -467,12 +467,12 @@ def test_concepts_offline_make_pending_images(db) -> None:  # type: ignore[no-un
 
         transition(s, book, BookStatus.NICHE_APPROVED, HumanActor.from_cli("test"))
         res = generation.make_concepts(s, book)
-        assert res["saved"] == 60
+        assert res["saved"] == 40
         assert book.status == BookStatus.CONCEPTS_READY
         imgs = generation.pending_concepts(book)
-        assert len(imgs) == 60 and all(i.status == ImageStatus.PENDING for i in imgs)
+        assert len(imgs) == 40 and all(i.status == ImageStatus.PENDING for i in imgs)
         assert "Thick bold black outlines" in imgs[0].prompt
-        assert len({i.prompt for i in imgs}) == 60
+        assert len({i.prompt for i in imgs}) == 40
         # re-running replaces unused concepts instead of piling them up
         out = concept.ConceptOut(
             scenes=[concept.Scene(title=f"S{i}", scene=f"a cow number {i}") for i in range(10)]
@@ -494,3 +494,40 @@ def test_vision_scores_merge() -> None:
     bad = ok.model_copy(update={"lookalike": "a famous mouse"})
     s = to_scores(bad)
     assert s["recommendation"] == "reject" and s["flags"] == ["looks like a famous mouse"]
+
+
+@respx.mock
+def test_deepinfra_flux_schnell(monkeypatch: pytest.MonkeyPatch) -> None:
+    from crayonlark.core.config import get_settings
+    from crayonlark.providers.image.base import get_image_provider
+    from crayonlark.providers.image.deepinfra_image import unit_price_usd
+
+    monkeypatch.setenv("DEEPINFRA_API_KEY", "di-key")
+    get_settings.cache_clear()
+    try:
+        b64 = base64.b64encode(_png()).decode()
+        route = respx.post(
+            "https://api.deepinfra.com/v1/inference/black-forest-labs/FLUX-1-schnell"
+        ).respond(
+            200,
+            json={
+                "images": [f"data:image/png;base64,{b64}"],
+                "nsfw_content_detected": [False],
+                "inference_status": {"cost": 0.0029},
+            },
+        )
+        p = get_image_provider("deepinfra")
+        res = p.generate("a happy cat, thick black outlines", "")
+        sent = json.loads(route.calls[0].request.content)
+        assert route.calls[0].request.headers["authorization"] == "Bearer di-key"
+        assert (sent["width"], sent["height"], sent["num_inference_steps"]) == (1024, 1536, 4)
+        assert res.data == _png() and res.cost_usd == pytest.approx(0.0029)
+        assert unit_price_usd() == pytest.approx(0.003)  # 1.5 MP x 4 steps x 0.05 cents
+        assert p.estimate_usd("") == pytest.approx(0.003)
+        with pytest.raises(NotImplementedError):  # colour examples use the free auto-fill
+            p.edit("colour it", _png(), "")
+        route.respond(200, json={"images": [b64], "nsfw_content_detected": [True]})
+        with pytest.raises(RuntimeError, match="unsafe"):
+            p.generate("x", "")
+    finally:
+        get_settings.cache_clear()

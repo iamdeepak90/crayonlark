@@ -30,7 +30,6 @@ def build_cover(book_id: int, options: dict[str, Any] | None = None) -> dict[str
     with session_scope() as s:
         cover = publishing.build_cover(s, _book(s, book_id), options)
         cover_id, version = cover.id, cover.version
-    flows.after_cover_built(book_id, cover_id)
     return {"cover_id": cover_id, "version": version}
 
 
@@ -82,5 +81,5 @@ def build_etsy_files(book_id: int) -> dict[str, Any]:
     with session_scope() as s:
         out = publishing.build_etsy_files(s, _book(s, book_id))
     if out:
-        flows.after_etsy_files(book_id)
+        flows.queue_mockups(book_id)
     return {str(k): v for k, v in out.items()}

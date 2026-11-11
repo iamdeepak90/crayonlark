@@ -64,3 +64,29 @@ def test_budget_is_set_in_admin_and_rearms_alerts(db) -> None:  # type: ignore[n
             budget.set_limits(s, -1, 88, "admin:x")
         with pytest.raises(ValueError):
             budget.set_limits(s, 100, 0, "admin:x")
+
+
+def test_book_cap_blocks_one_book_only(db) -> None:  # type: ignore[no-untyped-def]
+    from crayonlark.core.models import Book
+
+    with db() as s:
+        budget.set_limits(s, 2000, 88, "admin:test", book_cap_inr=44)  # = $0.50 per book
+        a = Book(title="A", slug="cap-a")
+        b = Book(title="B", slug="cap-b")
+        s.add_all([a, b])
+        s.flush()
+        ids = a.id, b.id
+    with budget.paid_call("deepinfra", "m", "art", "image", 0.4, book_id=ids[0]) as call:
+        call.actual_usd = 0.4
+    with (
+        pytest.raises(budget.BookBudgetExceeded),
+        budget.paid_call("deepinfra", "m", "art", "image", 0.2, book_id=ids[0]),
+    ):
+        pass
+    with budget.paid_call("deepinfra", "m", "art", "image", 0.2, book_id=ids[1]):
+        pass  # the other book is fine
+    with db() as s:
+        assert budget.book_room_usd(s, ids[0]) == pytest.approx(0.1)
+        assert budget.limits(s).book_cap_inr == 44
+        budget.set_limits(s, 2000, 88, "admin:test", book_cap_inr=0)
+        assert budget.book_room_usd(s, ids[0]) is None  # 0 = no per-book cap

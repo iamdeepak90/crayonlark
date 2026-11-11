@@ -58,6 +58,7 @@ GROUPS: tuple[Group, ...] = (
             Field("openai_api_key", "OpenAI API key", True, "sk-…"),
             Field("gemini_api_key", "Gemini API key", True),
             Field("openrouter_api_key", "OpenRouter API key", True, "sk-or-…"),
+            Field("deepinfra_api_key", "DeepInfra API key (cheap FLUX pictures)", True),
         ),
     ),
     Group(

@@ -137,6 +137,11 @@ class Book(TimestampMixin, Base):
 
     # KDP weekly slot (week starts Sunday 00:00 UTC)
     kdp_week_start: Mapped[date | None] = mapped_column(Date, index=True)
+    # Etsy queue: approved for Etsy at (queue order) / went live at (one per day)
+    etsy_approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    etsy_live_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # "Not for KDP": hidden from the KDP candidates, stays Etsy-only
+    kdp_skipped: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     # links (filled by me after manual upload)
     kdp_asin: Mapped[str | None] = mapped_column(String(20))
@@ -225,7 +230,7 @@ class Cover(TimestampMixin, Base):
 
 
 class Listing(TimestampMixin, Base):
-    """KDP listing (one per book) or Etsy product listing (3-5 per book)."""
+    """KDP listing (one per book) or Etsy listing (one per book; older books may have more)."""
 
     __tablename__ = "listings"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -267,6 +272,10 @@ class EtsyListing(TimestampMixin, Base):
     uploaded: Mapped[dict[str, Any]] = mapped_column(default=dict)  # which images/files done
     publish_approved_by: Mapped[str | None] = mapped_column(String(120))
     publish_approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # stats from Etsy (getListing: views tabulated once a day, num_favorers)
+    views: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    favorites: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    stats_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     error: Mapped[str | None] = mapped_column(Text)
 

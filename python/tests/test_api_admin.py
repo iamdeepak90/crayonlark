@@ -107,6 +107,6 @@ def test_paid_apis_overview_never_shows_keys(client: TestClient, monkeypatch) ->
     get_settings.cache_clear()
     assert "sk-secret-value" not in r.text
     apis = {a["id"]: a for a in r.json()["apis"]}
-    assert set(apis) == {"anthropic", "openai", "gemini", "openrouter", "websearch"}
+    assert set(apis) == {"anthropic", "openai", "gemini", "openrouter", "deepinfra", "websearch"}
     assert apis["openai"]["key_set"] and not apis["anthropic"]["key_set"]
     assert apis["openai"]["used_by"] == []  # nothing uses it until chosen in AI settings

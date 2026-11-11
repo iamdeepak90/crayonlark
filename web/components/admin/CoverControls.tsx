@@ -47,11 +47,11 @@ export default function CoverControls({
     <div className="space-y-4">
       {pending && coverId && (
         <div className="flex flex-wrap gap-2">
-          <Button variant="success" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: true } }), "Cover approved. The listing agent is writing listings.")}>
+          <Button variant="success" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: true } }), "Cover approved. Approve the book on Pick for KDP to build the upload pack.")}>
             <Check aria-hidden="true" /> Approve cover
           </Button>
           <Button variant="destructive" disabled={busy} onClick={() => run(() => api(`/api/admin/covers/${coverId}/decision`, { body: { approve: false } }), "Rejected. A new version is being built.")}>
-            <X aria-hidden="true" /> Reject (build new version)
+            <X aria-hidden="true" /> Reject (build another)
           </Button>
         </div>
       )}

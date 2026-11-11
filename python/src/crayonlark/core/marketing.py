@@ -19,9 +19,9 @@ from crayonlark.core import app_settings, storage
 from crayonlark.core.actors import SYSTEM
 from crayonlark.core.approvals import require_etsy_publish_approval
 from crayonlark.core.config import get_settings
-from crayonlark.core.enums import EtsyStatus, ListingStatus, PinStatus
+from crayonlark.core.enums import BookStatus, EtsyStatus, ListingStatus, PinStatus
 from crayonlark.core.models import Book, EtsyListing, Listing, Pin, PinterestBoard
-from crayonlark.core.state_machine import transition_etsy
+from crayonlark.core.state_machine import transition, transition_etsy
 from crayonlark.integrations import etsy, pinterest
 from crayonlark.print import mockups
 
@@ -41,8 +41,10 @@ def short_name(lst: Listing) -> str:
 
 
 def build_mockups(session: Session, book: Book) -> dict[int, list[str]]:
+    from crayonlark.core.publishing import etsy_listings
+
     out: dict[int, list[str]] = {}
-    for lst in approved_etsy(book):
+    for lst in etsy_listings(book):
         letter = (lst.file_keys or {}).get("letter")
         if not letter:
             raise ValueError(f"listing {lst.id} has no PDF yet")
@@ -115,6 +117,7 @@ def create_etsy_drafts(session: Session, book: Book, client: etsy.Etsy | None = 
         if lst.etsy is None:
             session.add(row)
             lst.etsy = row
+        row.shop_id = row.shop_id or api.shop_id
         done: dict[str, Any] = dict(row.uploaded or {})
         try:
             if row.etsy_listing_id is None:
@@ -170,6 +173,136 @@ def publish_etsy(session: Session, book: Book, client: etsy.Etsy | None = None) 
         urls.append(row.url or "")
     transition_etsy(session, book, EtsyStatus.ETSY_PUBLISHED, SYSTEM)
     return urls
+
+
+# --------------------------------------------------------------------------- daily Etsy queue
+
+DAILY_DEFAULT = {"per_day": 1, "hour_utc": 14}  # 14:00 UTC = morning in the US
+
+
+def daily_settings() -> dict[str, int]:
+    v = dict(app_settings.get("etsy_daily") or {})
+    return {
+        "per_day": max(1, int(v.get("per_day", DAILY_DEFAULT["per_day"]))),
+        "hour_utc": min(23, max(0, int(v.get("hour_utc", DAILY_DEFAULT["hour_utc"])))),
+    }
+
+
+def etsy_queue(session: Session) -> list[Book]:
+    """Books approved for Etsy, in the order they go live (first approved, first live)."""
+    return list(
+        session.scalars(
+            select(Book)
+            .where(Book.status == BookStatus.ETSY_QUEUED)
+            .order_by(Book.etsy_approved_at.asc().nulls_last(), Book.id)
+        )
+    )
+
+
+def live_today(session: Session, now: datetime | None = None) -> int:
+    now = now or datetime.now(UTC)
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    return len(list(session.scalars(select(Book.id).where(Book.etsy_live_at >= start))))
+
+
+def planned_dates(session: Session, now: datetime | None = None) -> dict[int, str]:
+    """Day each queued book is expected to go live (ISO date, UTC): today's free places first,
+    then `per_day` books a day."""
+    now = now or datetime.now(UTC)
+    per_day = daily_settings()["per_day"]
+    day, free = now.date(), per_day - live_today(session, now)
+    out = {}
+    for book in etsy_queue(session):
+        while free <= 0:
+            day, free = day + timedelta(days=1), per_day
+        out[book.id] = day.isoformat()
+        free -= 1
+    return out
+
+
+def due_for_etsy(session: Session, now: datetime | None = None) -> Book | None:
+    """The book to put live now, or None (too early, today's quota done, queue empty)."""
+    now = now or datetime.now(UTC)
+    cfg = daily_settings()
+    if now.hour < cfg["hour_utc"] or live_today(session, now) >= cfg["per_day"]:
+        return None
+    queue = etsy_queue(session)
+    return queue[0] if queue else None
+
+
+def publish_book(session: Session, book: Book, client: etsy.Etsy | None = None) -> list[str]:
+    """Create the Etsy draft (images, PDFs) and activate it, for a book I approved for Etsy.
+    The publish gate is checked inside `publish_etsy` before anything goes live."""
+    if book.status != BookStatus.ETSY_QUEUED:
+        raise ValueError(f"book is {book.status}, not in the Etsy queue")
+    api = client or etsy.Etsy(session)
+    create_etsy_drafts(session, book, api)
+    urls = publish_etsy(session, book, api)
+    book.etsy_live_at = datetime.now(UTC)
+    book.etsy_url = next((u for u in urls if u), book.etsy_url)
+    transition(session, book, BookStatus.ON_ETSY, SYSTEM)
+    return urls
+
+
+# --------------------------------------------------------------------------- Etsy stats → KDP
+
+
+def sync_stats(session: Session, client: etsy.Etsy | None = None) -> int:
+    """Views and favourites for every live Etsy listing (getListing)."""
+    rows = list(
+        session.scalars(
+            select(EtsyListing).where(
+                EtsyListing.etsy_listing_id.is_not(None), EtsyListing.state == "active"
+            )
+        )
+    )
+    api = client or etsy.Etsy(session)
+    for row in rows:
+        assert row.etsy_listing_id is not None
+        data = api.listing(row.etsy_listing_id)
+        row.views = int(data.get("views") or 0)
+        row.favorites = int(data.get("num_favorers") or 0)
+        row.state = str(data.get("state") or row.state)
+        row.stats_at = datetime.now(UTC)
+    return len(rows)
+
+
+SCORE_HELP = "sales × 20 + favourites × 3 + views × 0.2, per week on Etsy"
+
+
+def score(sales: int, favorites: int, views: int, days: float) -> float:
+    """How well a book does on Etsy, per week live (so new and old books compare fairly).
+    Books live under a week count as one week."""
+    weeks = max(days, 7.0) / 7.0
+    return round((sales * 20 + favorites * 3 + views * 0.2) / weeks, 1)
+
+
+def book_stats(session: Session, book: Book, now: datetime | None = None) -> dict[str, Any]:
+    from sqlalchemy import func
+
+    from crayonlark.core.models import Sale
+
+    now = now or datetime.now(UTC)
+    units, revenue = session.execute(
+        select(
+            func.coalesce(func.sum(Sale.units), 0), func.coalesce(func.sum(Sale.revenue_cents), 0)
+        ).where(Sale.book_id == book.id, Sale.platform == "etsy")
+    ).one()
+    rows = [lst.etsy for lst in book.listings if lst.platform == "etsy" and lst.etsy is not None]
+    views = sum(r.views or 0 for r in rows)
+    favs = sum(r.favorites or 0 for r in rows)
+    live = book.etsy_live_at
+    days = (now - live).total_seconds() / 86400 if live else 0.0
+    return {
+        "days_on_etsy": round(days, 1),
+        "views": views,
+        "favorites": favs,
+        "sales": int(units),
+        "revenue_cents": int(revenue),
+        "conversion": round(100 * int(units) / views, 1) if views else None,
+        "score": score(int(units), favs, views, days),
+        "stats_at": max((r.stats_at for r in rows if r.stats_at), default=None),
+    }
 
 
 # --------------------------------------------------------------------------- Pinterest

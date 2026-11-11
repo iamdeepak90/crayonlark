@@ -1,30 +1,29 @@
 # Day-to-day workflow
 
-Crayonlark does the repetitive work. You make every decision. Each gate below waits for you, and
-no agent can pass it on your behalf. Telegram pings you when something is waiting, and you can
-approve image sets from the album the bot sends.
+Crayonlark does the repetitive work. You make **two decisions per book**: *Approve for Etsy*
+and *Pick for KDP*. Neither can be passed by any agent or by the Autopilot. Telegram pings you
+when something is waiting.
 
-## Making one book (about 1–2 hours of your time, spread over a few days)
+## How a book moves (Etsy first, KDP second)
 
-| Step | Where | What you do |
+| Step | Who | What happens |
 |---|---|---|
-| 1. Ideas | admin → Niches → *Research* | Enter a theme (for example "farm animals"), paste any notes, and optionally tick "Use web search". You get 10 **proposed** niches. Or add a niche by hand. |
-| 2. **Gate: niche** | admin → Niches | Approve one niche and reject the rest. Check that it is kid-friendly and has no famous characters or brands. |
-| 3. Book | admin → Books → *New book* from the niche | Pick the trim size and page count. The concept agent writes 60 scene prompts. |
-| 4. Pictures | Book page → *Scene prompts & AI images* | **Paid:** *Generate N images* (it checks the budget first). **Free:** copy each prompt into the ChatGPT or Gemini app and upload the result. Python QA and (if enabled) vision QA run on every picture. |
-| 5. **Gate: image set** | admin → Books → Images, or the Telegram album | Look at each image at 100%. Keys: `a` approve, `r` reject, `z` zoom, arrows to move. Reject anything odd (hands, faces, stray text, look-alikes). Then approve the set. |
-| 6. Build | automatic | Cleanup (potrace, 300 DPI), activities with answer keys, interior PDF, validation. |
-| 7. **Gate: cover** | Book page → Cover | Check the full wrap, the thumbnail and the phone preview. Approve or regenerate. |
-| 8. **Gate: listing text** | Book page → Listings | Edit and approve the KDP and Etsy text. The AI disclosure is filled in already, so leave it. Never write "handmade" or "hand-drawn". |
-| 9. KDP pack | admin → Packs | Download the zip. It holds `interior.pdf`, `cover.pdf`, `listing.md` (in KDP's field order), `ai-disclosure.md` and `upload-checklist.md`. The pack takes one of this week's slots (2 paperback + 2 hardcover, reset Sunday 00:00 UTC). |
-| 10. Upload to KDP | kdp.amazon.com, **by hand** | Follow `upload-checklist.md`. Answer KDP's AI questions from `ai-disclosure.md`. Order a proof copy. |
-| 11. Proof and live | Book page → KDP steps | Mark *uploaded*, then *proof ordered*. When the book is live, enter the ASIN and Amazon link and mark it *live*. That publishes the book page on crayonlark.com and drafts a blog post. |
-| 12. **Gate: blog post** | admin → Blog | Edit and approve the post. |
-| 13. **Gate: Etsy publish** | admin → Etsy | Drafts (Letter + A4 PDFs, mockups, tags) are created through the Etsy API. Check them, then *Publish*. Pins are then scheduled automatically, 3–5 per day. |
+| 1. Niche idea | Autopilot (or you, admin → Niche ideas) | With the **Autopilot** on (switch on the Today page), it approves the oldest proposed niche whenever fewer than *keep* books are in progress (max 2 new a day). When the ideas run out, it researches the least-used theme from its list (once a day). Ideas are blocklist-checked. |
+| 2. Scene prompts | automatic | The concept agent writes 40 scene prompts. |
+| 3. Pictures | Autopilot (paid) | It generates the minimum + 30 % (not all 60) and checks the budget first. Pixel QA and the AI vision check run on every picture. With the image provider on *manual*, upload the pictures yourself. |
+| 4. Image set | Autopilot | It keeps the pictures that passed **both** checks (best first, up to the maximum) and rejects the rest. If too few passed, it generates more. With the Autopilot off, you approve them (admin → book → Images, or the Telegram album). |
+| 5. Build | automatic | Cleanup (potrace, 300 DPI), colour examples if switched on, interior PDF, KDP cover, listing text, Etsy Letter + A4 PDFs, listing photos. |
+| 6. **Approval 1: Etsy** | **you**, admin → *1. Approve for Etsy* | You see the photos, every page, the PDFs, title, price, tags and description. *Approve for Etsy* adds the book to the queue. You can also *Edit text* or *Send back*. |
+| 7. Etsy queue | automatic | One book a day goes live on Etsy (from 14:00 UTC by default; change it on the same screen). Pins follow automatically. Keep about a week of books in the queue. |
+| 8. Etsy results | automatic | Views and favourites sync every morning, sales every 6 hours. |
+| 9. **Approval 2: KDP** | **you**, admin → *2. Pick for KDP* | Books on Etsy are ranked by score (sales × 20 + favourites × 3 + views × 0.2, per week live). Approve only the best: it approves the cover and KDP text and takes the next free weekly slot (2 paperbacks a week, about 8–9 a month). A new book with no Etsy data yet can be approved too. *Not for KDP* hides a book (it stays on Etsy). |
+| 10. Upload to KDP | **you**, kdp.amazon.com, by hand | admin → KDP uploads: download the pack and follow `upload-checklist.md`. Mark *uploaded*, *proof ordered*, then *live* with the ASIN. That publishes the book page on crayonlark.com and drafts a blog post. |
+
+If a book seems stuck between automatic steps, open it and press **Continue**.
 
 ## Daily (5–10 minutes)
 - Read Telegram: things waiting for you, failed jobs, budget warnings (80%), backup failures.
-- admin → Dashboard: pipeline board, KDP slots left this week, budget.
+- admin → Today: what is waiting, Etsy queue stock, KDP slots, Autopilot problems, budget.
 - admin → Messages: answer contact-form messages.
 - admin → Jobs: retry anything failed. An image stuck on "generating" also gets retried here.
 

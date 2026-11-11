@@ -41,9 +41,7 @@ def test_offline_listing_follows_the_rules() -> None:
     out = listing.offline_listing(_book(), n_designs=30, n_activities=4)
     assert len(out.kdp.keywords) == 7 and len(out.kdp.categories) == 3
     assert out.kdp.price_usd >= listing.MIN_KDP_PRICE
-    assert 3 <= len(out.etsy) <= 5
-    kinds = [e.product_kind for e in out.etsy]
-    assert kinds[0] == "full_pdf" and "bundle" in kinds and "activity_pack" in kinds
+    assert [e.product_kind for e in out.etsy] == ["full_pdf"]  # one Etsy listing per book
     for e in out.etsy:
         assert len(e.tags) == 13 and all(len(t) <= 20 and t == t.lower() for t in e.tags)
         assert len(e.title) <= 140
@@ -51,8 +49,12 @@ def test_offline_listing_follows_the_rules() -> None:
     assert "handmade" not in text and "hand-drawn" not in text
 
 
-def test_plan_without_activities_still_has_three_products() -> None:
-    assert listing.plan_etsy_products(8, False) == ["full_pdf", "mini_pack", "mini_pack"]
+def test_one_etsy_listing_per_book() -> None:
+    assert listing.plan_etsy_products(8, False) == ["full_pdf"]
+    assert listing.plan_etsy_products(40, True) == ["full_pdf"]
+    out = listing.offline_listing(_book(), 30, 4)
+    out.etsy = out.etsy * 3  # a model that writes more products: only the first is kept
+    assert len(listing.enforce(out, _book()).etsy) == 1
 
 
 def test_enforce_price_keywords_and_html() -> None:

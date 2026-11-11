@@ -4,6 +4,9 @@ import { Badge, Card, PageTitle, fileUrl, fmtDate } from "@/components/admin/ui"
 import { serverApi } from "@/lib/api";
 import type { CoversResponse } from "@/lib/types";
 
+// The KDP cover is decided together with the book on "Pick for KDP"; until then it can change.
+const BEFORE_KDP = ["listing_draft", "awaiting_etsy_approval", "etsy_queued", "on_etsy"];
+
 export default async function CoverPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await serverApi<CoversResponse>(`/api/admin/books/${id}/covers`);
@@ -17,6 +20,13 @@ export default async function CoverPage({ params }: { params: Promise<{ id: stri
         </Link>{" "}
         · Cover
       </PageTitle>
+      <p className="mb-4 text-sm text-muted-foreground">
+        This is the KDP paperback cover. It is only needed if you pick the book for KDP; it is approved together with the book on{" "}
+        <Link href="/kdp" className="font-medium text-foreground underline underline-offset-4">
+          Pick for KDP
+        </Link>
+        .
+      </p>
       {!latest && <Card>No cover yet. It is built automatically after the interior; check Jobs if this takes long.</Card>}
       {latest && (
         <div className="grid gap-4 lg:grid-cols-3">
@@ -38,8 +48,8 @@ export default async function CoverPage({ params }: { params: Promise<{ id: stri
               <CoverControls
                 bookId={data.book.id}
                 coverId={latest.id}
-                pending={status === "awaiting_cover_approval" && latest.approval === "pending"}
-                canRebuild={["building", "awaiting_cover_approval"].includes(status)}
+                pending={BEFORE_KDP.includes(status) && latest.approval === "pending"}
+                canRebuild={BEFORE_KDP.includes(status)}
                 themes={data.themes}
                 images={data.approved_images}
               />
