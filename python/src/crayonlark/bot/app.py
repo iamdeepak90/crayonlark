@@ -31,7 +31,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Hi! Crayonlark bot is connected. Try /status.")
     else:
         await update.message.reply_text(
-            f"Your chat id is {chat.id}. Enter it in admin → Settings → Integrations → Telegram."
+            f"Your chat id is {chat.id}. Enter it in admin → Settings → Telegram."
         )
 
 

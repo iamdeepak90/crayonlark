@@ -37,8 +37,8 @@ from crayonlark.core.models import AuditLog, Book, Image, Job, Niche
 from crayonlark.core.notify import notify
 from crayonlark.core.state_machine import transition
 
-DEFAULTS: dict[str, Any] = {
-    "enabled": False,
+DEFAULTS: dict[str, Any] = {  # fixed in code; only "enabled" is a setting (Today page)
+    "enabled": True,
     "keep_books": 7,  # in production + waiting for my Etsy approval + Etsy queue (≈ a week)
     "new_books_per_day": 2,
     "extra_images": 0.3,  # generate 30 % more pictures than the minimum (some fail QA)
@@ -78,7 +78,8 @@ PIPELINE = [
 
 
 def settings(session: Session | None = None) -> dict[str, Any]:
-    return {**DEFAULTS, **(app_settings.get("autopilot", session) or {})}
+    stored = app_settings.get("autopilot", session) or {}
+    return {**DEFAULTS, **stored}
 
 
 @dataclass
@@ -148,7 +149,7 @@ def _can_generate(session: Session, book_id: int, n: int, now: datetime) -> str 
 
     cfg = image_config()
     if cfg.get("provider", "manual") == "manual":
-        return "the image provider is 'manual' (upload the pictures, or pick one in Settings → AI)"
+        return "no picture provider (add the DeepInfra key in Settings, or upload the pictures)"
     estimate = n * pricing.image_price(cfg.get("model") or "")
     left = budget.limits(session).cap_usd - budget.spent_usd(session, budget.month_key(now))
     if estimate > left:
@@ -192,8 +193,8 @@ def _decide_images(
             session,
             "no_vision",
             "vision",
-            "I only keep pictures an AI vision check has passed. Choose a vision model in "
-            "Settings → AI (vision QA), or approve the images yourself.",
+            "I only keep pictures an AI vision check has passed. Add the OpenRouter key in "
+            "Settings, or approve the images yourself.",
             now,
         )
         return
@@ -321,9 +322,9 @@ def status(session: Session) -> dict[str, Any]:
     image_provider = image_config().get("provider", "manual")
     problems = []
     if image_provider == "manual":
-        problems.append("Image provider is 'manual': pictures cannot be made automatically.")
+        problems.append("Add the DeepInfra key in Settings so pictures are made automatically.")
     if not vision_qa.enabled():
-        problems.append("No vision model: pictures cannot be checked automatically.")
+        problems.append("Add the OpenRouter key in Settings so pictures are checked automatically.")
     return {
         **cfg,
         "stock": stock,

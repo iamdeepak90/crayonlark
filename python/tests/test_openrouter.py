@@ -113,7 +113,7 @@ def test_chat_without_cost_uses_live_prices_and_errors(keys) -> None:  # type: i
         p.complete_json(_task(), sent_model)
     _, usage = p.complete_json(_task(), sent_model)
     assert usage.stop == "refusal"
-    with pytest.raises(RuntimeError, match="pick an OpenRouter model"):
+    with pytest.raises(RuntimeError, match="no OpenRouter model set"):
         p.complete_json(_task(), "")
 
 

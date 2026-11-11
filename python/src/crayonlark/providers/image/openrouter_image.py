@@ -53,7 +53,7 @@ class OpenRouterImageProvider:
 
     def generate(self, prompt: str, model: str) -> ImageResult:
         if not model:
-            raise RuntimeError("pick an OpenRouter image model in admin → Settings → AI providers")
+            raise RuntimeError("no OpenRouter image model set (defaults: providers/llm/base.py)")
         data = post_json(URL, openrouter.headers(), self.request(prompt, model))
         return self.parse(data, model, self.estimate_usd(model))
 
@@ -64,6 +64,6 @@ class OpenRouterImageProvider:
 
     def edit(self, prompt: str, image_png: bytes, model: str) -> ImageResult:
         if not model:
-            raise RuntimeError("pick an OpenRouter image model in admin → Settings → AI providers")
+            raise RuntimeError("no OpenRouter image model set (defaults: providers/llm/base.py)")
         data = post_json(URL, openrouter.headers(), self.edit_request(prompt, image_png, model))
         return self.parse(data, model, self.estimate_usd(model))

@@ -1,7 +1,8 @@
 """USD prices for the paid models we can call, used by the budget guard.
 
-Prices change: check the providers' pricing pages now and then and update this table (or override
-a price without a deploy in admin → Settings → `model_prices`, same shape). An unknown model is
+Prices change: check the providers' pricing pages now and then and update this table (a stored
+`model_prices` setting row, same shape, still overrides it). OpenRouter and DeepInfra also report
+the real cost of each call, and that is what gets recorded. An unknown model is
 priced at UNKNOWN_* (deliberately expensive) so the budget guard errs on the safe side.
 """
 

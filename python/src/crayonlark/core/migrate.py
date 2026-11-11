@@ -15,7 +15,6 @@ def alembic_config() -> Config:
 
 
 def upgrade_and_seed() -> None:
+    # Defaults are not copied into the settings table: app_settings.get falls back to the
+    # code, so changing a default in code reaches every install.
     command.upgrade(alembic_config(), "head")
-    from crayonlark.core.app_settings import seed_defaults
-
-    seed_defaults()

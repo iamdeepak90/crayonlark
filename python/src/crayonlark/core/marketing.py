@@ -177,15 +177,12 @@ def publish_etsy(session: Session, book: Book, client: etsy.Etsy | None = None) 
 
 # --------------------------------------------------------------------------- daily Etsy queue
 
-DAILY_DEFAULT = {"per_day": 1, "hour_utc": 14}  # 14:00 UTC = morning in the US
+# Fixed: one book a day, from 14:00 UTC (19:30 IST, morning in the US).
+DAILY = {"per_day": 1, "hour_utc": 14}
 
 
 def daily_settings() -> dict[str, int]:
-    v = dict(app_settings.get("etsy_daily") or {})
-    return {
-        "per_day": max(1, int(v.get("per_day", DAILY_DEFAULT["per_day"]))),
-        "hour_utc": min(23, max(0, int(v.get("hour_utc", DAILY_DEFAULT["hour_utc"])))),
-    }
+    return dict(DAILY)
 
 
 def etsy_queue(session: Session) -> list[Book]:

@@ -38,38 +38,28 @@ type Item = { href: string; label: string; icon: LucideIcon };
 
 const GROUPS: { title: string; items: Item[] }[] = [
   {
-    title: "Daily",
+    title: "Your part",
     items: [
       { href: "/", label: "Today", icon: House },
       { href: "/etsy", label: "1. Approve for Etsy", icon: Store },
       { href: "/kdp", label: "2. Pick for KDP", icon: Trophy },
       { href: "/packs", label: "KDP uploads", icon: Package },
+      { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
   {
-    title: "Make",
-    items: [
-      { href: "/niches", label: "Niche ideas", icon: Lightbulb },
-      { href: "/books/new", label: "New book", icon: Plus },
-    ],
-  },
-  {
-    title: "Grow",
+    title: "More (runs by itself)",
     items: [
       { href: "/sales", label: "Sales", icon: ChartColumn },
+      { href: "/niches", label: "Niche ideas", icon: Lightbulb },
+      { href: "/books/new", label: "New book", icon: Plus },
       { href: "/pinterest", label: "Pinterest", icon: Pin },
       { href: "/blog", label: "Blog posts", icon: FileText },
       { href: "/subscribers", label: "Subscribers", icon: Users },
       { href: "/messages", label: "Messages", icon: Mail },
-    ],
-  },
-  {
-    title: "System",
-    items: [
       { href: "/costs", label: "Costs", icon: Wallet },
       { href: "/jobs", label: "Jobs", icon: Clock },
       { href: "/audit", label: "Audit log", icon: ScrollText },
-      { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];

@@ -128,9 +128,7 @@ def test_etsy_review_screen_and_queue(db, client: TestClient) -> None:  # type: 
     # no Etsy listing yet: approval explains why
     r = client.post(f"/api/admin/books/{wid}/etsy/approve", headers=H)
     assert r.status_code == 400 and "no Etsy listing" in r.json()["detail"]
-    r = client.put("/api/admin/etsy/daily", json={"per_day": 2, "hour_utc": 9}, headers=H)
-    assert r.status_code == 200
-    assert client.get("/api/admin/etsy/review").json()["days_of_stock"] == 1.0
+    assert data["daily"] == {"per_day": 1, "hour_utc": 14}  # fixed in code
 
 
 def test_continue_restarts_the_stopped_step(db, client: TestClient, monkeypatch) -> None:  # type: ignore[no-untyped-def]

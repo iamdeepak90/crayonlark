@@ -1,8 +1,7 @@
-"""Runtime settings stored in the `settings` table, editable from admin → Settings.
+"""Runtime settings in the `settings` table, falling back to DEFAULTS below.
 
-Env vars hold secrets and infra; this table holds things I tune: models per agent,
-blocklist, prompt templates, Pinterest cadence, the monthly budget ("budget", edited through
-its own validated endpoint), etc.
+Env vars hold secrets and infra. Only a few rows are written by the owner (the monthly budget,
+the Autopilot switch); the rest are code defaults that a stored row can still override.
 """
 
 from __future__ import annotations
@@ -23,23 +22,16 @@ HOUSE_PROMPT_TEMPLATE = (
     "plenty of empty space inside shapes for coloring."
 )
 
-DEFAULT_AGENT_MODELS: dict[str, dict[str, str]] = {
-    # provider: anthropic | openai | gemini (official APIs) | openrouter | offline
-    "research": {"provider": "offline", "model": ""},
-    "concept": {"provider": "offline", "model": ""},
-    "listing": {"provider": "offline", "model": ""},
-    "vision_qa": {"provider": "offline", "model": ""},
-    "website_content": {"provider": "offline", "model": ""},
-}
-
 DEFAULTS: dict[str, Any] = {
-    "agent_models": DEFAULT_AGENT_MODELS,
-    "image_provider": {"provider": "manual", "model": ""},  # manual | openai | gemini | openrouter
+    # Models are fixed in code (providers/llm/base.py AUTO_MODELS, providers/image/base.py):
+    # they follow the keys you add. A stored value still wins (tests, emergencies).
+    "agent_models": {},
+    "image_provider": None,
     "house_prompt_template": HOUSE_PROMPT_TEMPLATE,
     "blocklist_extra": [],  # added on top of assets/blocklist.txt
     "images_per_book": {"min": 25, "max": 50},
     "concepts_per_niche": 40,  # ~25 pictures are kept per book; unused prompts are wasted text
-    "autopilot": {"enabled": False},  # core/autopilot.py fills in the other defaults
+    "autopilot": {"enabled": True},  # the owner only approves; switch off on the Today page
     "pinterest": {"pins_per_day": 4, "start_hour_utc": 13, "end_hour_utc": 23},
     "free_printable_key": None,  # outputs/free/sample-pack.pdf once built
     "qa_thresholds": {
@@ -79,10 +71,3 @@ def set_value(key: str, value: Any, actor: str, session: Session) -> None:
 def all_settings(session: Session) -> dict[str, Any]:
     stored = {r.key: r.value for r in session.scalars(select(Setting))}
     return {**DEFAULTS, **stored}
-
-
-def seed_defaults() -> None:
-    with session_scope() as s:
-        for key, value in DEFAULTS.items():
-            if s.get(Setting, key) is None:
-                s.add(Setting(key=key, value=value, updated_by="system"))

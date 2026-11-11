@@ -21,8 +21,11 @@ Crayonlark is a one-person business: AI-assisted kids' coloring/activity books s
 - **Two human approvals per book, never passed by an agent or the Autopilot**: approval 1 "Approve for
   Etsy" (listing text + Etsy publish) and approval 2 "Pick for KDP" (cover + KDP text + slot). Gate
   transitions only go through `core/approvals.py`. The niche and image-set gates also need a
-  `HumanActor`, except the owner-enabled Autopilot (`core/autopilot.py`, `AUTOPILOT_GATES`), which
-  only keeps images that passed both pixel QA and the AI vision check.
+  `HumanActor`, except the Autopilot (`core/autopilot.py`, `AUTOPILOT_GATES`; on by default, the
+  owner can switch it off), which only keeps images that passed both pixel QA and the AI vision check.
+- **Keep the owner's settings minimal**: only keys/connections (OpenRouter, DeepInfra, Etsy,
+  optional Telegram), the budget, 2FA and backups are settings. Models, picture provider, Etsy
+  schedule, Autopilot tuning and QA limits are fixed in code. Don't add new settings without asking.
 - **Budget guard**: every paid API call goes through `core/budget.py` (monthly cap set in admin → Settings, setting `budget`,
   default ₹2,000; warn at 80 %, hard stop at 100 %).
 - Infra secrets (the 7 in `.env.example`) only in env vars. Optional third-party keys are entered

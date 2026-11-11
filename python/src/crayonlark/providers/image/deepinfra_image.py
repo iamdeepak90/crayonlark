@@ -34,7 +34,7 @@ class DeepInfraImageProvider:
     def __init__(self) -> None:
         self.key = get_settings().deepinfra_api_key
         if not self.key:
-            raise RuntimeError("DeepInfra API key is not set (Settings → Integrations)")
+            raise RuntimeError("DeepInfra API key is not set (Settings → Keys and connections)")
 
     def estimate_usd(self, model: str) -> float:
         return pricing.image_price(model or DEFAULT_MODEL)

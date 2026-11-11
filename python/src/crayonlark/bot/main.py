@@ -1,6 +1,6 @@
 """Telegram bot (long-polling).
 
-The token is set in admin → Settings → Integrations → Telegram. The bot waits until a token is
+The token is set in admin → Settings → Telegram. The bot waits until a token is
 saved, and exits when it changes or is switched off; Docker restarts it with the new one.
 """
 
@@ -44,7 +44,7 @@ def main() -> None:
     threading.Thread(target=_heartbeat, daemon=True).start()
     token = _token()
     if not token:
-        log.warning("Telegram is off (admin → Settings → Integrations): bot idle")
+        log.warning("Telegram is off (admin → Settings → Keys and connections): bot idle")
         while not (token := _token()):
             time.sleep(CHECK_SECONDS)
     threading.Thread(target=_exit_when_token_changes, args=(token,), daemon=True).start()

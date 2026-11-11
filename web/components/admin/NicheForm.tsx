@@ -113,7 +113,7 @@ export default function NicheForm({ webSearch = true }: { webSearch?: boolean })
               <input type="checkbox" name="use_web" defaultChecked={webSearch} disabled={!webSearch} />
               Use web search
             </Label>
-            {!webSearch && <p className="text-xs text-muted-foreground">Off: add a free LangSearch or TinyFish key in Settings → Integrations → Web search.</p>}
+            {!webSearch && <p className="text-xs text-muted-foreground">Off: add a free LangSearch or TinyFish key in Settings → Keys and connections → Web search.</p>}
           </div>
           <div>
             <Button disabled={busy}>

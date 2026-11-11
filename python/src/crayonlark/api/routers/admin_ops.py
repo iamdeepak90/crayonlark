@@ -17,11 +17,9 @@ from crayonlark.core.models import AuditLog, BlogPost, Book, ContactMessage, Job
 router = APIRouter(prefix="/api/admin", tags=["admin-ops"])
 
 
-NEEDS_YOU_STATUSES = (
-    BookStatus.AWAITING_IMAGE_APPROVAL,
-    BookStatus.AWAITING_ETSY_APPROVAL,
-    BookStatus.KDP_PACK_READY,
-)
+# My to-dos: approval 1 and the KDP upload. Approval 2 is a choice, not a to-do. With the
+# Autopilot on, it decides niches and image sets (core/autopilot.py).
+NEEDS_YOU_STATUSES = (BookStatus.AWAITING_ETSY_APPROVAL, BookStatus.KDP_PACK_READY)
 
 
 @router.get("/dashboard")
@@ -51,11 +49,12 @@ def dashboard(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -
         "messages": s.scalar(select(func.count(ContactMessage.id))) or 0,
     }
     # everything waiting for a human decision (the top-bar counter)
-    out["needs_you"] = (
-        sum(by_status.get(st, 0) for st in NEEDS_YOU_STATUSES)
-        + pending_niches
-        + out["posts_to_review"]
-    )
+    from crayonlark.core import approvals
+
+    out["autopilot"] = approvals.autopilot_on(s)
+    out["needs_you"] = sum(by_status.get(st, 0) for st in NEEDS_YOU_STATUSES)
+    if not out["autopilot"]:
+        out["needs_you"] += by_status.get(BookStatus.AWAITING_IMAGE_APPROVAL, 0) + pending_niches
     out["kdp_slots"] = kdp_slots.summary(s)
     out["budget"] = budget.summary(s)
     return out

@@ -14,7 +14,7 @@ declare global {
 }
 
 /**
- * Cloudflare Turnstile spam check. Only rendered when a site key is set in Settings → Integrations.
+ * Cloudflare Turnstile spam check. Only rendered when a site key is set in Settings → Keys and connections.
  * Re-mount it (change its `key`) to get a fresh token after a failed submit.
  */
 export function Turnstile({ siteKey, onToken }: { siteKey: string; onToken: (token: string) => void }) {

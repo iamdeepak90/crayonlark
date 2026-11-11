@@ -35,7 +35,7 @@ class AnthropicProvider:
         if client is None:
             key = get_settings().anthropic_api_key
             if not key:
-                raise RuntimeError("Anthropic API key is not set (Settings → Integrations)")
+                raise RuntimeError("Anthropic API key is not set (Settings → Keys and connections)")
             client = anthropic.Anthropic(api_key=key, max_retries=3, timeout=600)
         self.client = client
 

@@ -51,8 +51,10 @@ def test_autopilot_never_passes_my_two_approvals(gate) -> None:  # type: ignore[
         transition(None, b, dst, AUTOPILOT)  # type: ignore[arg-type]
 
 
-def test_autopilot_needs_to_be_switched_on(db) -> None:  # type: ignore[no-untyped-def]
+def test_switched_off_autopilot_does_nothing(db) -> None:  # type: ignore[no-untyped-def]
     with db() as s:
+        assert autopilot.settings(s)["enabled"]  # on by default
+        app_settings.set_value("autopilot", {"enabled": False}, "admin:me", s)
         n = Niche(theme="dinosaurs", name="Dino Friends")
         s.add(n)
         s.flush()
@@ -128,17 +130,17 @@ def test_too_few_good_pictures_tells_me_once(on) -> None:  # type: ignore[no-unt
         assert warned == 1
 
 
-def test_switching_on_is_mine_and_shows_problems(client, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[no-untyped-def]
+def test_on_off_switch_and_setup_checklist(client, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[no-untyped-def]
     from .test_api_admin import H, login
 
     monkeypatch.setattr("crayonlark.core.flows.poke_autopilot", lambda: None)
     login(client)
     r = client.get("/api/admin/autopilot", headers=H)
+    assert r.status_code == 200 and r.json()["enabled"] is True
+    assert any("DeepInfra" in p for p in r.json()["problems"])  # no keys in tests
+    r = client.put("/api/admin/autopilot", json={"enabled": False}, headers=H)
     assert r.status_code == 200 and r.json()["enabled"] is False
-    assert any("manual" in p for p in r.json()["problems"])
-    r = client.put("/api/admin/autopilot", json={"enabled": True, "keep_books": 5}, headers=H)
-    assert r.status_code == 200 and r.json()["enabled"] and r.json()["keep_books"] == 5
-    r = client.put(
-        "/api/admin/autopilot", json={"enabled": True, "themes": ["Disney princesses"]}, headers=H
-    )
-    assert r.status_code == 400
+    assert r.json()["keep_books"] == 7  # fixed in code
+    setup = client.get("/api/admin/setup", headers=H).json()
+    assert [i["id"] for i in setup["items"]] == ["openrouter", "deepinfra", "etsy", "telegram"]
+    assert setup["ready"] is False

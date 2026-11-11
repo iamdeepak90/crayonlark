@@ -41,17 +41,17 @@ test.describe("logged-in admin", () => {
     await expect(page.getByRole("heading", { name: "Recent calls (last 100)" })).toBeVisible();
   });
 
-  test("settings page shows AI providers and backups", async () => {
+  test("settings page shows only keys, budget, security and backups", async () => {
     const res = await page.goto("/settings");
     expect(res?.status()).toBe(200);
-    await expect(page.getByRole("heading", { name: "AI providers & models" })).toBeVisible();
-    await expect(page.getByRole("group", { name: "concept" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Save AI settings" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Backups" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Monthly API budget" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Integrations" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Keys and connections" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI keys" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Telegram" })).toBeVisible();
+    await expect(page.getByText("Optional extras")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Monthly API budget" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Backups" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Run backup now" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "AI providers & models" })).toHaveCount(0);
   });
 
   test("niches page has the web search option", async () => {
@@ -73,7 +73,8 @@ test.describe("logged-in admin", () => {
     const res = await page.goto("/");
     expect(res?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Today");
-    await expect(page.getByText("Autopilot", { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Autopilot (on|off)\.$/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Waiting for you" })).toBeVisible();
     await expect(page.getByRole("link", { name: "1. Approve for Etsy" }).first()).toBeVisible();
     await expect(page.getByRole("link", { name: "2. Pick for KDP" }).first()).toBeVisible();
   });

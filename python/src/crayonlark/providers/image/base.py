@@ -35,9 +35,16 @@ class ImageProvider(Protocol):
 
 
 def image_config() -> dict[str, str]:
+    """Fixed in code: DeepInfra FLUX.1 schnell once its key is set, else manual uploads."""
     from crayonlark.core import app_settings
+    from crayonlark.core.config import get_settings
 
-    return dict(app_settings.get("image_provider") or {"provider": "manual", "model": ""})
+    stored = app_settings.get("image_provider")
+    if stored:  # not shown in admin any more; kept for tests and emergencies
+        return dict(stored)
+    if get_settings().deepinfra_api_key:
+        return {"provider": "deepinfra", "model": "black-forest-labs/FLUX-1-schnell"}
+    return {"provider": "manual", "model": ""}
 
 
 def get_image_provider(name: str) -> Any:

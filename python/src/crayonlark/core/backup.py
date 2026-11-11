@@ -7,7 +7,7 @@ Layout under BACKUP_DIR (/backups):
     objects-deleted/YYYY-MM-DD/<bucket>/…  files removed from Garage that night (kept 14 days)
     last.json                              result of the last run (shown in admin)
 
-Optional off-site copy: switch on "Off-site backup copy" in Settings → Integrations, for any
+Optional off-site copy: switch on "Off-site backup copy" in Settings → Keys and connections, for any
 S3-compatible storage (Backblaze B2, Cloudflare R2, Wasabi, …). The same dumps and changed
 files are uploaded there.
 

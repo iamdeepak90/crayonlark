@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button";
 export default function ConnectCard({ name, label, configured, connection, children }: { name: string; label: string; configured: boolean; connection: Connection; children?: React.ReactNode }) {
   return (
     <Card title={`${label} connection`} actions={<Badge value={connection.connected ? "connected" : "not connected"} />} className="mb-4">
-      {!configured && <p className="text-sm text-rose-700">App keys are missing. Enter them in Settings → Integrations (see docs/API_KEYS.md).</p>}
+      {!configured && <p className="text-sm text-rose-700">App keys are missing. Enter them in Settings → Keys and connections (see docs/API_KEYS.md).</p>}
       {configured && !connection.connected && (
         <a href={`/api/oauth/${name}/start`} className={buttonVariants({ size: "sm" })}>
           Connect {label}

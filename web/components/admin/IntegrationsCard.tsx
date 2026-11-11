@@ -13,17 +13,26 @@ const input = "w-full min-w-0 rounded-lg border border-slate-300 px-2 py-1.5 tex
  */
 export default function IntegrationsCard({ initial }: { initial: Integrations }) {
   const [groups, setGroups] = useState(initial.groups);
+  const needed = groups.filter((g) => g.required);
+  const optional = groups.filter((g) => !g.required);
   return (
-    <Card title="Integrations" className="lg:col-span-2">
+    <Card title="Keys and connections" className="lg:col-span-2">
       <p className="mb-4 text-sm text-slate-600">
-        Switch on only what you use. Keys are stored encrypted and are never shown again: leave a key field empty to keep the saved one. Changes reach the
-        workers and the Telegram bot within a minute and the website within 5 minutes; no redeploy needed.
+        Fill these in once and switch each one on. Keys are stored encrypted and never shown again (leave a key empty to keep the saved one). Changes apply within a minute; no redeploy needed.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
-        {groups.map((g) => (
+        {needed.map((g) => (
           <GroupForm key={g.id} group={g} onSaved={setGroups} />
         ))}
       </div>
+      <details className="mt-4">
+        <summary className="cursor-pointer select-none text-sm font-medium">Optional extras ({optional.length}): email, Pinterest, web search, backups, website</summary>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {optional.map((g) => (
+            <GroupForm key={g.id} group={g} onSaved={setGroups} />
+          ))}
+        </div>
+      </details>
     </Card>
   );
 }

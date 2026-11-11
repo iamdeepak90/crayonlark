@@ -21,7 +21,7 @@ _cache: dict[str, tuple[float, list[dict[str, Any]]]] = {}
 def key() -> str:
     k = get_settings().openrouter_api_key
     if not k:
-        raise RuntimeError("OpenRouter API key is not set (Settings → Integrations)")
+        raise RuntimeError("OpenRouter API key is not set (Settings → Keys and connections)")
     return k
 
 

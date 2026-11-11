@@ -149,7 +149,7 @@ def draft_problems(form: dict[str, str]) -> list[str]:
     errs = []
     if form["taxonomy_id"] in ("", "0"):
         errs.append(
-            "set the Etsy taxonomy id in Settings → Integrations "
+            "set the Etsy taxonomy id in Settings → Keys and connections "
             "(find it with `crayonlark etsy-taxonomy --search coloring`)"
         )
     if len(form["tags"].split(",")) != 13:

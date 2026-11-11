@@ -5,17 +5,19 @@ Everything is optional. With no keys at all, Crayonlark runs in **offline/manual
 - pictures you make yourself in the ChatGPT or Gemini apps and upload;
 - KDP packs you upload by hand.
 
-Keys are entered in **admin → Settings → Integrations** (not in Coolify). They are stored
-encrypted, never shown again, and reach the workers within a minute, so there's no redeploy. Then choose
-providers and models in **admin → Settings → AI providers & models**. A key alone switches
-nothing on. (A non-empty env var with the same name still wins, which is handy for local testing.)
+Keys are entered in **admin → Settings → Keys and connections** (not in Coolify). They are stored
+encrypted, never shown again, and reach the workers within a minute, so there's no redeploy.
+**You only need two AI keys:** OpenRouter (every text agent and the vision check, with Claude
+Haiku 5.5, and Sonnet 5.5 for the listing text) and DeepInfra (pictures with FLUX.1 schnell).
+The models are fixed in code and switch on as soon as the key is saved. (A non-empty env var
+with the same name still wins, which is handy for local testing.)
 
 ChatGPT Plus, Gemini Pro and Claude Pro subscriptions do **not** include API access. API keys are
 billed separately, by usage.
 
 ## AI providers (Phase 6)
 
-| Key (Settings → Integrations) | Where to get it | Used for |
+| Key (Settings → Keys and connections) | Where to get it | Used for |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | console.anthropic.com → API keys | any text agent; vision QA |
 | `OPENAI_API_KEY` | platform.openai.com → API keys | text agents, vision QA, image generation |
@@ -25,15 +27,8 @@ billed separately, by usage.
 | `LANGSEARCH_API_KEY` | langsearch.com/api-keys (free) | optional web search for the research agent |
 | `TINYFISH_API_KEY` | agent.tinyfish.ai/api-keys (free) | optional web search for the research agent; with both keys, results are merged |
 
-**Official API or OpenRouter?** In admin → Settings → AI providers, every agent (and the
-image generator) has its own choice: *Official API* (Anthropic, OpenAI or Gemini directly,
-with that company's key) or *OpenRouter* (one key and one bill, any model, ids like
-`anthropic/claude-haiku-5.5`). You can mix them, for example vision QA on OpenRouter and the
-rest official. OpenRouter's model list and prices load live in the model picker, and only
-models that can answer in a JSON schema are offered. The real cost of each call
-(`usage.cost`) goes into the budget. OpenRouter adds a small fee when you buy credits, and the
-official APIs are sometimes cheaper or get new models first. Set a credit limit on the
-OpenRouter key too.
+**Other AI keys** (Anthropic, OpenAI, Gemini) are not needed any more; they stay as optional
+fields in case the code is switched to them later.
 
 **Spend limits:** set a monthly limit in each provider's billing console as well. Crayonlark's
 own guard (admin → Settings → Monthly API budget, default ₹2,000) stops paid calls at 100 %, but a limit at the

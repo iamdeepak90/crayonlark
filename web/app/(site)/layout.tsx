@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { getSiteConfig } from "@/lib/public";
 
 // Every public page is regenerated at most every 5 minutes (ISR). This also replaces the empty
-// pages built without an API, and picks up changes from admin → Settings → Integrations.
+// pages built without an API, and picks up changes from admin → Settings → Keys and connections.
 export const revalidate = 300;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {

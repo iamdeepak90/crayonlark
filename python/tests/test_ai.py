@@ -531,3 +531,29 @@ def test_deepinfra_flux_schnell(monkeypatch: pytest.MonkeyPatch) -> None:
             p.generate("x", "")
     finally:
         get_settings.cache_clear()
+
+
+def test_models_follow_the_keys(db, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[no-untyped-def]
+    """No model settings: one OpenRouter key runs every agent, DeepInfra makes the pictures."""
+    from crayonlark.core.config import get_settings
+    from crayonlark.providers.image.base import image_config
+    from crayonlark.providers.llm.base import agent_config
+
+    get_settings.cache_clear()
+    assert agent_config("concept")["provider"] == "offline"
+    assert image_config()["provider"] == "manual"
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or")
+    monkeypatch.setenv("DEEPINFRA_API_KEY", "di")
+    get_settings.cache_clear()
+    try:
+        assert agent_config("vision_qa") == {
+            "provider": "openrouter",
+            "model": "anthropic/claude-haiku-5.5",
+        }
+        assert agent_config("listing")["model"] == "anthropic/claude-sonnet-5.5"
+        assert image_config() == {
+            "provider": "deepinfra",
+            "model": "black-forest-labs/FLUX-1-schnell",
+        }
+    finally:
+        get_settings.cache_clear()

@@ -350,3 +350,25 @@ Short log of choices that are not obvious from the code. Newest at the bottom of
     - Scene prompts per book: 60 → 40 (about 25 pictures are kept).
     - Expected cost: ~33 pictures × $0.003 + ~₹1 of Haiku text and vision ≈ ₹10 a book.
 
+77. **Minimal settings: the owner only approves (2026-11-12).** Asked for "only the approvals,
+    nothing else to set".
+    - **Settings left:** keys and connections (required: OpenRouter, DeepInfra, Etsy; optional:
+      Telegram, email, Pinterest, web search, off-site backup, website extras), the budget
+      (monthly + per book), 2FA and backups. The Today page lists what setup is still missing.
+    - **Fixed in code:** text models (OpenRouter: Claude Haiku 5.5 for everything, Sonnet 5.5
+      for the listing; offline templates without a key), pictures (DeepInfra FLUX.1 schnell;
+      manual uploads without a key), Etsy schedule (1 a day from 14:00 UTC), Autopilot tuning
+      (7 books in progress, 2 new a day, theme list), QA limits, prompt template, images per
+      book, Pinterest cadence. A migration deletes the stored `agent_models`, `image_provider`
+      and `etsy_daily` rows so the code defaults apply; a stored value would still win (tests).
+    - **No more seeding of defaults.** Startup used to copy every default into the `settings`
+      table, which froze old defaults (the Autopilot stayed off). `app_settings.get` already
+      falls back to the code, so the seeder is gone and the migration deletes the copied rows
+      (`updated_by = 'system'`). Rows the owner saved are kept.
+    - **Autopilot is on by default** (one switch on the Today page to turn it off).
+    - **To-dos** are only: approve for Etsy, pick for KDP (when a slot is free), upload to KDP,
+      and approve images while the Autopilot is off. Niche ideas and blog drafts are no longer
+      to-dos; blog drafts stay unpublished unless approved in More → Blog posts.
+    - Removed from admin: the AI providers & models form, the paid-APIs card, the raw settings
+      editors, the Etsy daily form and the Autopilot tuning fields.
+

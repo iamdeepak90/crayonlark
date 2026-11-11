@@ -31,7 +31,7 @@ class OpenAIProvider:
     def __init__(self) -> None:
         self.key = get_settings().openai_api_key
         if not self.key:
-            raise RuntimeError("OpenAI API key is not set (Settings → Integrations)")
+            raise RuntimeError("OpenAI API key is not set (Settings → Keys and connections)")
 
     def estimate_usd(self, task: AgentTask[Any], model: str) -> float:
         return pricing.token_cost(

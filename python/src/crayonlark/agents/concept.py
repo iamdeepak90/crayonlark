@@ -101,7 +101,9 @@ def save_concepts(session: Session, book: Book, out: ConceptOut) -> tuple[int, l
     seen: set[str] = set()
     dropped: list[str] = []
     pos = max((i.position for i in book.images), default=0)
-    provider = (app_settings.get("image_provider", session) or {}).get("provider", "manual")
+    from crayonlark.providers.image.base import image_config
+
+    provider = image_config().get("provider", "manual")
     saved = 0
     for sc in out.scenes:
         key = sc.scene.strip().lower()

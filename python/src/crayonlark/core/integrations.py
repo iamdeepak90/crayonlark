@@ -1,5 +1,5 @@
 """Optional integrations (AI keys, Telegram, email, Etsy, Pinterest, off-site backup, website
-extras) are set in admin → Settings → Integrations, not in Coolify.
+extras) are set in admin → Settings → Keys and connections, not in Coolify.
 
 Only the 7 infra secrets are env vars (see .env.example). Everything here is stored in the
 `settings` table under the key "integrations":
@@ -45,21 +45,24 @@ class Group:
     title: str
     help: str
     fields: tuple[Field, ...]
+    required: bool = False  # shown first in Settings; the rest is under "Optional"
 
 
 GROUPS: tuple[Group, ...] = (
     Group(
         "ai",
-        "AI providers",
-        "Keys for paid AI. Keys alone change nothing: choose the provider per agent in "
-        "'AI providers & models'. Empty = free offline/manual mode.",
+        "AI keys",
+        "Two keys run everything: OpenRouter (openrouter.ai → Keys) writes the text and checks "
+        "each picture with Claude; DeepInfra (deepinfra.com → API keys) makes the pictures with "
+        "FLUX. Add a few dollars of credit to each. The models are chosen for you.",
         (
-            Field("anthropic_api_key", "Anthropic API key", True, "sk-ant-…"),
-            Field("openai_api_key", "OpenAI API key", True, "sk-…"),
-            Field("gemini_api_key", "Gemini API key", True),
             Field("openrouter_api_key", "OpenRouter API key", True, "sk-or-…"),
-            Field("deepinfra_api_key", "DeepInfra API key (cheap FLUX pictures)", True),
+            Field("deepinfra_api_key", "DeepInfra API key", True),
+            Field("anthropic_api_key", "Anthropic API key (not needed)", True, "sk-ant-…"),
+            Field("openai_api_key", "OpenAI API key (not needed)", True, "sk-…"),
+            Field("gemini_api_key", "Gemini API key (not needed)", True),
         ),
+        required=True,
     ),
     Group(
         "websearch",
@@ -75,12 +78,13 @@ GROUPS: tuple[Group, ...] = (
     Group(
         "telegram",
         "Telegram",
-        "Approvals, alerts and the weekly report on your phone. Create a bot with @BotFather, "
-        "send it /start to get your chat id. The bot picks up changes within a minute.",
+        "Optional but handy: approve books for Etsy from your phone, alerts and the weekly report. "
+        "Create a bot with @BotFather, send it /start to get your chat id.",
         (
             Field("telegram_bot_token", "Bot token", True, "123456:ABC…"),
             Field("telegram_admin_chat_id", "Your chat id", placeholder="123456789"),
         ),
+        required=True,
     ),
     Group(
         "email",
@@ -99,13 +103,14 @@ GROUPS: tuple[Group, ...] = (
         "etsy",
         "Etsy",
         "Etsy Open API v3 app. Callback URL: https://admin.crayonlark.com/api/oauth/etsy/callback. "
-        "Then connect the shop in Etsy & Pinterest.",
+        "Save, then press Connect Etsy on the Approve for Etsy page.",
         (
             Field("etsy_api_key", "Keystring", True),
             Field("etsy_shared_secret", "Shared secret", True),
             Field("etsy_shop_id", "Shop id"),
             Field("etsy_taxonomy_id", "Taxonomy id", kind="int", placeholder="0"),
         ),
+        required=True,
     ),
     Group(
         "pinterest",
@@ -253,6 +258,7 @@ def describe(session: Session) -> list[dict[str, Any]]:
                 "title": g.title,
                 "help": g.help,
                 "configured": g.id in stored,
+                "required": g.required,
                 "enabled": bool(data.get("enabled")),
                 "fields": fields,
             }

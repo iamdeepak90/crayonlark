@@ -10,7 +10,7 @@ type Status = { kind: "idle" | "sending" | "done" | "error"; message?: string };
 
 const inputClass = "w-full min-w-0 rounded-lg border-0 bg-white px-4 py-3 ring-1 ring-line placeholder:text-muted/70 focus:outline-none focus:ring-2 focus:ring-coral-600";
 
-/** `turnstileSiteKey`: from admin → Settings → Integrations → Website extras ("" = off). */
+/** `turnstileSiteKey`: from admin → Settings → Keys and connections → Website extras ("" = off). */
 export function ContactForm({ turnstileSiteKey: TURNSTILE_SITE_KEY }: { turnstileSiteKey: string }) {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [website, setWebsite] = useState("");

@@ -85,6 +85,7 @@ export type Dashboard = {
   subscribers: number;
   messages: number;
   needs_you: number;
+  autopilot: boolean;
   kdp_slots: {
     week_start: string;
     resets_at: string;
@@ -378,8 +379,11 @@ export type IntegrationGroup = {
   help: string;
   configured: boolean;
   enabled: boolean;
+  required: boolean;
   fields: IntegrationField[];
 };
+
+export type SetupStatus = { items: { id: string; label: string; done: boolean; required: boolean }[]; ready: boolean };
 
 export type Integrations = { groups: IntegrationGroup[] };
 

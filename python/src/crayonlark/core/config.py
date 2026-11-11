@@ -2,9 +2,9 @@
 
 Infra and the 7 required secrets come from environment variables (set in Coolify; only
 `.env.example` is committed). Optional integrations (AI keys, Telegram, email, Etsy, Pinterest,
-off-site backup, website extras) are entered in admin → Settings → Integrations and merged in
-by `get_settings()`, see core/integrations.py. Other runtime knobs (models per agent,
-blocklist, prompt templates, budget) live in the `settings` table, see core/app_settings.py.
+off-site backup, website extras) are entered in admin → Settings and merged in by
+`get_settings()`, see core/integrations.py. Other runtime values (budget, Autopilot switch,
+code defaults such as the blocklist and prompt template) are in core/app_settings.py.
 """
 
 from __future__ import annotations

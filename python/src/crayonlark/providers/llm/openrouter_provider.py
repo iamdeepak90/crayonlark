@@ -36,7 +36,7 @@ class OpenRouterProvider:
 
     def estimate_usd(self, task: AgentTask[Any], model: str) -> float:
         if not model:
-            raise RuntimeError("pick an OpenRouter model in admin → Settings → AI providers")
+            raise RuntimeError("no OpenRouter model set (defaults: providers/llm/base.py)")
         pin, pout = _price(model)
         return (estimate_input_tokens(task) * pin + task.max_tokens * 2 * pout) / 1_000_000
 
@@ -101,6 +101,6 @@ class OpenRouterProvider:
         options: dict[str, Any] | None = None,
     ) -> tuple[str, Usage]:
         if not model:
-            raise RuntimeError("pick an OpenRouter model in admin → Settings → AI providers")
+            raise RuntimeError("no OpenRouter model set (defaults: providers/llm/base.py)")
         body = self.request(task, model, extra_user, options or {})
         return self.parse(post_json(URL, openrouter.headers(), body), model)

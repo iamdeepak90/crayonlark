@@ -117,19 +117,6 @@ def etsy_review(admin: Admin = Depends(require_admin), s: Session = Depends(db))
     }
 
 
-class DailySettings(BaseModel):
-    per_day: int = Field(ge=1, le=10)
-    hour_utc: int = Field(ge=0, le=23)
-
-
-@router.put("/etsy/daily")
-def set_daily(
-    body: DailySettings, admin: Admin = Depends(require_admin), s: Session = Depends(db)
-) -> dict:
-    app_settings.set_value("etsy_daily", body.model_dump(), admin.actor.name, s)
-    return body.model_dump()
-
-
 def _gate(fn: Any) -> None:
     try:
         fn()
@@ -179,7 +166,7 @@ def publish_now(
     if b.status != BookStatus.ETSY_QUEUED:
         raise HTTPException(400, "only books in the Etsy queue can be published")
     if not _etsy_connected(s):
-        raise HTTPException(400, "connect Etsy first (Settings → Integrations → Etsy)")
+        raise HTTPException(400, "connect Etsy first (Settings → Keys and connections → Etsy)")
     return {"job_id": flows.queue_etsy_publish(b.id)}
 
 
@@ -270,30 +257,56 @@ def autopilot_status(admin: Admin = Depends(require_admin), s: Session = Depends
 
 class AutopilotIn(BaseModel):
     enabled: bool
-    keep_books: int = Field(default=7, ge=1, le=30)
-    new_books_per_day: int = Field(default=2, ge=1, le=5)
-    themes: list[str] | None = Field(default=None, max_length=50)
 
 
 @router.put("/autopilot")
 def set_autopilot(
     body: AutopilotIn, admin: Admin = Depends(require_admin), s: Session = Depends(db)
 ) -> dict:
-    """Only I can switch it on (this is a human session); it is recorded in the audit log."""
-    value = {**(app_settings.get("autopilot", s) or {}), **body.model_dump(exclude_none=True)}
-    if body.themes is not None:
-        themes = [t.strip()[:60] for t in body.themes if t.strip()]
-        from crayonlark.core import blocklist
-
-        hits = blocklist.find(" | ".join(themes), blocklist.extra_terms(s))
-        if hits:
-            raise HTTPException(400, f"blocked words in the themes: {', '.join(hits)}")
-        value["themes"] = themes
-    app_settings.set_value("autopilot", value, admin.actor.name, s)
+    """On/off only (the rest is fixed in core/autopilot.py). Recorded in the audit log."""
+    app_settings.set_value("autopilot", {"enabled": body.enabled}, admin.actor.name, s)
     s.commit()
     if body.enabled:
         flows.poke_autopilot()
     return autopilot.status(s)
+
+
+# --------------------------------------------------------------------------- setup
+
+
+@router.get("/setup")
+def setup(admin: Admin = Depends(require_admin), s: Session = Depends(db)) -> dict:
+    """The few things only I can do once. Everything else is fixed in code."""
+    from crayonlark.core.config import get_settings
+
+    st = get_settings()
+    items = [
+        {
+            "id": "openrouter",
+            "label": "OpenRouter key: writes the text and checks every picture",
+            "done": bool(st.openrouter_api_key),
+            "required": True,
+        },
+        {
+            "id": "deepinfra",
+            "label": "DeepInfra key: makes the pictures (about ₹0.26 each)",
+            "done": bool(st.deepinfra_api_key),
+            "required": True,
+        },
+        {
+            "id": "etsy",
+            "label": "Etsy: app keys, then connect your shop",
+            "done": _etsy_connected(s),
+            "required": True,
+        },
+        {
+            "id": "telegram",
+            "label": "Telegram (optional): approve for Etsy from your phone, get alerts",
+            "done": bool(st.telegram_bot_token and st.telegram_admin_chat_id),
+            "required": False,
+        },
+    ]
+    return {"items": items, "ready": all(i["done"] for i in items if i["required"])}
 
 
 # --------------------------------------------------------------------------- continue

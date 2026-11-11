@@ -1,9 +1,10 @@
 """One interface for every LLM (Anthropic, OpenAI, Gemini, OpenRouter, offline).
 
 Agents describe *what* they need as an AgentTask (system + prompt + Pydantic schema + a free
-offline fallback). `run_task()` picks the provider/model configured for that agent in
-Settings → agent_models, wraps paid calls in the budget guard, validates the JSON against the
-schema and retries once with the validation error if the model got it wrong.
+offline fallback). `run_task()` picks the provider/model for that agent (fixed in code:
+AUTO_MODELS through OpenRouter once its key is set, else the free offline templates), wraps paid
+calls in the budget guard, validates the JSON against the schema and retries once with the
+validation error if the model got it wrong.
 """
 
 from __future__ import annotations
@@ -90,11 +91,22 @@ def image_mime(data: bytes) -> str:
     return "image/jpeg" if data[:3] == b"\xff\xd8\xff" else "image/png"
 
 
+# One OpenRouter key runs every agent. Haiku is cheap and good at JSON and pictures; the listing
+# (the text buyers read) gets Sonnet. About ₹1–3 per book in total (docs/DECISIONS.md 76–77).
+AUTO_DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
+AUTO_MODELS = {"listing": "anthropic/claude-sonnet-5.5"}
+
+
 def agent_config(agent: str) -> dict[str, str]:
     from crayonlark.core import app_settings
+    from crayonlark.core.config import get_settings
 
-    models = app_settings.get("agent_models") or {}
-    return dict(models.get(agent) or {"provider": "offline", "model": ""})
+    stored = (app_settings.get("agent_models") or {}).get(agent)
+    if stored:  # not shown in admin any more; kept for tests and emergencies
+        return dict(stored)
+    if get_settings().openrouter_api_key:
+        return {"provider": "openrouter", "model": AUTO_MODELS.get(agent, AUTO_DEFAULT_MODEL)}
+    return {"provider": "offline", "model": ""}
 
 
 def run_task[T: BaseModel](task: AgentTask[T]) -> T:

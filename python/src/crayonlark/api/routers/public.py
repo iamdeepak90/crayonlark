@@ -24,7 +24,7 @@ SUBSCRIBE_MESSAGE = "Thanks! Check your inbox for a confirmation email (and your
 
 @router.get("/site-config")
 def site_config() -> dict:
-    """Non-secret website settings from admin → Settings → Integrations (Umami, Turnstile, …)."""
+    """Non-secret website settings (Umami, Turnstile, …) from admin → Settings."""
     return integrations.public_site_config()
 
 

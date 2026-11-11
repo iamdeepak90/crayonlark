@@ -2,7 +2,7 @@ import { AlertTriangle, Check, ExternalLink, FileDown, Pencil, Rocket, X } from 
 import Link from "next/link";
 import ActionButton from "@/components/admin/ActionButton";
 import ConnectCard from "@/components/admin/ConnectCard";
-import { EtsyDailyForm, SendBackButton } from "@/components/admin/EtsyControls";
+import { SendBackButton } from "@/components/admin/EtsyControls";
 import { Card, PageTitle, StatTile, fileUrl, fmtDate, fmtDay, money } from "@/components/admin/ui";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { serverApi } from "@/lib/api";
@@ -169,7 +169,7 @@ export default async function EtsyPage() {
           <h2 id="queue-h" className="text-sm font-semibold tracking-tight">
             Etsy queue
           </h2>
-          <EtsyDailyForm perDay={d.daily.per_day} hourUtc={d.daily.hour_utc} />
+          <p className="text-xs text-muted-foreground">One book goes live each day from {hour} (19:30 IST).</p>
         </div>
         {d.queue.length ? (
           <ol className="mt-3 divide-y overflow-hidden rounded-lg border bg-card shadow-xs">
